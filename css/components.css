@@ -1,0 +1,160 @@
+/* Composants communs : boutons, badges, cartes, KPI, tableaux. */
+
+/* ==========================  Boutons  ========================== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:inherit;font-size:14px;font-weight:650;
+  padding:11px 20px;border-radius:var(--r-control);border:1px solid transparent;
+  cursor:pointer;line-height:1.2;white-space:nowrap;
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease,color .2s ease;
+}
+.btn svg{width:16px;height:16px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 10px #155a9c20}
+.btn-primary:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover);color:#fff;box-shadow:0 5px 15px #155a9c26}
+.btn-signature{background:var(--signature);color:var(--signature-on);border-color:var(--signature)}
+.btn-signature:hover:not(:disabled){background:var(--signature-hover);border-color:var(--signature-hover);color:var(--signature-on)}
+.btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn-secondary:hover:not(:disabled){border-color:var(--text-secondary)}
+.btn-danger{background:var(--error);color:#fff;border-color:var(--error)}
+.btn-success{background:var(--success);color:#fff;border-color:var(--success)}
+.btn-ghost{background:transparent;color:var(--text-secondary);border-color:transparent}
+.btn-ghost:hover:not(:disabled){color:var(--text);background:var(--surface-2)}
+.btn-sm{padding:7px 13px;font-size:13px}
+.btn-lg{padding:15px 26px;font-size:15px}
+.btn-block{width:100%}
+
+/* ==========================  Badges & statuts  ========================== */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  padding:4px 10px;border-radius:5px;white-space:nowrap;
+}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+.badge-neutral{color:var(--text-secondary);background:var(--surface-sunken)}
+.badge-info{color:var(--info);background:var(--info-soft)}
+.badge-success{color:var(--success);background:var(--success-soft)}
+.badge-warning{color:var(--warning);background:var(--warning-soft)}
+.badge-error{color:var(--error);background:var(--error-soft)}
+.badge-accent{color:var(--accent);background:var(--accent-soft)}
+.badge-signature{color:var(--signature);background:var(--signature-soft)}
+
+/* Statuts métier B2F — mapping sémantique, une seule source de vérité. */
+.status-brouillon{color:var(--text-secondary);background:var(--surface-sunken)}
+.status-publiee{color:var(--accent);background:var(--accent-soft)}
+.status-disponible{color:var(--accent);background:var(--accent-soft)}
+.status-reserver{color:var(--warning);background:var(--warning-soft)}
+.status-accepter{color:var(--signature);background:var(--signature-soft)}
+.status-rejeter{color:var(--error);background:var(--error-soft)}
+.status-annuler{color:var(--text-muted);background:var(--surface-sunken)}
+.status-valider{color:var(--success);background:var(--success-soft)}
+.status-expire{color:var(--error);background:var(--error-soft)}
+
+/* ==========================  Cartes  ========================== */
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:22px;box-shadow:var(--sh-1);
+}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px}
+/* Intitulé d'une section posée à même la page (hors carte) : mêmes règles
+   typographiques qu'un en-tête de carte, pour que la hiérarchie reste unique. */
+/* Le dernier bloc d'un corps de carte ne traîne pas sa marge basse : elle
+   s'ajoutait au padding de la carte et creusait un vide sous le contenu. */
+.card-body>:last-child{margin-bottom:0}
+/* Une carte qui ne porte qu'un formulaire ne s'étale pas sur toute la largeur
+   de l'écran : elle se cale sur la largeur de lecture de ses champs. */
+.page>.card:only-child:has(>.card-body>.field){max-width:760px}
+.results{display:flex;flex-direction:column;gap:var(--s3)}
+.section-head h2{font-size:17px;font-weight:700}
+.section-head .subtitle{color:var(--text-secondary);font-size:13px;margin-top:3px}
+.card-header h3{font-size:17px;font-weight:700}
+.card-header .subtitle{color:var(--text-secondary);font-size:13px;margin-top:3px}
+/* Gouttières alignées sur l'échelle d'espacement (--s4 = 24px) : les valeurs
+   20/22px d'origine étaient hors échelle et donnaient des écarts dépareillés
+   d'une grille à l'autre sur un même écran. */
+.card-grid{display:grid;gap:var(--s4)}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.ops-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr);gap:var(--s4)}
+.ops-grid>.card{min-width:0}
+
+/* ==========================  KPI  ========================== */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s4)}
+.kpi-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;display:flex;flex-direction:column;min-width:0;
+  box-shadow:var(--sh-1);transition:border-color .2s ease,box-shadow .2s ease;
+}
+.kpi-card:hover{border-color:var(--accent-soft-border);box-shadow:var(--sh-2)}
+.kpi-label{font-size:14px;font-weight:650;color:var(--text);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-height:22px}
+.kpi-icon{width:29px;height:29px;border-radius:9px;display:grid;place-items:center;flex:none}
+.kpi-icon svg{width:16px;height:16px}
+/* Les valeurs monétaires (« 200 000 F CFA ») débordaient la carte à 34px fixes :
+   la taille suit désormais la largeur disponible, sans jamais casser la ligne. */
+.kpi-value{
+  font-size:clamp(25px,2.1vw,33px);font-weight:750;letter-spacing:-.8px;line-height:1.2;
+  margin-top:12px;font-variant-numeric:tabular-nums;
+}
+.kpi-value-long{font-size:clamp(19px,1.55vw,24px);letter-spacing:-.3px}
+/* La note porte l'information la plus décisive du parcours (« Solde insuffisant ») :
+   elle doit être colorée. Les tons émis par `core/ui.js` sont ok / warn / err —
+   ils n'étaient pas couverts, la note restait grise quel que soit l'état. */
+.kpi-trend{font-size:12px;color:var(--text-muted);margin-top:8px;display:flex;align-items:center;gap:5px;font-weight:600}
+.kpi-trend.up,.kpi-trend.ok{color:var(--success)}
+.kpi-trend.down,.kpi-trend.err{color:var(--error)}
+.kpi-trend.warn{color:var(--warning)}
+
+/* ==========================  Tableaux  ========================== */
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);margin-bottom:var(--s3);flex-wrap:wrap}
+.tabs-underline{display:flex;gap:20px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab-btn{
+  background:transparent;border:0;padding:0 0 10px;font-size:13.5px;font-weight:600;
+  color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;
+  display:flex;align-items:center;gap:6px;
+}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
+.tab-btn .count{font-size:12px;color:var(--text-muted)}
+.tab-btn.active .count{color:var(--accent)}
+.table-wrap{overflow-x:auto}
+/* Un tableau qui occupe toute la largeur de la carte qui le porte : la bande
+   d'en-tête et les séparateurs vont bord à bord au lieu de s'arrêter à 22px
+   des côtés, ce qui laissait flotter le tableau dans la carte. */
+.card>.card-body>.table-wrap:only-child{
+  margin:0 -22px -22px;width:calc(100% + 44px);
+  border-bottom-left-radius:var(--r-lg);border-bottom-right-radius:var(--r-lg);
+}
+.card>.card-body>.table-wrap:only-child th:first-child,
+.card>.card-body>.table-wrap:only-child td:first-child{padding-left:22px}
+.card>.card-body>.table-wrap:only-child th:last-child,
+.card>.card-body>.table-wrap:only-child td:last-child{padding-right:22px}
+.data-table{width:100%;border-collapse:collapse}
+.data-table thead th{
+  text-align:left;font-size:13px;font-weight:650;color:var(--text-secondary);
+  background:var(--surface-2);padding:12px 16px;border-bottom:1px solid var(--border-strong);white-space:nowrap;
+}
+.data-table tbody td{padding:16px;border-bottom:1px solid var(--border-hairline);vertical-align:middle;font-size:14px}
+.data-table tbody tr:last-child td{border-bottom:none}
+.data-table tbody tr:hover td{background:var(--surface-2)}
+.cell-2line strong{display:block;font-size:14px}
+.cell-2line span{display:block;font-size:12px;color:var(--text-muted)}
+.link-action{font-size:13px;font-weight:700;color:var(--accent);background:none;border:0;cursor:pointer;padding:0}
+.link-action:hover{text-decoration:underline}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding-top:var(--s3);flex-wrap:wrap;gap:var(--s2);font-size:13px;color:var(--text-muted)}
+.pagination-pages{display:flex;gap:4px}
+.pagination-pages button{
+  width:32px;height:32px;border-radius:var(--r-md);border:1px solid var(--border-strong);
+  background:transparent;cursor:pointer;font-size:13px;color:var(--text-secondary);
+}
+.pagination-pages button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Action refusée — désactivée ET expliquée (D32), sans `disabled` qui
+   retirerait le bouton de l'ordre de tabulation (correctif QA-08). */
+.action-refusee{display:inline-flex;flex-direction:column;gap:5px;align-items:flex-start}
+.btn.is-refuse{opacity:.55;cursor:not-allowed}
+.btn.is-refuse:hover{background:inherit;border-color:inherit}
+.btn.is-refuse:focus-visible{outline:2px solid var(--accent);outline-offset:2px;opacity:.8}
+.motif-refus{font-size:12px;line-height:1.5;color:var(--text-secondary);max-width:46ch}
+
+/* Les actions gardent un survol sans soulignement, même rendues avec <a>. */
+:is(button,[role="button"],.btn,.th-button,.b2f-public-login,.icon-btn-ghost,.link-action,.dash-link):hover{
+  text-decoration:none;
+}

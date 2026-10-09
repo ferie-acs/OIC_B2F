@@ -1,0 +1,15 @@
+.app-shell .transport-dashboard-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.app-shell .transport-dashboard-actions>.action-refusee{max-width:270px}
+.app-shell .transport-workflow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+.app-shell .transport-workflow-step{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:15px;color:var(--text)}
+.app-shell .transport-workflow-step:hover{border-color:var(--accent);text-decoration:none;box-shadow:0 5px 16px #2036550b}
+.app-shell .transport-workflow-step>svg{color:var(--accent);width:27px;height:27px}
+.app-shell .transport-workflow-step strong{font-size:14px;line-height:1.45}
+.app-shell .transport-workflow-step small{font-size:12px;line-height:1.6;color:var(--text-secondary)}
+.app-shell .transport-workflow-number{position:absolute;right:15px;top:16px;font-size:12px;font-weight:750;color:var(--bo-orange)}
+.app-shell .transport-form-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+.app-shell .transport-offer-form .field-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.modal-card:has(.flotte-formulaire){width:min(760px,calc(100vw - 32px));max-width:760px}
+.flotte-formulaire{margin-top:20px}.flotte-formulaire .field-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:1200px){.app-shell .transport-workflow{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.app-shell .transport-workflow{grid-template-columns:repeat(2,minmax(0,1fr))}.app-shell .transport-workflow-step{padding:16px}.app-shell .transport-dashboard-actions>.btn{flex:1 1 200px}.app-shell .transport-offer-form .field-row,.flotte-formulaire .field-row{grid-template-columns:1fr}.app-shell .transport-form-actions{flex-wrap:wrap}}

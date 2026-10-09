@@ -1,0 +1,31 @@
+/* Carte de suivi affréteur : contenu utile et hauteur naturelle. */
+.app-shell .aff-dashboard .dash-workspace{align-items:start}
+.app-shell .dash-next{flex:0 0 auto;display:flex;flex-direction:column;gap:20px;background:var(--surface);border-radius:15px}
+.app-shell .dash-next .dash-panel-head{margin-bottom:0;align-items:flex-start;flex-wrap:nowrap}
+.app-shell .dash-next .dash-panel-head>svg{flex-shrink:0;margin-top:3px}
+.app-shell .dash-next-intro{font-size:12px;line-height:1.6;color:var(--text-muted);margin:6px 0 0}
+.app-shell .dash-next-row{gap:14px;padding:17px 0}
+.app-shell .dash-next-row:first-child{padding-top:0}
+.app-shell .dash-next-row:last-child{padding-bottom:0}
+.app-shell .dash-next-icon{width:42px;height:42px;border-radius:15px}
+.app-shell .dash-next-label strong{line-height:1.45}
+.app-shell .dash-next-count{font-variant-numeric:tabular-nums;text-align:right;min-width:28px}
+.app-shell .dash-next-row>svg{flex-shrink:0}
+.app-shell .dash-next-focus{border-top:1px solid var(--border);padding-top:22px;display:flex;flex-direction:column;align-items:flex-start;gap:9px}
+.app-shell .dash-next-eyebrow{display:flex;align-items:center;gap:8px;color:var(--bo-orange);font-size:10px;font-weight:750;letter-spacing:1.2px}
+.app-shell .dash-next-focus h3{font-size:16px;line-height:1.45;margin:2px 0 0;color:var(--text)}
+.app-shell .dash-next-reference{font-size:11px;font-weight:650;color:var(--text-muted)}
+.app-shell .dash-next-corridor{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:650;color:var(--bo-blue);margin:2px 0}
+.app-shell .dash-next-corridor>svg{flex-shrink:0}
+.app-shell .dash-next-description{font-size:12px;line-height:1.7;color:var(--text-secondary);margin:0;max-width:56ch}
+.app-shell .dash-next-cta{margin-top:7px;min-height:42px;border-radius:15px;gap:16px}
+@media(max-width:640px){
+  .app-shell .dash-next{gap:18px}
+  .app-shell .dash-next-row{gap:10px;padding:15px 0}
+  .app-shell .dash-next-icon{width:36px;height:38px}
+  .app-shell .dash-next-label strong{font-size:13px}
+  .app-shell .dash-next-label small{font-size:11px}
+  .app-shell .dash-next-count{font-size:21px;min-width:23px}
+  .app-shell .dash-next-row>svg{width:12px}
+  .app-shell .dash-next-cta{width:100%;justify-content:space-between}
+}

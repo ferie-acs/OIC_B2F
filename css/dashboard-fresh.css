@@ -1,0 +1,430 @@
+/* Identité commune aux espaces métier : surfaces fraîches et accents logistiques. */
+:root:not([data-theme="dark"]) .app-fresh{--bg:#f4f7fc;--surface:#fff;--surface-2:#f5f8fc;--text:#203655;--text-secondary:#5b708a;--text-muted:#73859c;--border:#e7edf5;--accent:#3265af;--accent-hover:#28538f;--accent-soft:#eaf1fc;--signature:#518764;--signature-soft:#edf6ef;--side-w:244px;background:var(--bg)}
+.app-fresh{--side-w:244px;--top-h:76px;background:var(--bg)}
+.app-fresh .sidebar{padding:28px 19px 18px;background:var(--surface);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.app-fresh .sidebar-brand{padding:0 12px 23px;gap:5px;margin-bottom:18px}
+.app-fresh .sidebar-brand .oic-logo{width:76px;height:48px;object-fit:contain;margin-bottom:8px}
+.app-fresh .sidebar-brand strong{font-size:19px;letter-spacing:-.6px}
+.app-fresh .sidebar-brand>span{font-size:10px}
+.app-fresh .brand-tag{color:var(--accent);background:var(--accent-soft);border:0;padding:5px 9px;letter-spacing:.6px}
+.app-fresh .sidebar-nav{gap:8px}
+.sidebar-zone-title{display:flex;align-items:center;gap:11px;list-style:none;cursor:pointer;padding:12px 10px;font-size:12px;font-weight:650;color:var(--text-secondary);border-radius:10px}
+.sidebar-zone-title::-webkit-details-marker{display:none}
+.sidebar-zone-title::after{content:'+';margin-left:auto;color:var(--text-muted)}
+.sidebar-zone[open]>.sidebar-zone-title::after{content:'−'}
+.sidebar-zone-title:hover{background:var(--surface-2)}
+.app-fresh .nav-link{font-size:11px;font-weight:550;padding:11px 12px 11px 38px;border-radius:10px;position:relative}
+.app-fresh .nav-link.active{background:var(--accent-soft);font-weight:700}
+.app-fresh .nav-link.active::before{content:'';position:absolute;left:20px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.app-fresh .sidebar-note{background:var(--surface-2);border:0;margin:24px 0 10px;padding:16px}
+.app-fresh .sidebar-note p{font-size:10px;line-height:1.7}
+.app-fresh .sidebar-note strong{font-size:11px}
+.app-fresh .topbar{background:var(--surface);padding:0 30px;border-color:var(--border)}
+.app-fresh .topbar-right{gap:14px}.app-fresh .topbar-profile{border-left:1px solid var(--border);padding-left:16px}
+.app-fresh .topbar-profile strong{font-size:11px}.app-fresh .topbar-profile small{font-size:10px}
+.app-fresh .topbar .btn-secondary{font-size:11px;padding:9px 13px;background:var(--surface-2);border:0}
+.app-fresh .role-chip{display:none}.app-fresh .breadcrumb{font-size:11px}
+.app-fresh .main-content{padding:28px 30px;max-width:1500px}
+.app-fresh :is(.card,.kpi-card,.offer-card){background:var(--surface);border:1px solid var(--border);box-shadow:0 5px 24px #20365503;backdrop-filter:none;-webkit-backdrop-filter:none}
+.app-fresh .card-title{font-size:15px}.app-fresh .btn-primary{background:var(--accent);border-color:var(--accent);color:white;box-shadow:none}.app-fresh .btn-primary:hover{background:var(--accent-hover)}
+.app-fresh .app-footer{background:transparent;border:0;font-size:10px}.app-fresh .input,.app-fresh .select{background:var(--surface)}
+.aff-dashboard{gap:22px}.dash-eyebrow{display:block;color:var(--text-muted);font-size:9px;font-weight:700;letter-spacing:1.5px;margin-bottom:8px}
+.dash-page-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}.dash-page-heading h1{font-size:28px;letter-spacing:-1px;line-height:1.2}.dash-page-heading p{font-size:12px;color:var(--text-muted);margin-top:8px}.dash-page-heading .btn{font-size:12px;padding:13px 18px;flex-shrink:0}
+.dash-welcome{display:grid;grid-template-columns:1.2fr 1fr;align-items:center;min-height:215px;background:linear-gradient(110deg,#eaf1fd,#f0f5fd 62%,#e8f0fb);border:1px solid #e4ecf8;border-radius:18px;overflow:hidden;padding:24px 30px;position:relative}
+.dash-welcome-copy{position:relative;z-index:1}.dash-welcome .dash-eyebrow{color:#517aac;font-size:8px}.dash-welcome h2{font-size:27px;line-height:1.2;letter-spacing:-.8px;color:#203655}.dash-welcome p{font-size:12px;color:#6b7e96;max-width:310px;margin:12px 0 17px;line-height:1.7}.dash-link{display:inline-flex;align-items:center;gap:9px;font-size:11px;font-weight:650;color:var(--accent)}
+.dash-welcome img{width:100%;height:220px;object-fit:contain;mix-blend-mode:multiply;mask-image:radial-gradient(ellipse,#000 50%,transparent 74%);position:absolute;right:0;width:46%;top:4px}
+.dash-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0}
+.dash-kpi{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:18px 15px;display:flex;align-items:center;gap:12px;color:var(--text);min-width:0}.dash-kpi:hover{text-decoration:none;border-color:#b9cde8;box-shadow:0 5px 20px #20365508}.dash-kpi>.kpi-card{border:0;background:none;padding:0;box-shadow:none;flex:1;min-width:0}.dash-kpi>svg{color:#b1bfd1;width:13px}.dash-kpi .kpi-label{font-size:10px;white-space:normal;line-height:1.5}.dash-kpi .kpi-value{font-size:28px;margin:4px 0 0;line-height:1.1;letter-spacing:-1px}
+.dash-kpi-icon,.dash-next-icon{width:38px;height:42px;border-radius:12px;display:grid;place-items:center;flex-shrink:0}.dash-tone-blue .dash-kpi-icon,.dash-next-icon.dash-tone-blue{background:#eaf1fd;color:#3265af}.dash-tone-orange .dash-kpi-icon,.dash-next-icon.dash-tone-orange{background:#fff2e3;color:#c87b25}.dash-tone-green .dash-kpi-icon,.dash-next-icon.dash-tone-green{background:#ecf5ef;color:#598c6d}
+.dash-workspace{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(275px,1fr);gap:22px}.dash-main-column,.dash-side-column{display:flex;flex-direction:column;gap:22px;min-width:0}.dash-panel{border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:22px}.dash-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}.dash-panel-head h2{font-size:15px;letter-spacing:-.3px}.dash-panel-head>svg{color:#8b9eb5}.dash-panel-head .dash-eyebrow{font-size:8px;margin-bottom:7px}.dash-panel-head .badge{font-size:9px;white-space:nowrap}
+.dash-freight-title{font-size:14px;font-weight:600;margin:0 0 22px}.dash-route{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px;background:var(--surface-2);border-radius:12px}.dash-route small{display:block;font-size:8px;color:var(--text-muted);letter-spacing:1px;margin-bottom:5px}.dash-route strong{font-size:14px}.dash-route>div:last-child{text-align:right}.dash-route-line{position:relative;display:flex;justify-content:center;color:var(--accent);flex:1}.dash-route-line:before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1px dashed #b6c9e5}.dash-route-line svg{position:relative;background:var(--surface-2);box-sizing:content-box;padding:0 8px}
+.dash-freight-facts{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin:20px 0}.dash-freight-facts>div{display:flex;gap:10px;align-items:center;color:var(--accent)}.dash-freight-facts small{display:block;font-size:10px;color:var(--text-muted)}.dash-freight-facts strong{display:block;font-size:11px;font-weight:600;color:var(--text);margin-top:3px}.dash-freight-bottom{display:flex;justify-content:space-between;gap:12px;align-items:center;padding-top:17px;border-top:1px solid var(--border);flex-wrap:wrap}.dash-freight-bottom>span{font-size:10px;color:var(--text-muted)}
+.dash-next{flex:1}.dash-next .dash-panel-head{margin-bottom:10px}.dash-next-row{display:flex;align-items:center;gap:12px;padding:14px 0;color:var(--text);border-bottom:1px solid var(--border)}.dash-next-row:last-child{border:0;padding-bottom:0}.dash-next-row:hover{text-decoration:none;color:var(--accent)}.dash-next-label{flex:1;min-width:0}.dash-next-label strong{display:block;font-size:11px}.dash-next-label small{display:block;font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.5}.dash-next-count{font-weight:700;font-size:17px;min-width:20px;text-align:center}.dash-next-row>svg{color:#a5b4c7}
+.dash-geography{padding-bottom:15px}.dash-map-canvas{background:var(--surface-2);border-radius:12px;position:relative;overflow:hidden;background-image:radial-gradient(#9bb7d020 .8px,transparent .8px);background-size:13px 13px}.dash-map{display:block;width:100%;height:270px;padding:10px}.dash-map-country{fill:#e4ecf5;stroke:#d0ddeb;stroke-width:1.2}.dash-map-route{fill:none;stroke:#6b99cf;stroke-width:2.6;stroke-dasharray:5 5}.dash-map-halo{fill:#ed8b2420}.dash-map-dot{fill:#ed8b24;stroke:white;stroke-width:2}.dash-map-label{font:600 12px var(--font);fill:#42617f;paint-order:stroke;stroke:#f4f7fc;stroke-width:3px;stroke-linejoin:round}.dash-map-caption{display:block;text-align:center;font-size:10px;color:var(--text-secondary);padding:0 12px 12px}.dash-map-note{font-size:9px;line-height:1.5;color:var(--text-muted);margin-top:12px}
+.dash-balance .dash-panel-head{margin-bottom:14px}.dash-balance-value{display:block;font-size:28px;letter-spacing:-1px}.dash-balance p{display:flex;align-items:center;gap:6px;font-size:10px;margin:8px 0 18px}.dash-balance-ok{color:#518764}.dash-balance-low{color:var(--error)}
+.dash-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}.dash-filters button{border:1px solid transparent;background:transparent;color:var(--text-muted);padding:8px 13px;font:600 11px var(--font);cursor:pointer;border-radius:9px}.dash-filters button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}.dash-filters button:hover{border-color:var(--border)}.dash-table-ref strong{display:block;font-size:11px}.dash-table-ref small{display:block;color:var(--text-muted);font-size:10px;margin-top:4px}.aff-dashboard th{font-size:10px}.aff-dashboard td{font-size:11px}.aff-dashboard .badge{font-size:10px}.dash-demand-list .table-wrap{margin:0}.aff-dashboard .card{padding:22px}
+:root[data-theme="dark"] .dash-welcome{background:var(--surface);border-color:var(--border)}:root[data-theme="dark"] .dash-welcome h2{color:var(--text)}:root[data-theme="dark"] .dash-welcome img{mix-blend-mode:normal}:root[data-theme="dark"] .dash-map-country{fill:#293d52;stroke:#455b72}:root[data-theme="dark"] .dash-map-label{fill:#d9e7f4;stroke:#293d52}
+@media(min-width:1600px){.dash-welcome{min-height:235px}.dash-welcome img{height:245px}.dash-welcome h2{font-size:32px}}
+@media(max-width:1200px){.app-fresh{--side-w:220px}.app-fresh .main-content{padding:24px}.dash-kpi{padding:15px 12px;gap:8px}.dash-kpi>svg{display:none}.dash-kpi-icon{width:32px;height:38px}.dash-workspace{gap:16px;grid-template-columns:minmax(0,1.4fr) minmax(250px,1fr)}.dash-panel{padding:18px}.dash-welcome{padding:24px}.dash-page-heading h1{font-size:25px}.dash-page-heading p{max-width:330px}}
+@media(max-width:960px){.app-fresh .sidebar{width:260px}.app-fresh .topbar{padding:0 22px}.dash-kpis{gap:12px}.dash-kpi .kpi-label{font-size:9px}}
+@media(max-width:720px){.app-fresh .main-content{padding:22px 16px}.app-fresh .topbar{padding:0 16px}.app-fresh .topbar-profile{display:none}.app-fresh .topbar-right{gap:7px;margin-left:auto}.dash-page-heading{align-items:flex-start;flex-direction:column;gap:15px}.dash-page-heading h1{font-size:27px}.dash-page-heading p{font-size:11px}.dash-page-heading .btn{width:100%;justify-content:center}.dash-welcome{padding:23px;min-height:255px;grid-template-columns:1fr}.dash-welcome-copy{max-width:65%}.dash-welcome h2{font-size:23px}.dash-welcome p{font-size:11px}.dash-welcome img{width:48%;right:-5%;top:65px;height:190px}.dash-welcome .dash-eyebrow{font-size:7px;line-height:1.7}.dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dash-kpi .kpi-label{font-size:10px}.dash-workspace{grid-template-columns:1fr}.dash-map{height:280px}.dash-side-column{display:grid;grid-template-columns:1fr}.aff-dashboard .card{padding:18px}.dash-route{padding:16px}.dash-route strong{font-size:13px}.dash-freight-facts{grid-template-columns:1fr 1fr}.dash-page-heading .dash-eyebrow{margin-bottom:7px}}
+/* Composition inspirée de NexLink : rail, bordures fines, indicateurs et analyses. */
+.app-fresh{--side-w:286px;--rail-w:60px}
+:root:not([data-theme="dark"]) .app-fresh{--side-w:286px;--bg:#f6f8fd;--border:#e9edf5}
+.app-fresh .sidebar{padding-left:76px;padding-right:16px}
+.app-fresh .app-rail{width:60px;background:var(--surface);border-right:1px solid var(--border);padding:22px 0;gap:13px}
+.app-fresh .rail-logo{width:36px;height:38px;background:var(--accent);color:white;border-radius:11px;margin-bottom:16px}
+.app-fresh .rail-link{width:39px;height:42px;color:var(--text-muted);border-radius:11px}
+.app-fresh .rail-link:hover,.app-fresh .rail-link.active{background:var(--accent-soft);color:var(--accent)}
+.app-fresh .rail-link.active:before{display:none}
+.app-fresh .sidebar-brand{padding-left:5px;padding-right:0}.app-fresh .sidebar-brand strong{font-size:17px}.app-fresh .sidebar-brand .oic-logo{width:64px;height:40px}
+.app-fresh .sidebar-zone-title{padding-left:7px;font-size:11px;gap:8px}.app-fresh .nav-link{padding-left:28px;font-size:10.5px}.app-fresh .nav-link.active:before{left:14px}.app-fresh .sidebar-note{padding:12px}
+.app-fresh .sidebar-user strong{font-size:11px}.app-fresh .sidebar-footer{gap:6px}.app-fresh .sidebar-footer .avatar-round{width:28px;height:28px;font-size:10px}
+.app-fresh .main-content{padding:26px}.app-fresh .topbar{padding:0 26px}.app-fresh .topbar-profile>div{display:block}
+.nav-search{display:flex;align-items:center;gap:9px;position:relative;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;max-width:280px;flex:1;color:var(--text-muted)}
+.nav-search input{min-width:0;width:100%;background:none;border:0;color:var(--text);font:11px var(--font);outline:0}.nav-search:focus-within{outline:2px solid var(--accent-soft-border)}
+.nav-search-results{position:absolute;left:0;right:0;top:calc(100% + 8px);padding:7px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px #20365518;z-index:30;max-height:320px;overflow:auto}
+.nav-search-results a{display:block;padding:11px 10px;border-radius:8px;font-size:12px;color:var(--text-secondary)}.nav-search-results a:hover{background:var(--accent-soft);text-decoration:none;color:var(--accent)}.nav-search-results p{padding:12px;font-size:12px}
+.dash-welcome{min-height:173px;padding:22px 26px}.dash-welcome h2{font-size:24px}.dash-welcome p{margin:9px 0 12px;font-size:11px}.dash-welcome img{height:185px;top:-2px}.dash-welcome .dash-eyebrow{font-size:7px}
+.dash-kpi{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 32px;gap:0;padding:18px 16px 0;overflow:hidden;align-items:start;box-shadow:0 3px 12px #20365503}
+.dash-kpi>.kpi-card{grid-area:1/1;display:flex;flex-direction:column;gap:7px}.dash-kpi-icon{grid-area:1/2;width:32px;height:32px;border-radius:10px}.dash-kpi .kpi-label{font-size:11px;max-width:135px;min-height:33px}.dash-kpi .kpi-value{font-size:31px;margin:0 0 15px}.dash-kpi-footer{grid-column:1/-1;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin:0 -16px;padding:10px 16px;font-size:10px;color:var(--text-muted)}.dash-kpi-footer svg{color:var(--accent)}
+.dash-panel{box-shadow:0 3px 12px #20365503}.dash-analytics{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(275px,1fr);gap:22px}.dash-period{background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:6px 10px;color:var(--text-muted);font-size:9px;white-space:nowrap}
+.dash-chart-total{display:flex;align-items:baseline;gap:10px;margin:10px 0 25px}.dash-chart-total strong{font-size:30px;line-height:1}.dash-chart-total>span{font-size:10px;color:var(--text-muted)}
+.dash-bars{display:flex;align-items:stretch;justify-content:space-around;gap:14px;height:157px;padding:0 10px;background:repeating-linear-gradient(to top,transparent 0 38px,var(--border) 39px 40px);background-position:0 -18px}
+.dash-bar-column{display:flex;flex:1;flex-direction:column;align-items:center;min-width:0}.dash-bar-track{height:130px;display:flex;align-items:flex-end;width:100%;max-width:42px}.dash-bar-fill{width:100%;background:linear-gradient(to top,#3265af,#82a9df);border-radius:6px 6px 0 0;position:relative;min-height:2px}.dash-bar-fill>span{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:10px;color:var(--text-secondary)}.dash-bar-month{font-size:10px;color:var(--text-muted);padding-top:10px}.dash-chart-note{font-size:9px;color:var(--text-muted);margin-top:16px}
+.dash-donut{width:128px;height:128px;border-radius:50%;display:grid;place-items:center;margin:14px auto 23px;transform:rotate(-90deg)}.dash-donut>div{width:100px;height:100px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(90deg);box-shadow:0 0 0 3px var(--surface)}.dash-donut strong{font-size:29px;line-height:1.2;letter-spacing:-1px}.dash-donut span{font-size:10px;color:var(--text-muted)}
+.dash-chart-legend{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.dash-chart-legend>div{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-muted)}.dash-chart-legend i{width:7px;height:7px;border-radius:2px}.dash-chart-legend strong{margin-left:auto;color:var(--text);font-size:11px}
+@media(max-width:1200px){.app-fresh,:root:not([data-theme="dark"]) .app-fresh{--side-w:260px}.app-fresh .main-content{padding:22px}.app-fresh .sidebar{padding-left:72px;padding-right:12px}.app-fresh .topbar-profile>div{display:none}.app-fresh .nav-link{font-size:10px}.dash-kpis{gap:12px}.dash-kpi{padding:15px 13px 0}.dash-kpi .kpi-label{font-size:10px}.dash-kpi-footer{margin:0 -13px;padding:10px 13px}.dash-kpi-icon{width:29px;height:30px}.dash-analytics{grid-template-columns:minmax(0,1.4fr) minmax(250px,1fr);gap:16px}.dash-panel-head{flex-wrap:wrap}.dash-chart-legend{gap:12px}.dash-welcome img{width:44%}}
+@media(max-width:960px){.app-fresh .sidebar{width:286px}.nav-search{max-width:245px}.app-fresh .topbar-right{gap:8px}.dash-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.dash-kpi .kpi-label{font-size:10px}.dash-kpi{padding:14px 12px 0}.dash-kpi-footer{margin:0 -12px;padding:9px 12px}}
+@media(max-width:720px){.app-fresh .main-content{padding:22px 16px}.app-fresh .topbar{padding:0 16px;gap:6px}.app-fresh .topbar-right>.btn{display:none}.nav-search{max-width:none;padding:10px}.dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.dash-analytics{grid-template-columns:1fr}.dash-welcome{min-height:215px;padding:22px}.dash-welcome-copy{max-width:65%}.dash-welcome h2{font-size:22px}.dash-welcome img{top:37px;width:47%;height:180px}.dash-period{font-size:9px}.dash-chart-legend{max-width:320px;margin:auto}.dash-donut{width:142px;height:142px}.dash-donut>div{width:112px;height:112px}}
+/* Indicateurs à courbe : variation de l’activité, distincte du stock courant. */
+.dash-kpi.dash-kpi-chart{display:flex;flex-direction:column;align-items:stretch;padding:0;gap:0;border-radius:16px;overflow:hidden;min-width:0}
+.dash-kpi-chart-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:20px 17px 0}
+.dash-kpi-chart .kpi-label{font-size:11px;line-height:1.45;min-height:32px;max-width:none;color:var(--text);font-weight:650}
+.dash-kpi-chart-head>svg{color:var(--accent);width:16px}
+.dash-kpi-figures{display:flex;align-items:center;gap:10px;padding:9px 17px 0;flex-wrap:wrap}
+.dash-kpi-number{font-size:35px;font-weight:750;line-height:1.15;letter-spacing:-1.5px;color:var(--text)}
+.dash-trend{display:inline-flex;align-items:center;gap:4px;padding:5px 7px;border-radius:7px;font-size:10px;font-weight:750;white-space:nowrap}
+.trend-up .dash-trend{color:#278354;background:#edf8f1}.trend-down .dash-trend{color:#d64959;background:#fff0f2}.trend-flat .dash-trend{color:#78879c;background:#f2f5f9}
+.trend-up .dash-kpi-number{color:#278354}.trend-down .dash-kpi-number{color:#d64959}
+.trend-up .dash-trend svg{transform:rotate(-40deg)}.trend-down .dash-trend svg{transform:rotate(40deg)}
+.dash-kpi-context{padding:9px 17px 0;color:var(--text-muted);font-size:9px;line-height:1.6}
+.dash-sparkline{width:100%;height:65px;display:block;flex:none;margin-top:11px;color:var(--accent);overflow:visible}
+.dash-spark-area{fill:currentColor;opacity:.085}.dash-spark-line{fill:none;stroke:currentColor;stroke-width:2;vector-effect:non-scaling-stroke}
+.dash-kpi-comparison{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:12px 16px 15px;background:#3265af0b;color:var(--text-muted);font-size:9px}.dash-kpi-comparison svg{color:var(--accent)}
+:root[data-theme="dark"] .trend-up .dash-kpi-number{color:#67c9a3}:root[data-theme="dark"] .trend-down .dash-kpi-number{color:#fa90a5}
+@media(max-width:1200px){.dash-kpi-chart-head{padding:17px 13px 0;gap:5px}.dash-kpi-chart .kpi-label{font-size:10px}.dash-kpi-figures{padding:9px 13px 0;gap:7px}.dash-kpi-context{padding:8px 13px 0;font-size:8px}.dash-trend{font-size:9px;padding:4px 6px}.dash-kpi-comparison{padding:11px 12px;font-size:8px}.dash-kpi-number{font-size:32px}}
+@media(max-width:420px){.dash-kpi-chart-head>svg{display:none}.dash-kpi-chart .kpi-label{font-size:11px}.dash-kpi-figures{gap:8px}.dash-kpi-number{font-size:33px}.dash-kpi-context{font-size:9px;min-height:36px}.dash-kpi-comparison{font-size:8px}.dash-kpi-comparison>svg{display:none}}
+.dash-kpi.dash-kpi-chart>.dash-sparkline{display:block;width:100%;height:65px;color:var(--accent)}
+/* Échelle de lecture à 100 % : priorité aux écrans de portable. */
+.app-fresh,
+:root:not([data-theme="dark"]) .app-fresh{--side-w:302px;--top-h:80px}
+.app-fresh .main-content{max-width:none;margin-inline:0;padding:28px 24px}
+.app-fresh .sidebar{padding-right:18px}
+.app-fresh .sidebar-brand strong{font-size:21px}
+.app-fresh .sidebar-brand>span{font-size:12px}
+.app-fresh .sidebar-brand .oic-logo{width:80px;height:50px}
+.app-fresh .sidebar-zone-title{font-size:14px;padding:13px 7px;gap:10px}
+.app-fresh .nav-link{font-size:13px;padding-top:12px;padding-bottom:12px}
+.app-fresh .sidebar-note strong{font-size:14px}
+.app-fresh .sidebar-note p{font-size:12px;line-height:1.7}
+.app-fresh .sidebar-user strong{font-size:13px}
+.app-fresh .sidebar-user span{font-size:12px}
+.app-fresh .topbar-profile strong{font-size:14px}
+.app-fresh .topbar-profile small{font-size:12px}
+.app-fresh .topbar .btn-secondary{font-size:13px;padding:11px 15px}
+.nav-search{max-width:330px;padding:12px 14px}
+.nav-search input,.nav-search-results a,.nav-search-results p{font-size:14px}
+.app-fresh .app-footer{font-size:12px}
+.dash-eyebrow{font-size:11px;letter-spacing:1.3px}
+.dash-page-heading h1{font-size:34px}
+.dash-page-heading p{font-size:15px;line-height:1.6;max-width:none}
+.dash-page-heading .btn{font-size:14px;padding:14px 20px}
+.dash-welcome{min-height:230px;padding:28px 32px}
+.dash-welcome-copy{max-width:56%}
+.dash-welcome .dash-eyebrow{font-size:10px;line-height:1.6}
+.dash-welcome h2{font-size:32px;line-height:1.2}
+.dash-welcome p{font-size:14px;max-width:440px;margin:13px 0 18px}
+.dash-welcome img{width:43%;height:235px;top:0;right:2%}
+.dash-link{font-size:13px}
+.dash-kpis{gap:18px}
+.dash-kpi-chart-head{padding:22px 20px 0;gap:10px}
+.dash-kpi-chart .kpi-label{font-size:14px;min-height:40px;line-height:1.4}
+.dash-kpi-chart-head>svg{width:19px;height:19px}
+.dash-kpi-figures{padding:10px 20px 0;gap:12px}
+.dash-kpi-number{font-size:44px}
+.dash-trend{font-size:12px;padding:6px 8px}
+.dash-kpi-context{font-size:12px;padding:10px 20px 0;min-height:30px}
+.dash-kpi.dash-kpi-chart>.dash-sparkline{height:76px;margin-top:15px}
+.dash-kpi-comparison{font-size:11px;padding:14px 18px;line-height:1.5}
+.dash-panel,.aff-dashboard .card{padding:25px}
+.dash-panel-head h2,.app-fresh .card-title{font-size:19px}
+.dash-panel-head .dash-eyebrow{font-size:10px;line-height:1.5}
+.dash-panel-head .badge,.aff-dashboard .badge{font-size:12px;white-space:normal}
+.dash-period{font-size:12px;padding:8px 12px}
+.dash-chart-total strong{font-size:38px}
+.dash-chart-total>span,.dash-chart-note{font-size:12px;line-height:1.6}
+.dash-bar-month,.dash-bar-fill>span{font-size:12px}
+.dash-donut{width:154px;height:154px}
+.dash-donut>div{width:120px;height:120px}
+.dash-donut strong{font-size:36px}
+.dash-donut span{font-size:12px}
+.dash-chart-legend>div{font-size:13px}
+.dash-chart-legend strong{font-size:14px}
+.dash-chart-legend{gap:15px 20px}
+.dash-freight-title{font-size:17px}
+.dash-route strong{font-size:17px}
+.dash-route small{font-size:11px}
+.dash-freight-facts small,.dash-freight-bottom>span{font-size:12px}
+.dash-freight-facts strong{font-size:14px;line-height:1.5}
+.dash-next-label strong{font-size:14px}
+.dash-next-label small{font-size:12px}
+.dash-next-count{font-size:22px}
+.dash-next-row{padding:17px 0}
+.dash-map{height:300px}
+.dash-map-label{font-size:14px}
+.dash-map-caption{font-size:12px}
+.dash-map-note{font-size:11px;line-height:1.6}
+.dash-balance-value{font-size:34px}
+.dash-balance p{font-size:12px;line-height:1.5}
+.dash-filters button{font-size:13px;padding:10px 14px}
+.dash-table-ref strong,.aff-dashboard td{font-size:14px}
+.dash-table-ref small,.aff-dashboard th{font-size:12px}
+@media(max-width:1200px){
+  .app-fresh,:root:not([data-theme="dark"]) .app-fresh{--side-w:286px}
+  .app-fresh .main-content{padding:26px 24px}
+  .app-fresh .sidebar-zone-title{font-size:13px}
+  .app-fresh .nav-link{font-size:12px}
+  .dash-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dash-kpi-chart .kpi-label{min-height:20px}
+  .dash-welcome h2{font-size:28px}
+  .dash-welcome-copy{max-width:60%}
+  .dash-workspace,.dash-analytics{grid-template-columns:minmax(0,1.3fr) minmax(250px,1fr)}
+  .dash-panel,.aff-dashboard .card{padding:21px}
+  .dash-panel-head h2{font-size:18px}
+  .dash-freight-facts{grid-template-columns:1fr}
+  .dash-chart-legend{grid-template-columns:1fr}
+}
+@media(max-width:960px){
+  .app-fresh .sidebar{width:302px}
+  .dash-freight-facts{grid-template-columns:1fr 1fr}
+  .dash-chart-legend{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+  .app-fresh .main-content{padding:24px 16px}
+  .dash-page-heading h1{font-size:30px}
+  .dash-page-heading p{font-size:14px}
+  .dash-workspace,.dash-analytics{grid-template-columns:1fr}
+  .dash-welcome{padding:24px;min-height:270px}
+  .dash-welcome-copy{max-width:100%}
+  .dash-welcome h2{font-size:27px;max-width:75%}
+  .dash-welcome p{font-size:13px;max-width:64%}
+  .dash-welcome img{width:39%;right:-3%;height:160px;top:90px}
+  .dash-welcome .dash-eyebrow{font-size:9px}
+  .dash-kpis{gap:12px}
+  .dash-kpi-chart-head{padding:18px 14px 0}
+  .dash-kpi-chart .kpi-label{font-size:13px;min-height:37px}
+  .dash-kpi-figures{padding:10px 14px 0;gap:8px}
+  .dash-kpi-number{font-size:39px}
+  .dash-trend{font-size:11px;padding:5px 6px}
+  .dash-kpi-context{padding:9px 14px 0;font-size:11px;min-height:44px}
+  .dash-kpi-comparison{font-size:10px;padding:12px}
+  .dash-kpi-comparison>svg{display:none}
+  .nav-search input{font-size:13px}
+  .nav-search{padding:11px 10px}
+  .dash-panel,.aff-dashboard .card{padding:20px}
+  .dash-panel-head h2{font-size:18px}
+}
+/* Le conteneur reçoit le focus après navigation ; les contrôles gardent leur anneau. */
+.app-fresh .main-content:focus{outline:none}
+
+/* Carte routière des corridors, avec repères et sélection accessibles. */
+.dash-road-map{position:relative;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#e8eef1}
+.dash-road-canvas{height:390px;width:100%}
+.dash-road-toolbar{position:absolute;top:14px;left:14px;right:52px;display:flex;gap:8px;align-items:center;pointer-events:none}
+.dash-road-distance,.dash-road-reset{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:9px;box-shadow:0 3px 12px #213e6012}
+.dash-road-distance{padding:9px 12px;font-size:12px;font-weight:700;line-height:1.4}
+.dash-road-reset{pointer-events:auto;display:grid;place-items:center;width:34px;height:34px;cursor:pointer;flex-shrink:0}
+.dash-road-status{font-size:12px;color:var(--text-secondary);line-height:1.5;margin:12px 0}
+.dash-corridor-list{display:grid;gap:8px;max-height:210px;overflow:auto}
+.dash-corridor-choice{width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:12px;border:1px solid var(--border);border-radius:11px;background:var(--surface);color:var(--text);cursor:pointer;font:inherit}
+.dash-corridor-choice[aria-pressed="true"]{border-color:#9ebae1;background:var(--primary-light,#edf3fc)}
+.dash-corridor-choice:hover{border-color:#3265af;text-decoration:none}
+.dash-corridor-choice>span:nth-child(2){flex:1}.dash-corridor-choice strong{display:block;font-size:13px}.dash-corridor-choice small{display:block;font-size:11px;color:var(--text-secondary);margin-top:3px}
+.dash-corridor-symbol{display:grid;place-items:center;width:32px;height:32px;background:#e5edfa;border-radius:9px;color:#3265af;font-size:20px}
+.dash-road-pin{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;filter:drop-shadow(0 2px 4px #203b6133);padding-bottom:0}
+.dash-road-pin b{display:grid;place-items:center;background:#3265af;border:3px solid white;border-radius:50%;width:30px;height:30px;font-size:12px;color:white}
+.dash-road-pin.arrival b{background:#e78b31}.dash-road-pin span{background:white;color:#203b61;border-radius:6px;padding:5px 8px;font:600 12px var(--font)}
+.dash-road-unavailable{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:25px;text-align:center;color:#496580;font-size:13px}
+.dash-road-map .maplibregl-ctrl-attrib{font-size:10px}.dash-road-map .maplibregl-ctrl-scale{font-size:10px}
+@media(max-width:720px){.dash-road-canvas{height:340px}.dash-road-distance{font-size:11px}}
+
+/* Marché : carte immersive et panneau de comparaison. */
+.market-page{gap:18px}.market-page-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}.market-page-heading h1{font-size:29px;margin:8px 0}.market-page-heading p{color:var(--text-secondary);margin:0;font-size:14px}
+.market-workspace{position:relative;isolation:isolate;min-height:650px;height:calc(100vh - 250px);border:1px solid var(--border);border-radius:20px;overflow:hidden;background:#e8eef1}
+.freight-market-map{position:absolute;inset:0 0 0 380px}.freight-market-map-canvas{height:100%;width:100%}.freight-market-map-status{position:absolute;top:18px;left:18px;right:55px;background:var(--surface);box-shadow:0 4px 16px #203b6112;border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:12px;line-height:1.5;color:var(--text-secondary);margin:0;pointer-events:none}
+.market-sidebar{position:absolute;top:12px;bottom:12px;left:12px;width:368px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:15px;box-shadow:0 10px 35px #203b6114;overflow:hidden}
+.market-filters{padding:18px;border-bottom:1px solid var(--border);max-height:55%;overflow:auto}.market-filters summary{display:flex;gap:9px;align-items:center;cursor:pointer;font-weight:700;font-size:15px}.market-filters summary:after{content:'＋';margin-left:auto;color:#3265af}.market-filters[open] summary:after{content:'−'}.market-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.market-fields .field{margin:0}.market-fields label{font-size:12px}.market-fields .input,.market-fields .select{min-width:0;width:100%;font-size:12px}.market-filter-actions{display:flex;gap:8px;margin-top:12px}.market-filter-actions .btn{flex:1;font-size:12px}
+.market-result-heading{display:flex;align-items:center;justify-content:space-between;padding:17px 18px 10px;gap:5px}.market-result-heading h2{font-size:15px;margin:0}.market-result-heading .btn{font-size:10px;padding:5px}
+.market-results{overflow:auto;padding:5px 12px 16px;flex:1;min-height:0;overscroll-behavior:contain}.market-offer{border:1px solid var(--border);border-radius:12px;margin:8px 0;background:var(--surface);overflow:hidden}.market-offer.selected{border-color:#3265af;box-shadow:0 0 0 1px #3265af}.market-offer-select{display:block;width:100%;background:transparent;color:var(--text);border:0;text-align:left;cursor:pointer;padding:15px;font:inherit}.market-offer-select:hover{background:var(--surface-2);text-decoration:none}.market-offer-top{display:flex;align-items:center;gap:9px;font-size:12px}.market-truck{display:grid;place-items:center;width:38px;height:38px;background:#edf3fc;border-radius:10px;color:#3265af}.market-capacity{margin-left:auto;border-radius:6px;padding:5px 8px;background:#edf7f1;color:#32865a;font-weight:700}.market-offer h3{font-size:16px;margin:12px 0 5px}.market-offer p{font-size:12px;color:var(--text-secondary);margin:0 0 9px}.market-dates{font-size:11px;color:var(--text-secondary)}.market-offer-bottom{padding:10px 15px;display:flex;justify-content:space-between;align-items:center;gap:6px;border-top:1px solid var(--border)}.market-offer-bottom>span{font-size:10px;color:var(--text-secondary)}.market-offer-bottom .btn{font-size:12px;padding:7px 10px;color:#3265af}
+.market-pin{display:flex;align-items:center;gap:7px;padding:5px 10px 5px 5px;background:white;border:2px solid #3265af;border-radius:25px;color:#203b61;box-shadow:0 3px 12px #203b6133;cursor:pointer;font:600 12px var(--font)}.market-pin b{display:grid;place-items:center;background:#3265af;color:white;border-radius:50%;width:25px;height:25px}.market-arrival{background:#fff;color:#87501a;border:2px solid #e78b31;border-radius:20px;padding:7px 11px;font:600 12px var(--font);box-shadow:0 3px 12px #203b6133}.market-disclaimer{font-size:11px;color:var(--text-muted);margin:0}.market-mobile-toggle{display:none}
+@media(max-width:1100px) and (min-width:721px){.market-sidebar{width:310px}.freight-market-map{left:322px}.market-page-heading h1{font-size:25px}}
+@media(max-width:720px){.market-page-heading{align-items:flex-start}.market-page-heading h1{font-size:24px}.market-page-heading p{font-size:12px}.market-page-heading>.btn{font-size:11px}.market-workspace{height:750px;min-height:0}.freight-market-map{inset:0 0 280px}.market-sidebar{top:auto;left:0;right:0;bottom:0;width:auto;height:290px;border-radius:16px 16px 0 0}.market-mobile-toggle{display:block;position:absolute;right:12px;bottom:302px;background:var(--surface);font-size:12px}.freight-market-map-status{font-size:10px;left:10px;top:10px}.market-workspace.list-collapsed .market-sidebar{display:none}.market-workspace.list-collapsed .freight-market-map{bottom:0}.market-workspace.list-collapsed .market-mobile-toggle{bottom:38px}.market-filters{padding:12px;max-height:65%}.market-result-heading{padding:10px 16px}.market-fields{grid-template-columns:1fr 1fr}}
+
+/* Cartes de disponibilité : lecture du trajet de haut en bas. */
+.market-sidebar{border-radius:26px;box-shadow:0 8px 28px #203b610d}
+.market-results{padding:4px 18px 20px;scrollbar-width:thin;scrollbar-color:#c7d1df transparent}
+.market-offer{background:#f2f4f7;border:1px solid transparent;border-radius:24px;margin:10px 0 16px;transition:background .15s,border-color .15s}
+.market-offer.selected{background:#eaf1fb;border-color:#8eadd5;box-shadow:none}
+.market-offer-select{padding:19px 20px 13px}
+.market-offer-select:hover{background:#eaf0f7}
+.market-offer-select:focus-visible{outline:2px solid #3265af;outline-offset:-4px;border-radius:22px}
+.market-trip-date{font-size:15px;font-weight:650;letter-spacing:-.2px;margin-bottom:9px}
+.market-trip-chips{display:flex;flex-wrap:wrap;gap:7px}
+.market-trip-chips>span{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border-radius:20px;padding:5px 9px;color:var(--text-secondary);font-size:12px;font-weight:600}
+.market-trip-chips svg{color:#527198}
+.market-trip-route{position:relative;margin:18px 0 14px;display:grid;gap:24px}
+.market-trip-stop{display:flex;align-items:flex-start;gap:12px;position:relative;z-index:1}
+.market-trip-stop strong{display:block;font-size:17px;font-weight:650;line-height:1.3}
+.market-trip-stop small{display:block;color:var(--text-muted);font-size:11px;line-height:1.5;margin-top:3px}
+.market-trip-dot{flex-shrink:0;width:17px;height:17px;border:2px dashed #7189a7;border-radius:50%;margin-top:3px;background:#f2f4f7}
+.market-trip-dot.arrival{border-style:solid;border-color:#3265af;position:relative}
+.market-trip-dot.arrival:after{content:'';position:absolute;inset:3px;border-radius:50%;background:#3265af}
+.market-trip-connector{position:absolute;top:22px;bottom:28px;left:8px;border-left:1px dashed #8fa3bd;display:flex;align-items:center}
+.market-trip-connector svg{position:relative;left:-7px;background:#f2f4f7;color:#527198;padding:3px 0;box-sizing:content-box}
+.market-offer.selected .market-trip-dot,.market-offer.selected .market-trip-connector svg{background:#eaf1fb}
+.market-trip-carrier{font-size:11px;color:var(--text-secondary);font-weight:600;margin-bottom:4px}
+.market-offer .market-dates{font-size:10px;color:var(--text-muted)}
+.market-offer-bottom{border-top:1px solid #dce3ed;padding:10px 20px 14px;align-items:center}
+.market-offer-bottom .btn{background:var(--surface);border:0;border-radius:20px;font-size:11px;padding:8px 12px;box-shadow:none}
+:root[data-theme="dark"] .market-offer{background:var(--surface-2)}
+:root[data-theme="dark"] .market-offer.selected,:root[data-theme="dark"] .market-offer-select:hover{background:#22364f}
+:root[data-theme="dark"] .market-trip-dot,:root[data-theme="dark"] .market-trip-connector svg{background:var(--surface-2)}
+@media(max-width:720px){.market-sidebar{border-radius:22px 22px 0 0}.market-results{padding-inline:14px}.market-offer-select{padding:16px 18px 12px}}
+
+/* Détail véhicule : fiche et aperçu géographique côte à côte. */
+.modal-card:has(.vehicle-detail){width:min(880px,calc(100vw - 40px));max-width:880px;border-radius:30px;background:var(--surface);padding:30px;box-shadow:0 25px 90px #203b6126}
+.modal-card:has(.vehicle-detail) .modal-title{font-size:12px;text-transform:uppercase;letter-spacing:1.7px;color:var(--text-muted);margin:0 0 24px}
+.vehicle-detail{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:stretch}
+.vehicle-detail-info{min-width:0}.vehicle-detail-identity{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.vehicle-detail-truck{display:grid;place-items:center;flex-shrink:0;width:48px;height:48px;border-radius:16px;background:#edf3fc;color:#3265af}
+.vehicle-detail-identity h2{font-size:22px;line-height:1.3;margin:0;color:var(--text)}
+.vehicle-detail-identity p{font-size:12px;color:var(--text-secondary);margin:4px 0 0}
+.vehicle-detail-row{display:flex;gap:12px;align-items:center;margin:19px 0}.vehicle-detail-row>svg{color:#8298b2;flex-shrink:0}.vehicle-detail-row span{display:block;font-size:11px;color:var(--text-muted);margin-bottom:4px}.vehicle-detail-row strong{font-size:14px;font-weight:600;color:var(--text);line-height:1.5}
+.vehicle-detail-price{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:10px;background:var(--surface-2);border-radius:12px;padding:11px 14px;margin:4px 0 14px}.vehicle-detail-price span{font-size:12px;color:var(--text-secondary)}.vehicle-detail-price strong{font-size:19px;color:var(--text)}
+.vehicle-detail-action{margin-top:8px}.vehicle-detail-action p{font-size:11px;line-height:1.5;color:var(--text-muted);margin:0 0 13px}.vehicle-detail-action .btn{border-radius:12px;width:100%;justify-content:center;padding:13px}
+.vehicle-detail-map{position:relative;min-height:385px;border-radius:23px;overflow:hidden;background:#eef2f5;border:1px solid var(--border)}
+.vehicle-detail-map .freight-market-map{inset:0}.vehicle-detail-map .freight-market-map-status{top:auto;bottom:30px;left:10px;right:10px;font-size:9px;padding:8px;background:var(--surface);border:0;box-shadow:none}
+.vehicle-availability{position:absolute;top:14px;left:12px;padding:8px 11px;background:var(--surface);border-radius:20px;box-shadow:0 3px 14px #203b6114;font-size:11px;color:var(--text);display:flex;align-items:center;gap:7px;pointer-events:none}
+.vehicle-availability i{width:7px;height:7px;border-radius:50%;background:#379a6b;box-shadow:0 0 0 4px #379a6b15}
+.vehicle-detail-map .market-pin{font-size:10px;padding:4px 8px;border-width:1px;gap:4px}.vehicle-detail-map .market-pin b{display:none}.vehicle-detail-map .market-arrival{font-size:10px;padding:5px 8px;border-width:1px}.vehicle-detail-map .maplibregl-ctrl-scale{font-size:9px}.vehicle-detail-map .maplibregl-ctrl-attrib{font-size:9px}
+@media(max-width:640px){.modal-card:has(.vehicle-detail){padding:22px;width:calc(100vw - 24px);border-radius:24px}.vehicle-detail{grid-template-columns:1fr;gap:18px}.vehicle-detail-map{min-height:270px}.vehicle-detail-identity{margin-bottom:18px}.vehicle-detail-row{margin:14px 0}.vehicle-detail-identity h2{font-size:20px}}
+
+/* Réservations : suivi des réponses et accès aux prochaines actions. */
+.reservations-page{gap:24px}.reservation-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.reservation-summary-card{display:flex;align-items:center;gap:15px;text-align:left;border:1px solid var(--border);border-radius:20px;background:var(--surface);padding:22px;color:var(--text);cursor:pointer;font:inherit}.reservation-summary-card>span:nth-child(2){flex:1}.reservation-summary-card strong{display:block;font-size:30px;line-height:1.1}.reservation-summary-card small{display:block;margin-top:7px;font-size:12px;color:var(--text-secondary)}.reservation-summary-card>svg{color:var(--text-muted)}.reservation-summary-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:#fff4e5;color:#cb8730}.summary-accepter .reservation-summary-icon{background:#eaf1fc;color:#3265af}.summary-valider .reservation-summary-icon{background:#eaf6ef;color:#398c60}.reservation-summary-card:hover{border-color:#9bb7db}
+.reservation-toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px}.reservation-filters{display:flex;gap:6px;flex-wrap:wrap}.reservation-filter{display:flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--text-secondary);padding:10px 13px;cursor:pointer;font:600 12px var(--font)}.reservation-filter span{font-size:10px;background:var(--surface);border-radius:6px;padding:2px 6px}.reservation-filter[aria-pressed="true"]{background:#e8f0fc;color:#3265af;border-color:#dce7f6}.reservation-count{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.reservation-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.reservation-list>.empty-state{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:65px 25px}
+.reservation-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}.reservation-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:22px 24px}.reservation-ref{font-weight:700;font-size:16px;color:var(--text)}.reservation-card-head p{font-size:12px;color:var(--text-secondary);margin:6px 0 0}.reservation-card-head .badge{font-size:10px;max-width:48%;white-space:normal;line-height:1.5}.reservation-card-body{padding:0 24px}.reservation-corridor{display:flex;align-items:center;gap:16px;padding:20px;border-radius:18px;background:var(--surface-2)}.reservation-stop{flex:1;min-width:0}.reservation-stop:last-child{text-align:right}.reservation-stop span{display:block;font-size:9px;font-weight:700;letter-spacing:1px;color:var(--text-muted);margin-bottom:6px}.reservation-stop strong{font-size:17px;color:var(--text)}.reservation-route-line{flex:0 1 64px;position:relative;display:flex;justify-content:center;color:#668dbf}.reservation-route-line:before{content:'';position:absolute;top:50%;left:0;right:0;border-top:2px dotted #c4d2e5}.reservation-route-line svg{position:relative;background:var(--surface-2);padding:0 5px;box-sizing:content-box}
+.reservation-facts{display:grid;grid-template-columns:1fr 1fr;gap:17px;padding:22px 0}.reservation-facts>div{display:flex;gap:9px;align-items:center}.reservation-facts>div:last-child{grid-column:1/-1}.reservation-facts svg{color:#8a9eb8;flex-shrink:0}.reservation-facts small{display:block;font-size:10px;color:var(--text-muted);margin-bottom:4px}.reservation-facts strong{font-size:12px;font-weight:600;color:var(--text)}
+.reservation-progress{display:flex;gap:7px;margin-bottom:20px}.reservation-progress span{flex:1;border-top:3px solid var(--border);padding-top:8px;font-size:10px;color:var(--text-muted);text-align:center}.reservation-progress .done{border-color:#719bd0;color:#3265af}.state-valider .reservation-progress .done{border-color:#63a37c;color:#398c60}.reservation-message{padding:15px 24px;background:var(--surface-2);flex:1}.reservation-message p{font-size:12px;color:var(--text-secondary);line-height:1.6;margin:0}.reservation-message small{display:block;font-size:11px;margin-top:6px}.reservation-message .badge{margin-top:8px}.reservation-card-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px}.reservation-card-foot>span{font-size:10px;color:var(--text-muted)}.reservation-card-foot a,.reservation-card-foot button{font-size:12px}.reservation-reassurance{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-secondary);padding:17px 20px;background:#edf3fb;border-radius:14px}.reservation-reassurance svg{flex-shrink:0;color:#6086b6}
+@media(max-width:1100px){.reservation-summary-card{padding:17px;gap:10px}.reservation-summary-icon{width:36px;height:36px}.reservation-summary-card small{font-size:11px}.reservation-list{grid-template-columns:1fr}.reservation-toolbar{align-items:flex-start;flex-direction:column;gap:4px}}
+@media(max-width:640px){.reservation-summary{grid-template-columns:1fr;gap:10px}.reservation-summary-card{padding:14px 17px}.reservation-summary-card strong{font-size:23px}.reservation-summary-card small{margin-top:3px}.reservation-card-head,.reservation-card-foot{padding:18px}.reservation-card-body{padding:0 18px}.reservation-message{padding:15px 18px}.reservation-corridor{padding:16px;gap:8px}.reservation-stop strong{font-size:15px}.reservation-filter{padding:8px}.reservation-card-foot{align-items:flex-start;flex-direction:column}.reservation-reassurance{font-size:11px}}
+:root[data-theme="dark"] .reservation-reassurance,:root[data-theme="dark"] .reservation-filter[aria-pressed="true"]{background:#22364f}
+@media(min-width:721px){.reservation-list:has(>.reservation-card:only-child){grid-template-columns:1fr}.reservation-card:only-child .reservation-card-body{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px;align-items:center}.reservation-card:only-child .reservation-facts{padding:12px 0}.reservation-card:only-child .reservation-progress{grid-column:1/-1;margin-bottom:20px}.reservation-card:only-child .reservation-card-head .badge{max-width:none}.reservation-card:only-child .reservation-corridor{min-height:120px}}
+
+/* Camion illustré B2F : conserver la silhouette horizontale. */
+svg:has(>use[href="#ic-truck"]){width:32px;height:18px;flex-shrink:0}
+.reservation-route-line svg:has(>use[href="#ic-truck"]),.dash-route svg:has(>use[href="#ic-truck"]){width:50px;height:24px;padding-inline:4px}
+.vehicle-detail-truck svg:has(>use[href="#ic-truck"]){width:42px;height:24px}
+.market-trip-chips svg:has(>use[href="#ic-truck"]){width:25px;height:14px}
+.market-trip-connector svg:has(>use[href="#ic-truck"]){width:23px;height:13px;left:-12px}
+.reservation-facts svg:has(>use[href="#ic-truck"]){width:29px;height:18px}
+.app-fresh .rail-logo:has(use[href="#ic-truck"]){background:#e7effb}
+.reservation-stop strong{display:block;overflow-wrap:anywhere;line-height:1.35}
+.fret-truck{display:inline-block;object-fit:contain;flex-shrink:0;vertical-align:middle;max-width:none}
+.fret-truck.is-return{transform:scaleX(-1)}
+.truck-journey-label{display:inline-block;font-size:10px;font-weight:600;color:var(--text-secondary);background:var(--surface-2);border-radius:8px;padding:4px 8px;margin-bottom:9px}
+.market-trip-connector .fret-truck{position:relative;left:-13px;background:var(--surface-2);padding-block:3px;box-sizing:content-box}
+.reservation-truck-direction{flex-direction:column;align-items:center;gap:5px;flex-basis:65px}
+.reservation-truck-direction .fret-truck{position:relative;background:var(--surface-2)}
+.reservation-truck-direction small{font-size:9px;color:var(--text-muted);position:relative;background:var(--surface-2);white-space:nowrap}
+.reservation-truck-direction:before{top:12px}
+
+/* En-tête et action prioritaire du tableau de bord. */
+.aff-dashboard .dash-page-heading{gap:24px;align-items:center;margin-bottom:0}
+.aff-dashboard .dash-page-heading>div{min-width:0}
+.aff-dashboard .dash-page-heading p{font-size:14px;line-height:1.6;max-width:760px}
+.aff-dashboard .dash-page-heading>.btn{flex-shrink:0;border-radius:14px}
+.dash-validation-notice{display:flex;align-items:center;gap:20px;padding:20px 24px;background:var(--surface);border:1px solid #d6e6dd;border-radius:18px;box-shadow:0 4px 18px #203b6103}
+.dash-validation-count{display:flex;align-items:center;gap:10px;padding:13px 16px;background:#eaf6ef;color:#388360;border-radius:14px;flex-shrink:0}
+.dash-validation-count strong{font-size:26px;line-height:1;font-weight:700}
+.dash-validation-copy{flex:1;min-width:0}.dash-validation-copy h2{font-size:16px;line-height:1.4;margin:0 0 5px;color:var(--text);font-weight:700}
+.dash-validation-copy p{font-size:12px;line-height:1.65;color:var(--text-secondary);margin:0;max-width:760px}
+.dash-validation-action{flex-shrink:0;display:inline-flex;gap:12px;align-items:center;border:1px solid #d4e2f5;border-radius:11px;background:#edf3fc;color:#3265af;padding:11px 16px;font-size:13px;font-weight:650}
+.dash-validation-action:hover{background:#e2ecfa;text-decoration:none}
+:root[data-theme="dark"] .dash-validation-count{background:#233e34;color:#8acba6}
+:root[data-theme="dark"] .dash-validation-action{background:#22364f;color:#a5c4ef;border-color:#365271}
+@media(max-width:720px){.aff-dashboard .dash-page-heading{align-items:flex-start;gap:14px}.aff-dashboard .dash-page-heading p{font-size:12px}.dash-validation-notice{display:grid;grid-template-columns:auto 1fr;gap:13px;padding:17px}.dash-validation-count{padding:12px;gap:7px}.dash-validation-count strong{font-size:23px}.dash-validation-copy h2{font-size:14px}.dash-validation-copy p{font-size:11px}.dash-validation-action{grid-column:1/-1;justify-content:center}}
+
+/* Icônes en filigrane des indicateurs, hors du flux et sans interaction. */
+.kpi-card,.dash-balance,.reservation-summary-card{position:relative;isolation:isolate;overflow:hidden}
+.indicator-watermark{position:absolute!important;right:14px;bottom:8px;color:#3265af;opacity:.075;pointer-events:none;z-index:0;line-height:0;transform:rotate(-8deg)}
+.indicator-watermark>svg{width:88px!important;height:88px!important}
+.dash-balance>.indicator-watermark>svg{width:104px!important;height:104px!important}
+.kpi-card>:not(.indicator-watermark),.dash-balance>:not(.indicator-watermark),.reservation-summary-card>:not(.indicator-watermark){position:relative;z-index:1}
+.kpi-label-icon{display:flex;align-items:center;gap:9px}.kpi-label-icon>svg{color:#6686ae;flex-shrink:0}
+.reservation-summary-card>.reservation-summary-icon{flex-shrink:0}
+.reservation-summary-card>span:not(.indicator-watermark):not(.reservation-summary-icon){flex:1}
+.app-shell .dash-welcome img{mix-blend-mode:multiply}
+:root[data-theme="dark"] .app-shell .dash-welcome img{mix-blend-mode:normal}
+:root[data-theme="dark"] .indicator-watermark{color:#b2cef5;opacity:.08}
+@media(max-width:640px){.indicator-watermark>svg{width:68px!important;height:68px!important}.kpi-label-icon{gap:7px}}
+.kpi-label.kpi-label-icon{justify-content:flex-start}
+.reservation-summary-card>.reservation-summary-icon{flex:0 0 46px}
+@media(max-width:1100px){.reservation-summary-card>.reservation-summary-icon{flex-basis:36px}}
+.reservation-summary-card>.reservation-summary-icon:nth-child(2){flex:0 0 46px}
+@media(max-width:1100px){.reservation-summary-card>.reservation-summary-icon:nth-child(2){flex-basis:36px}}
+
+/* Carton de fret aux couleurs B2F. */
+svg:has(>use[href="#ic-package"]){width:24px;height:24px;flex-shrink:0}
+.indicator-watermark svg:has(>use[href="#ic-package"]){width:88px;height:88px}
+.rail-link svg:has(>use[href="#ic-package"]){width:26px;height:26px}
+
+/* Icônes illustrées validées : portefeuille, réservation, mise en relation. */
+svg:has(>use[href="#ic-wallet"]),svg:has(>use[href="#ic-reservation"]){width:26px;height:26px;flex-shrink:0}
+svg:has(>use[href="#ic-handshake"]){width:30px;height:26px;flex-shrink:0}
+.indicator-watermark svg:has(>use[href="#ic-wallet"]),.indicator-watermark svg:has(>use[href="#ic-reservation"]),.indicator-watermark svg:has(>use[href="#ic-handshake"]){width:88px;height:88px}
+
+/* Navigation illustrée : mêmes proportions que le carton. */
+svg:has(>use[href="#ic-dashboard"]),svg:has(>use[href="#ic-market"]),svg:has(>use[href="#ic-settings"]),svg:has(>use[href="#ic-bell"]),svg:has(>use[href="#ic-pilotage"]){width:26px;height:26px;flex-shrink:0}
+.sidebar-section .nav-link:has(>svg):before{display:none}
+
+/* Taille et alignement des illustrations dans chaque contexte. */
+.app-shell .sidebar-section .nav-link{display:flex;align-items:center;gap:9px}
+.app-shell .sidebar-section .nav-link>svg{width:22px;height:22px;flex:0 0 22px}
+.app-shell .sidebar-section .nav-link>span{min-width:0}
+.app-shell .bo-title-with-icon{display:flex;align-items:center;gap:12px}
+.app-shell .bo-title-with-icon>svg{width:34px;height:34px;flex:0 0 34px}
+.app-shell .bo-page-symbol>svg{width:30px;height:30px}
+.indicator-watermark>svg{width:88px;height:88px}
+@media(max-width:640px){.app-shell .bo-title-with-icon{gap:9px}.app-shell .bo-title-with-icon>svg{width:28px;height:28px;flex-basis:28px}}
+
+/* Repères des crédits et des demandes. */
+svg:has(>use[href="#ic-credits"]),svg:has(>use[href="#ic-published"]),svg:has(>use[href="#ic-request-activity"]){width:26px;height:26px;flex-shrink:0}
+.indicator-watermark svg:has(>use[href="#ic-credits"]),.indicator-watermark svg:has(>use[href="#ic-published"]),.indicator-watermark svg:has(>use[href="#ic-request-activity"]){width:88px;height:88px}
+
+/* Illustration du bandeau : pleine hauteur, alignée au bord droit. */
+.app-shell .dash-welcome{grid-template-columns:46% 54%;padding:0;min-height:280px;align-items:stretch}
+.app-shell .dash-welcome-copy{max-width:none;padding:30px 0 30px 30px;align-self:center}
+.app-shell .dash-welcome img{position:absolute;top:0;right:0;bottom:0;width:54%;height:100%;object-fit:contain;object-position:right center;mask-image:linear-gradient(to right,transparent,#000 5%);border-radius:0}
+@media(max-width:720px){
+  .app-shell .dash-welcome{grid-template-columns:1fr;min-height:0}
+  .app-shell .dash-welcome-copy{padding:24px;max-width:none}
+  .app-shell .dash-welcome h2,.app-shell .dash-welcome p{max-width:none}
+  .app-shell .dash-welcome img{position:relative;grid-column:1;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;object-position:right center;mask-image:none}
+}
+
+/* Aperçu cartographique du marché sur le tableau de bord transporteur. */
+.dashboard-freight-workspace{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;min-height:520px}
+.dashboard-freight-list{display:flex;flex-direction:column;gap:12px;max-height:540px;overflow:auto;padding:2px 6px 6px 2px;scrollbar-width:thin}
+.dashboard-freight-item{background:#f1f6ff;border:1px solid #ccdbef;border-radius:15px;box-shadow:0 3px 10px #244b7e0b}
+.dashboard-freight-item.selected{border-color:#3265af;box-shadow:0 0 0 1px #3265af}
+.dashboard-freight-select{display:grid;gap:9px;width:100%;padding:16px;text-align:left;border:0;background:transparent;color:var(--text);cursor:pointer;font:inherit}
+.dashboard-freight-ref{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--accent)}
+.dashboard-freight-select strong{font-size:16px}.dashboard-freight-select>span:not(.dashboard-freight-ref),.dashboard-freight-select small{font-size:12px;color:var(--text-secondary)}
+.dashboard-freight-item>a{display:block;padding:12px 16px;border-top:1px solid #dce6f4;font-size:12px;font-weight:650}
+.dashboard-freight-workspace>.freight-market-map{position:relative;inset:auto;width:100%;height:540px;border-radius:15px;overflow:hidden;min-width:0}
+@media(max-width:1100px){.dashboard-freight-workspace{grid-template-columns:270px minmax(0,1fr)}}
+@media(max-width:720px){.dashboard-freight-workspace{grid-template-columns:1fr}.dashboard-freight-workspace>.freight-market-map{grid-row:1;height:360px}.dashboard-freight-list{max-height:420px}}
+
+/* La carte des frets s'ouvre à la demande dans une grande fenêtre. */
+.dashboard-freight-launch{display:flex;align-items:center;gap:20px;padding:8px 0}
+.dashboard-freight-launch>svg{width:54px;height:54px;flex:0 0 54px}
+.dashboard-freight-launch>div{flex:1}.dashboard-freight-launch strong{font-size:20px}
+.dashboard-freight-launch p{font-size:14px;color:var(--text-secondary);margin-top:7px}
+.modal-card:has(.dashboard-freight-modal){width:min(1200px,calc(100vw - 40px));max-width:1200px;max-height:92vh}
+.dashboard-freight-modal .dashboard-freight-workspace{min-height:0}
+.dashboard-freight-modal .dashboard-freight-list{max-height:min(62vh,620px)}
+.dashboard-freight-modal .freight-market-map{height:min(62vh,620px);min-height:320px}
+@media(max-width:720px){.dashboard-freight-launch{flex-wrap:wrap}.dashboard-freight-launch>.btn{width:100%}.modal-card:has(.dashboard-freight-modal){width:calc(100vw - 20px);padding:16px}.dashboard-freight-modal .freight-market-map{height:320px}.dashboard-freight-modal .dashboard-freight-list{max-height:320px}}

@@ -1,0 +1,154 @@
+/* Shell applicatif : rail (zones), barre latérale (pages), barre supérieure.
+   Le rail est marine plein — marqueur d'identité n°1 de B2F (D29, U1 confirmée). */
+
+/* ==========================  Shell  ========================== */
+.app-shell{
+  display:grid;
+  grid-template-columns:var(--side-w) minmax(0,1fr);
+  grid-template-rows:var(--top-h) 1fr auto;
+  grid-template-areas:"sidebar topbar" "sidebar main" "sidebar footer";
+  min-height:100vh;
+}
+.sidebar{
+  grid-area:sidebar;position:sticky;top:0;height:100vh;overflow-y:auto;overflow-x:hidden;
+  background:var(--surface);color:var(--text-secondary);
+  border-right:1px solid var(--border);
+  padding:26px 18px 18px calc(var(--rail-w) + 20px);
+  display:flex;flex-direction:column;
+}
+
+/* --- B2F : le rail est plein marine. C'est le marqueur d'identité n°1 :
+       le DUT porte un rail blanc, la Bourse de Fret un rail marine. --- */
+.app-rail{
+  position:absolute;left:0;top:0;bottom:0;width:var(--rail-w);
+  background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:21px 0;
+}
+.rail-logo{
+  width:44px;height:44px;background:#fff;border-radius:10px;overflow:hidden;
+  display:grid;place-items:center;margin-bottom:18px;flex:none;
+  font-weight:800;font-size:13px;color:var(--navy);letter-spacing:-.5px;
+}
+.rail-link{
+  width:44px;height:44px;display:grid;place-items:center;flex:none;
+  color:rgba(255,255,255,.66);border-radius:9px;cursor:pointer;
+  background:transparent;border:0;transition:background .15s,color .15s;
+}
+.rail-link:hover{background:rgba(255,255,255,.10);color:#fff;text-decoration:none}
+.rail-link.active{background:rgba(255,255,255,.16);color:#fff}
+.rail-link.active::before{
+  content:"";position:absolute;left:0;width:3px;height:26px;border-radius:0 3px 3px 0;
+  background:var(--signature);
+}
+.rail-link{position:relative}
+.rail-bottom{margin-top:auto}
+/* Le logo est ancré en pied de rail : la marge basse pensée pour un logo en
+   tête le décollait du bord et cassait l'alignement avec le pied de la barre. */
+.rail-logo.rail-bottom{margin-bottom:0}
+
+.sidebar-brand{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  padding:0 0 20px;margin-bottom:16px;border-bottom:1px solid var(--border);
+}
+.sidebar-brand strong{font-size:18px;color:var(--text);letter-spacing:-.4px;line-height:1.2}
+.sidebar-brand span{font-size:11px;color:var(--text-muted);letter-spacing:.2px}
+.brand-tag{
+  display:inline-flex;align-items:center;gap:6px;margin-top:8px;
+  font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--signature);background:var(--signature-soft);
+  border:1px solid var(--signature-soft-border);border-radius:var(--r-sm);padding:3px 8px;
+}
+
+.sidebar-nav{display:flex;flex-direction:column;gap:24px;flex:1}
+.sidebar-section{display:flex;flex-direction:column;gap:2px}
+.sidebar-section-label{
+  font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;
+  color:var(--text-muted);padding:0 10px 9px;
+}
+.nav-link{
+  display:flex;align-items:center;gap:10px;padding:11px 9px;border-radius:7px;
+  color:var(--text-secondary);font-size:14px;font-weight:600;border:0;background:transparent;
+  cursor:pointer;width:100%;text-align:left;transition:background .15s,color .15s;
+}
+.nav-link:hover{background:var(--surface-2);color:var(--accent);text-decoration:none}
+.nav-link.active{color:var(--accent);background:var(--accent-soft)}
+.nav-link span{line-height:1.35}
+.nav-link .pill{
+  margin-left:auto;font-size:11px;font-weight:700;background:var(--accent);color:#fff;
+  border-radius:var(--r-pill);padding:1px 7px;min-width:20px;text-align:center;
+}
+.nav-link.active .pill{background:var(--accent);color:#fff}
+
+.sidebar-note{
+  background:var(--signature-soft);border:1px solid var(--signature-soft-border);
+  padding:15px;border-radius:10px;margin-top:28px;color:var(--text);
+}
+.sidebar-note strong{display:block;font-size:13px;margin:8px 0}
+.sidebar-note p{font-size:11.5px;line-height:1.7;color:var(--text-secondary)}
+.sidebar-note svg{color:var(--signature)}
+
+.sidebar-footer{
+  border-top:1px solid var(--border);padding-top:16px;margin-top:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.sidebar-user{display:flex;flex-direction:column;overflow:hidden;flex:1}
+.sidebar-user strong{color:var(--text);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user span{color:var(--text-muted);font-size:10.5px}
+.avatar-round{
+  width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12px;
+}
+.icon-btn-ghost{
+  background:transparent;border:none;color:var(--text-secondary);cursor:pointer;
+  padding:8px;border-radius:var(--r-control);display:flex;
+}
+.icon-btn-ghost:hover{color:var(--accent);background:var(--accent-soft)}
+/* Bouton d'ouverture du menu : réservé aux petits écrans, où la barre latérale
+   est sortie du flux (voir responsive.css). */
+#btn-menu{display:none;margin-right:var(--s2)}
+
+.topbar{
+  grid-area:topbar;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:0 28px;position:sticky;top:0;z-index:20;
+}
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);font-weight:600}
+.breadcrumb .crumb-current{color:var(--text);font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.role-chip{
+  font-size:11px;font-weight:700;background:var(--surface-2);color:var(--text-secondary);
+  padding:7px 10px;border-radius:var(--r-sm);border:0;
+}
+.topbar-profile{display:flex;align-items:center;gap:10px}
+.topbar-profile strong{font-size:14px;display:block}
+.topbar-profile small{font-size:12px;color:var(--text-muted)}
+.header-search{
+  display:flex;align-items:center;gap:10px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:7px;padding:10px 12px;
+  max-width:280px;flex:1;color:var(--text-muted);
+}
+.header-search input{border:0;background:none;outline:none;color:var(--text);width:100%;font:inherit;font-size:14px}
+.header-search kbd{border:1px solid var(--border);border-radius:4px;padding:0 4px;font:10px var(--font)}
+
+.main-content{grid-area:main;padding:28px;max-width:1700px;width:100%;margin-inline:auto}
+
+/* Conteneur commun à TOUTES les vues (`el('div.page', …)`). Il n'avait aucune
+   règle : les blocs empilés — bandeau, rangée d'indicateurs, cartes, tableaux —
+   se touchaient bord à bord, d'où l'impression de cartes « collées » signalée
+   sur le tableau de bord. Une seule gouttière verticale, prise sur l'échelle
+   d'espacement, plutôt qu'une marge par composant. */
+.page{display:flex;flex-direction:column;gap:var(--s4)}
+/* Les composants qui portaient leur propre marge basse n'en ont plus besoin
+   ici : la gouttière du conteneur s'en charge, sans la doubler. */
+.page>.alert-banner,
+.page>.delegation-bar,
+.page>.stepper-h,
+.page>.table-toolbar{margin-bottom:0}
+.app-footer{
+  grid-area:footer;padding:16px 28px;background:var(--surface);
+  border-top:1px solid var(--border);color:var(--text-muted);font-size:11px;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:var(--s2);
+}
+.page-header{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.page-header .subtitle{color:var(--text-secondary);font-size:15px;margin-top:5px;max-width:700px}
+.page-header-rule{height:26px}

@@ -1,0 +1,93 @@
+/* Scène pédagogique : diorama isométrique et narration synchronisée. */
+.stage-diorama{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(280px,1fr);grid-template-areas:'tools tools' 'scenarios scenarios' 'visual caption' 'controls controls';background:var(--surface);border:1px solid var(--border);border-radius:15px;box-shadow:0 16px 48px #15395709;isolation:isolate;--story-tempo:1;--story-progress:0}
+.stage-diorama .stage-tools{grid-area:tools;padding:18px 24px;min-height:77px;gap:12px}.stage-diorama .stage-tools-group{gap:12px}.stage-diorama .stage-tools label{font-size:12px}.stage-diorama .stage-tools select{font-size:12px;padding:10px 14px;min-width:110px}.stage-diorama .stage-tools .btn{font-size:13px;padding:12px 18px;min-width:155px}.stage-diorama .stage-status{font-size:11px}
+.stage-diorama .stage-canvas{grid-area:visual;min-width:0;position:relative;display:flex;align-items:center;min-height:480px;background:radial-gradient(ellipse at 50% 45%,#fff 5%,#f3f7fa 75%);border:0;overflow:hidden}
+.stage-diorama .stage-canvas::before{content:'';position:absolute;inset:0;background-image:radial-gradient(#bacddd 1px,transparent 1px);background-size:22px 22px;opacity:.24;mask-image:linear-gradient(transparent,#000 25%,#000 80%,transparent)}
+.stage-diorama #stage-svg{position:relative;display:block;width:100%;height:auto;max-height:none;overflow:visible;margin:45px 0 30px;flex-shrink:0;font-family:var(--font)}
+.scene-heading{position:absolute;top:25px;left:27px;z-index:2;display:grid;gap:6px}.scene-heading>span{font-size:9px;letter-spacing:1.6px;color:#7b8c9d;font-weight:750}.scene-heading strong{font-size:16px;font-weight:750;color:#173c5e}.scene-heading strong span{display:inline-block;color:#c7791d;margin:0 8px}.scene-phase{position:absolute;top:29px;right:22px;font-size:10px;font-weight:700;z-index:2;color:#155a9c;padding:7px 10px;border:1px solid #dce8f1;background:#ffffffc9;border-radius:9px;max-width:165px}.scene-phase>span{display:none}
+.scene-legend{position:absolute;bottom:22px;left:27px;right:22px;display:flex;gap:20px;justify-content:center;color:#61788d;font-size:10px}.scene-legend span{display:flex;align-items:center;gap:6px}.scene-legend i{width:6px;height:6px;background:#216594;border-radius:50%}.scene-legend span:nth-child(2) i{background:#edb264}.scene-legend span:nth-child(3) i{background:#16875b}
+.scene-place text{font-size:16px;font-weight:750;fill:#173c5e}.scene-place .scene-place-sub{font-size:10px;font-weight:500;fill:#6d8498}
+.scene-hub,.scene-connection,.scene-match,.scene-route-success{opacity:0;transition:opacity .6s ease,transform .6s ease}.scene-hub{transform:translateY(12px)}.scene-cargo{opacity:.15;transition:opacity .7s ease}.scene-truck{transform:translate(0,0)}.scene-match{transform-box:fill-box;transform-origin:center;transform:scale(.7)}
+@keyframes scene-arrive{from{transform:translate(-90px,-40px);opacity:0}to{transform:translate(0,0);opacity:1}}
+@keyframes scene-cargo-in{from{opacity:.15;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scene-hub-in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scene-focus{50%{filter:drop-shadow(0 0 9px #67acd85c)}}
+@keyframes scene-agree{from{opacity:0;transform:scale(.5)}70%{transform:scale(1.08)}to{opacity:1;transform:scale(1)}}
+@keyframes scene-drive{0%,20%{transform:translate(0,0)}75%{transform:translate(424px,4px)}100%{transform:translate(546px,66px)}}
+@keyframes scene-load{from{opacity:1}to{opacity:.12}}
+.stage-diorama[data-playing='false'] *{animation-play-state:paused!important}.stage-diorama[data-animate='false'] *{animation:none!important;transition:none!important}
+.stage-diorama .stage-caption{grid-area:caption;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:35px 30px;border-top:0;border-left:1px solid var(--border);background:var(--surface);min-width:0}.stage-diorama .stage-caption .num{height:42px;width:42px;border-radius:12px;background:#eaf2fa;color:#155a9c;font-size:15px}.stage-diorama .stage-caption.bad .num{background:#fff2dc;color:#ae7018}.stage-diorama .stage-caption.good .num{background:#e7f3ec;color:#16875b}.stage-chapter-label{display:block;font-size:9px;letter-spacing:1.3px;color:var(--text-muted);font-weight:700;margin-bottom:12px}.stage-diorama .stage-caption h3{font-size:25px;line-height:1.2;letter-spacing:-.7px;margin-bottom:18px;text-wrap:balance}.stage-diorama .stage-caption p{font-size:13px;line-height:1.8;max-width:42ch}.stage-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px;border-top:1px solid var(--border);padding-top:24px;margin-top:26px}.stage-facts span{font-size:10px;color:var(--text-muted);line-height:1.6}.stage-facts b{display:block;font-size:25px;color:var(--text);font-weight:700;margin-bottom:3px}.stage-diorama .stage-caption .stage-hint{font-size:10px;color:var(--text-muted);margin-top:22px;line-height:1.6}
+.stage-diorama .stage-controls{grid-area:controls;padding:20px 24px;gap:14px;background:var(--surface);position:relative}.stage-diorama .stage-controls::before{content:'';position:absolute;top:-1px;left:0;width:calc(var(--story-progress) * 100%);height:2px;background:#f38a0b;transition:width .3s}
+.stage-diorama .stage-dots{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));flex-basis:100%;gap:8px;margin:0 0 7px}.stage-diorama .stage-dots button{height:auto;width:auto;min-height:64px;padding:11px 7px;border:1px solid var(--border);border-radius:12px;font:inherit;color:var(--text-secondary);background:var(--surface-2);display:flex;flex-direction:column;gap:5px;justify-content:center;align-items:center;transform:none}.stage-diorama .stage-dots button b{font-size:11px;font-weight:600;color:var(--text-muted)}.stage-diorama .stage-dots button span{font-size:11px;font-weight:650}.stage-diorama .stage-dots button.done{background:var(--accent-soft);border-color:var(--accent-soft-border)}.stage-diorama .stage-dots button.active{background:#155a9c;border-color:#155a9c;color:#fff}.stage-diorama .stage-dots button.active b{color:#b9d7ed}.stage-diorama .stage-controls>.btn{font-size:12px;padding:11px 16px}.stage-diorama #stage-replay{margin-right:auto;color:var(--text-secondary)}
+:root[data-theme='dark'] .stage-diorama .stage-canvas{background:radial-gradient(ellipse at center,#263d51,#142638)}:root[data-theme='dark'] .scene-heading strong{color:#dceafa}:root[data-theme='dark'] .scene-heading>span,:root[data-theme='dark'] .scene-legend{color:#aec2d5}
+@media(max-width:1000px){.stage-diorama{grid-template-columns:minmax(0,1.6fr) minmax(250px,1fr)}.stage-diorama .stage-caption{padding:26px 22px}.stage-diorama .stage-caption h3{font-size:22px}.stage-diorama .stage-canvas{min-height:470px}.scene-heading{left:20px}.scene-phase{top:82px;left:20px;right:auto}.stage-diorama #stage-svg{margin-top:80px}.scene-legend{gap:12px;font-size:9px}}
+@media(max-width:760px){.stage-diorama{grid-template-columns:1fr;grid-template-areas:'tools' 'scenarios' 'visual' 'caption' 'controls'}.stage-diorama .stage-tools{padding:15px 18px}.stage-diorama .stage-status{width:100%}.stage-diorama .stage-tools-group{gap:9px;width:100%}.stage-diorama .stage-tools .btn{min-width:0;margin-right:auto}.stage-diorama .stage-tools label{font-size:11px}.stage-diorama .stage-tools select{min-width:86px;width:96px;padding:9px;font-size:11px}.stage-diorama .stage-canvas{min-height:355px}.stage-diorama #stage-svg{margin:100px 0 44px}.scene-heading{top:20px;left:18px}.scene-heading strong{font-size:15px}.scene-phase{top:68px;left:18px;font-size:9px;padding:6px 9px}.scene-legend{left:12px;right:12px;bottom:18px;gap:14px;font-size:9px}.stage-diorama .stage-caption{border:0;border-top:1px solid var(--border);padding:22px;flex-direction:row;gap:14px;align-items:flex-start;justify-content:flex-start}.stage-diorama .stage-caption h3{font-size:22px}.stage-diorama .stage-caption .num{width:34px;height:34px}.stage-chapter-label{font-size:8px}.stage-facts{padding-top:15px;margin-top:18px}.stage-diorama .stage-caption .stage-hint{display:none}.stage-diorama .stage-controls{padding:16px;gap:8px}.stage-diorama .stage-dots{display:flex;flex-wrap:nowrap;overflow:auto;gap:7px;padding-bottom:6px}.stage-diorama .stage-dots button{min-width:76px;flex:1 0 76px;min-height:60px}.stage-diorama #stage-replay{width:100%;justify-content:flex-start;padding-left:0}.stage-diorama .stage-controls>.btn{font-size:11px}.stage-diorama #stage-prev{margin-right:auto}}
+@media(prefers-reduced-motion:reduce){.stage-diorama *{animation:none!important;transition:none!important}}
+
+@media(max-width:480px){
+ .stage-diorama .stage-tools-group{display:grid;grid-template-columns:minmax(0,1fr) auto 80px;gap:8px}
+ .stage-diorama .stage-tools .btn{padding:11px 10px;font-size:11px;margin:0}
+ .stage-diorama .stage-tools label{font-size:10px}
+ .stage-diorama .stage-tools select{width:80px;min-width:0;padding:9px 6px;font-size:10px}
+ .stage-diorama #stage-svg{width:120%;max-width:none;margin-left:-10%;margin-right:-10%}
+ .stage-diorama .scene-place{display:none}
+}
+/* Les personnages portent l’histoire : besoin, réponse, double accord. */
+.stage-diorama .scene-city-title{font-size:12px;letter-spacing:2px;fill:#668195}
+.scene-speech{transition:opacity .4s;transform-box:fill-box;transform-origin:center bottom}
+.scene-speech .voice-main{font-size:14px;font-weight:750;fill:#173c5e}.scene-speech .voice-sub{font-size:12px;fill:#607c92}
+.scene-human-match,.scene-match-label{opacity:0;transition:opacity .5s}
+@keyframes scene-voice-in{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.stage-diorama .stage-controls,.stage-diorama .stage-tools,.stage-diorama .stage-dots{min-width:0}
+@media(max-width:760px){.stage-diorama{grid-template-columns:minmax(0,1fr)}.stage-diorama .stage-dots{width:100%;max-width:100%}}
+.scene-mobile-dialogue{display:none}
+@media(max-width:760px){
+ .stage-diorama .stage-canvas{flex-direction:column;justify-content:flex-start}
+ .stage-diorama #stage-svg{margin-bottom:0}
+ .stage-diorama .scene-speech{display:none}
+ .scene-mobile-dialogue{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 16px 0;width:100%;position:relative}
+ .mobile-speech{border:1px solid #d7e5ef;border-radius:12px;background:#fff;padding:12px 10px;box-shadow:0 4px 15px #173c5e08;position:relative;color:#173c5e;font-size:12px;line-height:1.6}
+ .mobile-speech.speech-awa{border-color:#efdcbb}.mobile-speech strong{display:block;font-size:11px;line-height:1.6;margin-bottom:5px}.mobile-speech small{font-weight:500;color:#698194;font-size:9px}
+ .stage-diorama .scene-legend{position:relative;inset:auto;margin:18px 0 20px;gap:14px}
+}
+/* Montrer l’acceptation avant la confirmation, puis seulement le matching. */
+@keyframes scene-reveal{from{opacity:0}to{opacity:1}}
+
+/* Deux journées comparées : les états sont toujours reconstructibles au clic. */
+.story-scenarios{grid-area:scenarios;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.story-scenarios button{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text-secondary);font:inherit;cursor:pointer;min-width:0}
+.story-scenario-number{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:var(--surface-2);color:var(--text-muted);font-size:12px;font-weight:750}
+.story-scenarios strong{display:block;font-size:13px;font-weight:750;color:var(--text)}.story-scenarios small{display:block;font-size:10px;margin-top:3px;color:var(--text-muted);line-height:1.5}
+.story-scenarios button[aria-pressed='true']{border-color:#aecbe0;background:var(--accent-soft)}.story-scenarios button[aria-pressed='true'] .story-scenario-number{background:#155a9c;color:#fff}
+.story-scenarios button[data-story-scenario='sans'][aria-pressed='true']{border-color:#e5c4a3;background:#fff7ed}.story-scenarios button[data-story-scenario='sans'][aria-pressed='true'] .story-scenario-number{background:#ad7240;color:#fff}
+.stage-diorama[data-scenario='avec'] .stage-dots{grid-template-columns:repeat(9,minmax(0,1fr))}
+.stage-diorama .stage-dots button[hidden]{display:none!important}
+.stage-diorama[data-scenario='sans'] .stage-dots button.active{background:#9e6b42;border-color:#9e6b42}.stage-diorama[data-scenario='sans'] .stage-dots button.active b{color:#f6decb}
+.stage-diorama[data-scenario='sans'] .scene-phase{background:#fff6e8;color:#9a5e0c;border-color:#f1dbb8}.stage-diorama[data-scenario='avec'] .scene-phase{background:#edf6fc;color:#155a9c;border-color:#c4dce9}
+.scene-person{transition:opacity .4s}.scene-cargo{opacity:1}.scene-hub,.scene-connection,.scene-match,.scene-human-match,.scene-match-label,.scene-failed-link,.scene-outcome-empty,.scene-route-success,.scene-route-empty{opacity:0;transition:opacity .5s}
+.stage-diorama[data-scene='0'] :is(.person-awa,.scene-cargo){opacity:.2}.stage-diorama[data-scene='0'] .speech-awa{opacity:0;visibility:hidden}
+.stage-diorama[data-scene='0'] .scene-truck{animation:scene-arrive calc(1.5s * var(--story-tempo)) ease-out both}
+.stage-diorama[data-scene='1'] .scene-cargo{animation:scene-cargo-in calc(.8s * var(--story-tempo)) ease-out both}
+.stage-diorama:is([data-scene='4'],[data-scene='5'],[data-scene='6']) .scene-failed-link{opacity:1}
+.stage-diorama:is([data-scene='5'],[data-scene='6']) .scene-route-empty{opacity:1}
+.stage-diorama[data-scene='5'] .scene-truck{transform:translate(546px,66px);animation:scene-drive calc(5s * var(--story-tempo)) ease-in-out both}
+.stage-diorama[data-scene='6'] .scene-truck{transform:translate(546px,66px)}.stage-diorama[data-scene='6'] .scene-outcome-empty{opacity:1;animation:scene-hub-in calc(.7s * var(--story-tempo)) ease-out both}
+.stage-diorama[data-scene='7'] .diorama-world{animation:scene-reveal calc(.9s * var(--story-tempo)) ease-out both}
+.stage-diorama[data-scenario='avec']:not([data-scene='7']) :is(.scene-hub,.scene-connection){opacity:1;transform:translateY(0)}
+.hub-ad-truck,.hub-ad-cargo{transition:opacity .4s}.stage-diorama[data-scene='8'] .hub-ad-truck{opacity:0}
+.stage-diorama[data-scene='8'] .scene-hub{animation:scene-hub-in calc(.8s * var(--story-tempo)) ease-out both}
+.stage-diorama[data-scene='9'] .hub-ad-truck{animation:scene-reveal calc(.7s * var(--story-tempo)) ease-out both}
+.stage-diorama[data-scene='10'] .hub-ad-truck{animation:scene-focus calc(1.8s * var(--story-tempo)) ease-in-out 2}
+.stage-diorama:is([data-scene='13'],[data-scene='14'],[data-scene='15']) :is(.scene-human-match,.scene-match-label,.scene-match,.scene-route-success){opacity:1;transform:scale(1)}
+.stage-diorama[data-scene='13'] :is(.scene-human-match,.scene-match-label,.scene-route-success){animation:scene-reveal .5s ease-out calc(.8s * var(--story-tempo)) both}
+.stage-diorama[data-scene='13'] .scene-match{animation:scene-agree calc(.7s * var(--story-tempo)) ease-out calc(.8s * var(--story-tempo)) both}
+.stage-diorama[data-scene='15'] .scene-truck{transform:translate(546px,66px);animation:scene-drive calc(5s * var(--story-tempo)) ease-in-out both}
+.stage-diorama[data-scene='15'] .scene-cargo{opacity:.12;animation:scene-load calc(1s * var(--story-tempo)) ease-in-out both}
+.truck-status-empty,.truck-status-loaded{display:none}
+.stage-diorama:is([data-scene='5'],[data-scene='6'],[data-scene='15']) .truck-status-available{display:none}
+.stage-diorama:is([data-scene='5'],[data-scene='6']) .truck-status-empty{display:block}
+.stage-diorama:is([data-scene='5'],[data-scene='6']) .scene-truck-label circle{fill:#b25d22}
+.stage-diorama[data-scene='15'] .truck-status-loaded{display:block}
+.stage-diorama .scene-speech{animation:scene-voice-in calc(.6s * var(--story-tempo)) ease-out both}
+@media(max-width:760px){.story-scenarios{padding:12px;gap:8px}.story-scenarios button{align-items:flex-start;flex-direction:column;padding:12px;gap:8px}.story-scenarios strong{font-size:12px}.story-scenarios small{font-size:9px}.story-scenario-number{width:25px;height:25px;font-size:10px}.stage-diorama[data-scenario='avec'] .stage-dots{display:flex}}
+:root[data-theme='dark'] .story-scenarios button[data-story-scenario='sans'][aria-pressed='true']{background:#433224;border-color:#816044}

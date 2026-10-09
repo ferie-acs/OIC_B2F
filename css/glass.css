@@ -1,0 +1,57 @@
+/* Matière commune : surfaces translucides, reflets fins et profondeur douce.
+   Les couleurs des actions et des états métier gardent leur signification. */
+:root{
+  --glass-fill:linear-gradient(125deg,rgba(255,255,255,.82),rgba(255,255,255,.58));
+  --glass-edge:rgba(255,255,255,.85);
+  --glass-shadow:0 12px 35px #193a610b,inset 0 1px 0 #ffffffcf;
+}
+.app-shell,.explore-shell,.auth-page{
+  background:radial-gradient(ellipse at 5% 10%,#ffecd5,transparent 45%),radial-gradient(ellipse at 95% 25%,#dceffb,transparent 55%),linear-gradient(140deg,#fffaf3,#eef8f4);
+}
+:is(.card,.kpi-card,.offer-card,.auth-card,.search-panel,.explore-stat,.public-offer,.public-empty,.map-panel,.sidebar,.explore-sidebar,.app-topbar,.explore-topbar,.modal-card){
+  background:var(--glass-fill);
+  border-color:var(--glass-edge);
+  box-shadow:var(--glass-shadow);
+  backdrop-filter:blur(16px) saturate(125%);
+  -webkit-backdrop-filter:blur(16px) saturate(125%);
+}
+.app-rail{background:#eaf3fbab;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.modal-card{background:linear-gradient(125deg,#fffffff5,#ffffffe6)}
+.modal-overlay{backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.input,.select,textarea.textarea,.explore-field input,.explore-field select{background-color:#ffffffb8;box-shadow:inset 0 1px 2px #193a6106}
+.select option,.explore-field select option{background:#fff;color:#193a61}
+.input:focus,.select:focus,textarea.textarea:focus{background-color:#fffffff0}
+.btn-secondary{background:#ffffffad;box-shadow:inset 0 1px 0 #fff}
+.oic-landing :is(.lp-workspace,.lp-product,.lp-workspace-screen,.lp-mini-offer,.lp-actor-tile,.lp-assembly-hub,.lp-float-tag,.lp-benefit-grid article){
+  background:var(--glass-fill);
+  border:1px solid var(--glass-edge);
+  box-shadow:var(--glass-shadow);
+  backdrop-filter:blur(16px) saturate(135%);
+  -webkit-backdrop-filter:blur(16px) saturate(135%);
+}
+.oic-landing .lp-tag-bottom{background:linear-gradient(125deg,#088a43ed,#08783bd9);color:#fff}
+.oic-landing .lp-benefit-grid article:nth-child(2){background:linear-gradient(125deg,#fff3dfd9,#fff3df85)}
+.oic-landing .lp-benefit-grid article:nth-child(3){background:linear-gradient(125deg,#e9f7eedd,#e9f7ee88)}
+.oic-landing .lp-benefit-grid article:nth-child(4){background:linear-gradient(125deg,#eaf4f5dd,#eaf4f588)}
+.oic-landing .lp-how .lp-steps article{
+  border:1px solid var(--glass-edge);box-shadow:var(--glass-shadow);
+  backdrop-filter:blur(16px) saturate(130%);-webkit-backdrop-filter:blur(16px) saturate(130%);
+}
+.oic-landing .lp-how .lp-steps article:nth-child(1){background:linear-gradient(125deg,#155a9cf0,#155a9cd9)}
+.oic-landing .lp-how .lp-steps article:nth-child(2){background:var(--glass-fill)}
+.oic-landing .lp-how .lp-steps article:nth-child(3){background:linear-gradient(125deg,#088a43f0,#088a43d9)}
+.lp-role-tabs button{background:#ffffff99;border-color:#ffffffdb;box-shadow:inset 0 1px 0 #fff9}
+.lp-role-tabs button[aria-pressed=true]{background:#155a9ced;border-color:#155a9c;color:#fff}
+.lp-faq details{background:var(--glass-fill);border:1px solid var(--glass-edge);box-shadow:var(--glass-shadow);border-radius:14px;padding:21px;margin-bottom:12px}
+.lp-faq{background:radial-gradient(ellipse at center,#eaf3fb80,transparent 75%)}
+.lp-place-label{background:#193a6166;box-shadow:inset 0 1px 0 #ffffff50;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+/* Éviter l’empilement des filtres sur les petites surfaces imbriquées. */
+.oic-landing :is(.lp-product .map-panel,.lp-product .lp-mini-offer,.lp-workspace-screen){backdrop-filter:none;-webkit-backdrop-filter:none;background:#ffffffb8}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{--glass-fill:linear-gradient(125deg,#fff,#f6f9fc)}
+}
+@media(prefers-reduced-transparency:reduce){
+  :root{--glass-fill:linear-gradient(#fff,#fff)}
+  .oic-landing .lp-nav{background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+  :is(.sidebar,.explore-sidebar,.app-topbar,.explore-topbar,.modal-card){background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none}
+}

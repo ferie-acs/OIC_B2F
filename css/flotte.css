@@ -1,0 +1,134 @@
+/* Gestion du parc : liste et dossier synchronisés, surfaces blanches. */
+.app-shell .fleet-page{--fleet-blue:#3265af;--fleet-green:#3c795f;--fleet-orange:#bd7028;gap:22px;container-type:inline-size;container-name:fleet}
+.fleet-page-header{display:flex;justify-content:space-between;align-items:center;gap:22px}
+.app-shell .fleet-page-header h1{font-size:29px;letter-spacing:-1px;margin:6px 0 8px;line-height:1.2}
+.fleet-page-header p{color:var(--text-secondary);font-size:13px;line-height:1.6;margin:0}
+.fleet-page-header>.btn{flex-shrink:0}
+.fleet-nav{display:flex;gap:24px;align-items:center;border-bottom:1px solid var(--border);padding-bottom:0}
+.fleet-nav a{display:flex;align-items:center;gap:9px;padding:0 0 16px;font-size:13px;font-weight:600;color:var(--text-secondary);border-bottom:2px solid transparent;white-space:nowrap}
+.fleet-nav a.active{color:var(--fleet-blue);border-color:var(--fleet-blue)}
+.fleet-nav a>span{font-size:11px;background:var(--bo-blue-fill);padding:3px 8px;border-radius:15px}
+.fleet-nav a:hover{text-decoration:none;color:var(--fleet-blue)}
+.fleet-workspace{display:grid;grid-template-columns:minmax(250px,300px) minmax(0,1fr);gap:20px;align-items:start}
+.fleet-page .fleet-panel{background:var(--surface);border:1px solid var(--border);border-radius:15px;min-width:0;box-shadow:0 4px 20px #20365503}
+.fleet-page h2{font-size:15px;letter-spacing:-.2px;line-height:1.4;margin:0;color:var(--text)}
+.fleet-list-panel{padding:18px;position:sticky;top:20px}
+.fleet-list-heading,.fleet-card-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.fleet-list-count{font-size:11px;color:var(--text-secondary);background:var(--surface-2);padding:5px 9px;border-radius:15px;font-variant-numeric:tabular-nums}
+.fleet-search{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:15px;padding:10px 12px;margin:18px 0 14px;color:var(--text-muted)}
+.fleet-search input{min-width:0;width:100%;border:0;background:transparent;outline:none;box-shadow:none;color:var(--text);font:inherit;font-size:11px;padding:0;height:22px}
+.fleet-search:focus-within{outline:2px solid var(--fleet-blue);outline-offset:2px}
+.fleet-filters{display:flex;gap:4px;flex-wrap:wrap;padding-bottom:15px}
+.fleet-filters button{display:flex;gap:5px;align-items:center;padding:7px 6px;background:transparent;border:0;border-radius:15px;color:var(--text-secondary);font-size:10px;cursor:pointer}
+.fleet-filters button.active{background:var(--bo-blue-fill);color:var(--fleet-blue);font-weight:700}
+.fleet-filters button>span{font-size:9px;opacity:.7}
+.fleet-vehicle-list{display:grid;gap:11px;max-height:670px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding:2px}
+.fleet-vehicle-selector{display:flex;flex-direction:column;gap:13px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:14px 12px;cursor:pointer;text-align:left;color:var(--text);transition:border-color .18s,box-shadow .18s}
+.fleet-vehicle-selector:hover{border-color:#9ab7db}
+.fleet-vehicle-selector.selected{border-color:var(--fleet-blue);box-shadow:0 0 0 1px var(--fleet-blue)}
+.fleet-vehicle-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.fleet-vehicle-top>strong{font-size:12px;font-weight:750;white-space:nowrap}
+.fleet-status{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;background:var(--bo-blue-fill);color:var(--fleet-blue);border-radius:15px;font-size:9px;font-weight:650;line-height:1.4;white-space:nowrap}
+.fleet-status i{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.fleet-status.is-ok,.fleet-status.is-success{background:#edf6ef;color:var(--fleet-green)}
+.fleet-status.is-warn{background:#fff3e4;color:var(--fleet-orange)}
+.fleet-status.is-err{background:#fff0ef;color:#b95751}
+.fleet-vehicle-mid{display:flex;align-items:center;gap:12px;min-width:0}
+.fleet-vehicle-mid>div{min-width:0;display:grid;gap:5px}
+.fleet-vehicle-mid strong{font-size:11px;font-weight:600}
+.fleet-vehicle-mid small{font-size:10px;line-height:1.5;color:var(--text-secondary)}
+.fleet-page .fleet-truck-image{object-fit:contain;width:78px;height:40px;flex-shrink:0;filter:drop-shadow(0 4px 2px #20365514)}
+.fleet-vehicle-route{display:flex;align-items:center;gap:6px;font-size:10px;line-height:1.4;padding-top:10px;border-top:1px solid var(--border);color:var(--text-secondary)}
+.fleet-vehicle-route>span{flex:1}.fleet-vehicle-route svg{flex-shrink:0;color:var(--fleet-blue)}
+.fleet-list-footer{display:flex;gap:8px;align-items:flex-start;color:var(--text-muted);font-size:10px;line-height:1.6;margin-top:22px;padding:16px 2px 0;border-top:1px solid var(--border)}
+.fleet-list-footer svg{flex-shrink:0;margin-top:2px}
+.fleet-no-result{display:grid;gap:12px;text-align:center;justify-items:center;padding:35px 10px;color:var(--text-secondary);font-size:12px;line-height:1.6}
+.fleet-detail{display:grid;gap:17px;min-width:0}
+.fleet-summary{display:grid;grid-template-columns:minmax(190px,.72fr) minmax(0,1.4fr);gap:16px;align-items:start}
+.fleet-summary>.fleet-panel{padding:18px;min-width:0}
+.fleet-card-eyebrow{color:var(--text-muted);font-size:8px;letter-spacing:1.1px;font-weight:700;line-height:1.5;display:block}
+.fleet-summary-card{display:flex;flex-direction:column;gap:10px}
+.fleet-page .fleet-truck-large{height:70px;width:100%;max-width:220px;align-self:center;margin:0 auto}
+.fleet-summary-card h2{text-align:center;font-size:14px;letter-spacing:.15px}
+.fleet-summary-card dl{display:grid;gap:11px;margin:5px 0 0}
+.fleet-info-row{display:flex;gap:12px;justify-content:space-between;align-items:center;font-size:10px;line-height:1.5}
+.fleet-info-row dt{display:flex;gap:6px;align-items:center;color:var(--text-secondary);flex-shrink:0}
+.fleet-info-row dt svg{color:var(--text-muted);flex-shrink:0}
+.fleet-info-row dd{margin:0;text-align:right;color:var(--text);font-weight:600;overflow-wrap:anywhere}
+.fleet-trip-card .fleet-card-heading{flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.fleet-trip-card h2{font-size:15px}
+.fleet-trip-content{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,.85fr);gap:20px}
+.fleet-trip-itinerary{display:grid;gap:22px;margin:0;position:relative}
+.fleet-trip-itinerary:before{content:'';position:absolute;left:17px;top:28px;bottom:29px;border-left:1px dashed #b4c8df}
+.fleet-trip-stop{display:flex;gap:12px;align-items:center;min-width:0;position:relative}
+.fleet-stop-icon{width:35px;height:35px;flex-shrink:0;border-radius:15px;display:grid;place-items:center;background:var(--bo-blue-fill);color:var(--fleet-blue)}
+.fleet-trip-stop.is-destination .fleet-stop-icon{background:#edf6ef;color:var(--fleet-green)}
+.fleet-trip-stop>div{min-width:0;display:grid;gap:5px}
+.fleet-trip-stop dt{font-size:10px;color:var(--text-secondary)}
+.fleet-trip-stop dd{margin:0;font-size:16px;font-weight:700;line-height:1.25;overflow-wrap:anywhere;letter-spacing:-.2px}
+.fleet-trip-dates{margin:0;display:grid;gap:20px;border-left:1px solid var(--border);padding-left:20px}
+.fleet-trip-dates>div{display:grid;gap:7px;align-content:center}
+.fleet-trip-dates dt{display:flex;gap:6px;align-items:center;font-size:10px;color:var(--text-secondary)}
+.fleet-trip-dates dt svg{color:var(--fleet-blue);flex-shrink:0}
+.fleet-trip-dates dd{margin:0;font-size:12px;line-height:1.4;font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fleet-trip-crew{display:flex;align-items:center;gap:9px;margin-top:20px;padding-top:13px;border-top:1px solid var(--border);color:var(--fleet-blue)}
+.fleet-trip-crew>div{display:flex;gap:5px 10px;align-items:baseline;flex-wrap:wrap;min-width:0}
+.fleet-trip-crew span{font-size:10px;color:var(--text-secondary)}
+.fleet-trip-crew strong{font-size:11px;color:var(--text);overflow-wrap:anywhere}
+.fleet-trip-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;padding-top:13px;border-top:1px solid var(--border);flex-wrap:wrap}
+.fleet-trip-crew+.fleet-trip-footer{border:0;padding-top:0;margin-top:13px}
+.fleet-trip-footer>span{color:var(--text-muted);font-size:9px;line-height:1.5}
+.fleet-trip-footer>a{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--fleet-blue)}
+.fleet-trip-empty{display:flex;gap:12px;color:var(--fleet-blue);padding:2px 0}
+.fleet-trip-empty>svg{flex-shrink:0}.fleet-trip-empty strong{font-size:13px;color:var(--text)}
+.fleet-trip-empty p{font-size:12px;color:var(--text-secondary);line-height:1.7;margin:7px 0 0}
+.fleet-map-card{overflow:hidden}
+.fleet-map-heading{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:18px 22px}
+.fleet-map-heading h2{margin-top:5px;font-size:17px;letter-spacing:-.4px}
+.fleet-map-mode{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--fleet-blue);white-space:nowrap}
+.fleet-route-map{position:relative;width:100%;height:370px;background:#f2f5f7;overflow:hidden;isolation:isolate}
+.fleet-route-map .fleet-route-canvas{position:absolute;inset:0;width:100%;height:100%}
+.fleet-route-toolbar{position:absolute;top:14px;left:14px;z-index:2}
+.fleet-route-recenter{border:1px solid #dce4ed;border-radius:15px;background:#fff;color:#3265af;display:flex;align-items:center;gap:7px;cursor:pointer;padding:10px 12px;font-size:11px;box-shadow:0 3px 12px #2036550a}
+.fleet-route-status{position:absolute;z-index:2;left:14px;bottom:26px;right:56px;width:fit-content;max-width:calc(100% - 72px);margin:0;background:#fffffff0;border:1px solid #e5eaf0;border-radius:15px;padding:8px 12px;font-size:10px;color:#48617c;line-height:1.5;box-shadow:0 3px 12px #20365508;pointer-events:none}
+.fleet-route-map .maplibregl-ctrl-attrib{font-size:9px;background:#ffffffd9}
+.fleet-route-map .maplibregl-ctrl-group{border-radius:15px;overflow:hidden;box-shadow:0 3px 15px #20365512}
+.fleet-route-map.is-unavailable:before{content:'';position:absolute;inset:0;background:linear-gradient(35deg,transparent 47%,#e3eaf1 47%,#e3eaf1 48%,transparent 48%),linear-gradient(130deg,transparent 54%,#e3eaf1 54%,#e3eaf1 55%,transparent 55%);background-size:150px 160px}
+.fleet-map-origin,.fleet-map-destination{display:flex;align-items:center;gap:10px;min-width:0;background:#fff;color:#203b5d;border:1px solid #a9c1e0;border-radius:15px;padding:10px 12px;box-shadow:0 6px 22px #213c6030}
+.fleet-map-origin{border-bottom:3px solid #3265af}.fleet-map-destination{border-bottom:3px solid #dc8c3c}
+.fleet-map-truck{width:72px;height:35px;object-fit:contain}.fleet-map-label{display:grid;gap:3px;max-width:150px;line-height:1.4}
+.fleet-map-label strong{font-size:11px}.fleet-map-label small{font-size:9px;color:#74869a}
+.fleet-map-destination>svg{color:#bd7028}
+.fleet-map-caption{display:flex;align-items:center;gap:17px;padding:13px 20px;font-size:9px;color:var(--text-secondary);flex-wrap:wrap}
+.fleet-map-caption>span{display:flex;align-items:center;gap:6px}.fleet-map-caption small{font-size:9px;margin-left:auto}
+.fleet-origin-dot,.fleet-destination-dot{width:6px;height:6px;border-radius:50%;background:var(--fleet-blue);display:inline-block}.fleet-destination-dot{background:#dc8c3c}
+.fleet-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.fleet-metric{position:relative;isolation:isolate;overflow:hidden;border:1px solid var(--border);border-radius:15px;background:var(--surface);padding:15px 14px;display:grid;gap:9px;min-width:0}
+.fleet-metric>div{display:flex;align-items:center;gap:7px;z-index:1;font-size:10px;color:var(--text-secondary);line-height:1.4}
+.fleet-metric-icon{display:grid;place-items:center;width:25px;height:25px;border-radius:15px;flex-shrink:0;color:var(--fleet-blue);background:var(--bo-blue-fill)}
+.fleet-metric-icon.is-warn{background:#fff3e4;color:var(--fleet-orange)}.fleet-metric-icon.is-success{background:#edf6ef;color:var(--fleet-green)}
+.fleet-metric>strong{font-size:19px;line-height:1.2;color:var(--text);z-index:1;letter-spacing:-.4px}
+.fleet-metric>small{font-size:9px;line-height:1.6;color:var(--text-secondary);z-index:1}
+.fleet-metric-watermark{position:absolute;right:-7px;bottom:-13px;opacity:.05;pointer-events:none;color:var(--fleet-blue);z-index:0}
+.fleet-bottom{display:grid;grid-template-columns:1fr 1.1fr;gap:16px}
+.fleet-bottom>.fleet-panel{padding:20px}
+.fleet-quick-actions{display:flex;flex-direction:column;align-items:stretch;gap:11px}
+.fleet-quick-actions h2{margin-bottom:4px}
+.fleet-page .fleet-quick-actions .btn{justify-content:flex-start;padding:10px 14px;font-size:11px;min-height:40px}
+.fleet-page .fleet-quick-actions .action-refusee{max-width:100%}.fleet-page .fleet-quick-actions .action-refusee>button{width:100%}
+.fleet-action-link{display:flex;align-items:center;gap:10px;padding:10px 4px;font-size:11px;font-weight:600;color:var(--fleet-blue)}.fleet-action-link>span{flex:1}
+.fleet-history ol{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:18px}
+.fleet-history li{display:flex;gap:11px;position:relative}.fleet-history li>i{flex-shrink:0;width:7px;height:7px;background:#6d98cc;border-radius:50%;margin-top:5px;box-shadow:0 0 0 4px var(--bo-blue-fill)}
+.fleet-history li:not(:last-child):before{content:'';position:absolute;left:3px;top:15px;bottom:-14px;border-left:1px solid var(--border)}
+.fleet-history li>div{display:grid;gap:5px}.fleet-history strong{font-size:11px;line-height:1.5;font-weight:600}.fleet-history small{font-size:10px;color:var(--text-muted)}.fleet-history p{font-size:10px;line-height:1.5;margin:0;color:var(--text-secondary)}
+.fleet-alerts{display:grid;gap:9px}.fleet-alerts>div{display:flex;align-items:flex-start;gap:8px;border-left:2px solid #d59650;padding:5px 10px;color:var(--text-secondary);font-size:11px;line-height:1.6}.fleet-alerts svg{color:#bd7028;flex-shrink:0;margin-top:1px}
+.fleet-page :is(button,a):focus-visible{outline:2px solid var(--fleet-blue);outline-offset:3px}
+@container fleet (max-width:1120px){.fleet-workspace{grid-template-columns:245px minmax(0,1fr);gap:16px}.fleet-summary{grid-template-columns:minmax(180px,.8fr) minmax(0,1.4fr)}.fleet-trip-content{grid-template-columns:1fr}.fleet-trip-itinerary{gap:16px}.fleet-trip-dates{grid-template-columns:1fr 1fr;border-left:0;border-top:1px solid var(--border);padding:14px 0 0;gap:12px}.fleet-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.fleet-bottom{grid-template-columns:1fr}.fleet-vehicle-top{flex-wrap:wrap}.fleet-list-panel{padding:14px}.fleet-vehicle-mid{gap:8px}.fleet-page .fleet-vehicle-mid .fleet-truck-image{width:59px;height:34px}.fleet-map-heading{padding:16px}.fleet-map-caption small{margin-left:0}}
+@container fleet (max-width:960px){.fleet-workspace{grid-template-columns:1fr}.fleet-list-panel{position:static}.fleet-vehicle-list{display:flex;overflow-x:auto;max-height:none;padding:3px 3px 8px}.fleet-vehicle-selector{flex:0 0 240px}.fleet-list-footer{display:none}.fleet-search{margin:12px 0}.fleet-filters{padding-bottom:8px}.fleet-vehicle-top{flex-wrap:nowrap}.fleet-summary{grid-template-columns:minmax(190px,.7fr) minmax(0,1.4fr)}.fleet-summary>.fleet-panel{padding:18px}.fleet-trip-content{grid-template-columns:minmax(0,1fr) minmax(108px,.8fr);gap:16px}.fleet-trip-dates{grid-template-columns:1fr;border-top:0;border-left:1px solid var(--border);padding:0 0 0 16px}.fleet-bottom{grid-template-columns:1fr 1.1fr}}
+@container fleet (max-width:600px){.fleet-summary{grid-template-columns:1fr}.fleet-summary-card{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;align-items:center}.fleet-summary-card .fleet-card-eyebrow{grid-column:1/-1}.fleet-page .fleet-truck-large{grid-column:1;grid-row:2/4;height:85px}.fleet-summary-card h2{text-align:left;grid-column:2}.fleet-summary-card dl{grid-column:2;margin:0}.fleet-info-row{font-size:10px}.fleet-trip-content{grid-template-columns:minmax(0,1fr) minmax(115px,.7fr)}.fleet-bottom{grid-template-columns:1fr}}
+@container fleet (max-width:540px){.fleet-page-header{align-items:flex-start;flex-direction:column;gap:14px}.fleet-nav{gap:18px;overflow:auto}.fleet-nav a{font-size:11px;gap:6px}.fleet-map-heading{align-items:flex-start;gap:10px;flex-direction:column}.fleet-route-map{height:330px}.fleet-metrics{grid-template-columns:1fr 1fr}.fleet-map-origin{gap:6px;padding:8px}.fleet-map-truck{width:48px;height:26px}.fleet-map-label{max-width:120px}.fleet-map-caption{padding:12px 15px}.fleet-route-status{font-size:9px}}
+@container fleet (max-width:380px){.fleet-trip-content{grid-template-columns:1fr}.fleet-trip-dates{grid-template-columns:1fr 1fr;border-left:0;border-top:1px solid var(--border);padding:14px 0 0}.fleet-summary-card{column-gap:12px}.fleet-info-row{gap:6px}}
+[data-theme=dark] .fleet-trip-stop.is-destination .fleet-stop-icon,[data-theme=dark] .fleet-status.is-ok,[data-theme=dark] .fleet-status.is-success,[data-theme=dark] .fleet-metric-icon.is-success{background:#223b32;color:#a0d3b6}
+[data-theme=dark] .fleet-status.is-warn,[data-theme=dark] .fleet-metric-icon.is-warn{background:#3b3023;color:#edbb83}
+[data-theme=dark] .fleet-status.is-err{background:#442e31;color:#eaa7a7}
+@media(prefers-reduced-motion:reduce){.fleet-vehicle-selector{transition:none}}

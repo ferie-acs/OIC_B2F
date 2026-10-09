@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comprendre la Bourse de Fret — Office Ivoirien des Chargeurs</title>
+<meta name="description" content="Explication interactive du fonctionnement d'une bourse de fret, pour qui n'en a jamais entendu parler.">
+<style>
+/* ==========================================================================
+   Page pédagogique B2F — autonome, aucune dépendance réseau.
+   Jetons repris du design system B2F (cf. 02-design-system-b2f.md).
+   ========================================================================== */
+:root{
+  --bg:#f6f8fc; --surface:#fff; --surface-2:#f7f8fb; --surface-sunken:#eef0f6;
+  --text:#122b46; --text-secondary:#52657c; --text-muted:#65768a;
+  --border:#e9ebf2; --border-strong:#d9dce7; --border-hairline:#f0f1f6;
+  --accent:#155a9c; --accent-hover:#104b85; --accent-soft:#e9f2fb;
+  --accent-soft-border:#cee1f5; --accent-ring:#155a9c30;
+  --navy:#163f6e;
+  --signature:#088a43; --signature-hover:#066f35;
+  --signature-soft:#eaf6ef; --signature-soft-border:#c5e6d3; --signature-on:#fff;
+  --success:#168766; --success-soft:#e4f6ee;
+  --warning:#a86b13; --warning-soft:#fff3db;
+  --error:#d64e67;   --error-soft:#fdebf0;
+  --r-sm:6px; --r-md:8px; --r-lg:12px; --r-xl:16px; --r-pill:999px; --r-control:7px;
+  --sh-1:0 3px 12px #25283908; --sh-2:0 8px 28px #2528390d; --sh-3:0 16px 50px #122b4618;
+  --s1:4px; --s2:8px; --s3:16px; --s4:24px; --s5:32px; --s6:48px;
+  --font:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1a1a1a; --surface:#242424; --surface-2:#2a2a2a; --surface-sunken:#303030;
+  --text:#ececf3; --text-secondary:#b0b0bd; --text-muted:#9b9ba9;
+  --border:#343438; --border-strong:#4c4c55; --border-hairline:#2e2e32;
+  --accent:#80baf0; --accent-hover:#a7d4fa; --accent-soft:#20364a; --accent-soft-border:#335978;
+  --navy:#16233a;
+  --signature:#5ecfc0; --signature-soft:#153b37; --signature-soft-border:#2a5f59; --signature-on:#08322e;
+  --success:#67c9a3; --success-soft:#163b31;
+  --warning:#edc16e; --warning-soft:#443821;
+  --error:#fa90a5;   --error-soft:#48272f;
+  --sh-1:none; --sh-2:none; --sh-3:0 16px 50px #0006;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--font);background:var(--bg);color:var(--text);
+  font-size:16px;font-weight:500;line-height:1.65;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.4px;line-height:1.25}
+h1{font-size:clamp(30px,4.4vw,48px);letter-spacing:-1.3px}
+h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.8px}
+h3{font-size:19px}
+p{margin:0}
+ul{margin:0;padding:0;list-style:none}
+button{font-family:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+[hidden]{display:none!important}
+
+/* ---------- Mise en page ---------- */
+.wrap{max-width:1080px;margin-inline:auto;padding-inline:24px}
+section{padding-block:clamp(48px,7vw,86px)}
+section+section{border-top:1px solid var(--border)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+  letter-spacing:1.4px;text-transform:uppercase;color:var(--accent);margin-bottom:14px;
+}
+.lede{font-size:clamp(17px,2vw,20px);color:var(--text-secondary);line-height:1.7;max-width:70ch;margin-top:18px}
+.note{font-size:14px;color:var(--text-muted);line-height:1.7}
+
+/* ---------- En-tête ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--surface) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--border);
+}
+.topbar .wrap{display:flex;align-items:center;gap:16px;height:64px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:700}
+.logo .mark{
+  width:40px;height:40px;border-radius:10px;background:var(--navy);color:#fff;
+  display:grid;place-items:center;font-size:13px;font-weight:800;letter-spacing:-.5px;flex:none;
+}
+.logo small{display:block;font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.2px}
+.topbar nav{margin-left:auto;display:flex;gap:4px;align-items:center}
+.topbar nav a{
+  font-size:13.5px;font-weight:600;color:var(--text-secondary);text-decoration:none;
+  padding:8px 12px;border-radius:var(--r-control);
+}
+.topbar nav a:hover{background:var(--surface-2);color:var(--accent)}
+.icon-btn{
+  background:transparent;border:1px solid var(--border);color:var(--text-secondary);
+  cursor:pointer;padding:8px;border-radius:var(--r-control);display:flex;
+}
+.icon-btn:hover{color:var(--accent);border-color:var(--accent-soft-border);background:var(--accent-soft)}
+@media(max-width:820px){ .topbar nav a{display:none} }
+
+/* ---------- Hero ---------- */
+.hero{background:linear-gradient(180deg,var(--accent-soft),transparent);border-top:0}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:clamp(28px,5vw,64px);align-items:center}
+.hero h1 span{color:var(--accent)}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+.reading-time{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-muted);margin-top:22px}
+@media(max-width:860px){ .hero .wrap{grid-template-columns:1fr} }
+
+/* Illustration : camion / route */
+.scene{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);
+  padding:0;box-shadow:var(--sh-2);overflow:hidden;
+}
+.scene svg{display:block;width:100%;height:auto}
+.hero-road{animation:hero-road 2.4s linear infinite}
+@keyframes hero-road{to{stroke-dashoffset:-40}}
+.hero-truck{animation:hero-bob 2.6s ease-in-out infinite}
+@keyframes hero-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5px)}}
+
+/* ---------- Boutons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-size:15px;font-weight:650;padding:13px 22px;border-radius:var(--r-control);
+  border:1px solid transparent;cursor:pointer;line-height:1.2;text-decoration:none;
+  transition:background .2s,border-color .2s,box-shadow .2s,color .2s;
+}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px #155a9c22}
+.btn-primary:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn-signature{background:var(--signature);color:var(--signature-on);border-color:var(--signature)}
+.btn-signature:hover:not(:disabled){background:var(--signature-hover);border-color:var(--signature-hover)}
+.btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn-secondary:hover:not(:disabled){border-color:var(--text-secondary)}
+.btn-ghost{background:transparent;color:var(--text-secondary);border-color:transparent}
+.btn-ghost:hover:not(:disabled){background:var(--surface-2);color:var(--text)}
+.btn-sm{padding:8px 14px;font-size:13.5px}
+
+/* ---------- Cartes ---------- */
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:24px;box-shadow:var(--sh-1);
+}
+.grid{display:grid;gap:20px}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+
+/* ---------- Glossaire ---------- */
+.term{
+  border:0;background:none;padding:0;font:inherit;color:inherit;cursor:help;
+  border-bottom:2px dotted var(--accent);font-weight:650;
+}
+.term:hover{color:var(--accent)}
+.glossary-pop{
+  position:fixed;z-index:200;max-width:330px;background:var(--surface);
+  border:1px solid var(--accent-soft-border);border-radius:var(--r-md);
+  padding:16px 18px;box-shadow:var(--sh-3);font-size:14.5px;line-height:1.65;
+}
+.glossary-pop strong{display:block;color:var(--accent);margin-bottom:5px;font-size:15px}
+.glossary-pop .close{
+  position:absolute;top:8px;right:8px;background:none;border:0;cursor:pointer;
+  color:var(--text-muted);padding:5px;border-radius:50%;display:flex;
+}
+.glossary-pop .close:hover{background:var(--surface-2);color:var(--text)}
+
+/* ---------- Scène animée ---------- */
+.stage{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);
+  overflow:hidden;box-shadow:var(--sh-2);margin-top:30px;
+}
+.stage-canvas{position:relative;overflow:hidden;background:linear-gradient(180deg,var(--accent-soft) 0%,var(--surface) 62%)}
+:root[data-theme="dark"] .stage-canvas{background:linear-gradient(180deg,#1d2a38 0%,var(--surface) 62%)}
+/* Hauteur fixe : le cadrage (viewBox) bouge, pas la mise en page. */
+.stage-canvas svg{display:block;width:100%;height:clamp(290px,34vw,400px)}
+
+.stage-caption{
+  border-top:1px solid var(--border);padding:20px 26px;display:flex;gap:16px;align-items:flex-start;
+  min-height:104px;background:var(--surface);
+}
+.stage-caption .num{
+  width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;
+  font-size:14px;font-weight:800;background:var(--accent);color:#fff;
+}
+.stage-caption.bad .num{background:var(--error)}
+.stage-caption.good .num{background:var(--signature)}
+.stage-caption h3{font-size:18px;margin-bottom:5px}
+.stage-caption p{font-size:15px;color:var(--text-secondary);line-height:1.7;max-width:74ch}
+
+.stage-controls{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:16px 26px;border-top:1px solid var(--border);background:var(--surface-2);
+}
+.stage-dots{display:flex;gap:6px;margin-right:auto}
+.stage-dots button{
+  width:11px;height:11px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:var(--border-strong);transition:background .25s,transform .25s;
+}
+.stage-dots button.done{background:var(--accent-soft-border)}
+.stage-dots button.active{background:var(--accent);transform:scale(1.35)}
+
+/* Le trait de mise en relation : un flux qui circule entre les deux écrans */
+#link-line{animation:flux 1.1s linear infinite}
+@keyframes flux{to{stroke-dashoffset:-28}}
+@media(prefers-reduced-motion:reduce){#link-line{animation:none}}
+
+/* Bulles de dialogue dans la scène */
+.bubble-text{font:600 13px var(--font);fill:var(--text)}
+.bubble-text.small{font-size:11.5px;fill:var(--text-secondary);font-weight:500}
+.city-label{font:700 12px var(--font);fill:var(--text-muted);letter-spacing:1.2px}
+.screen-text{font:700 10px var(--font);fill:#fff}
+
+/* Chiffres du bilan, sous la scène */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:20px;margin-top:26px}
+.stat-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;box-shadow:var(--sh-1);
+}
+.stat-box b{display:block;font-size:31px;font-weight:750;letter-spacing:-1.1px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat-box span{display:block;font-size:13.5px;color:var(--text-muted);margin-top:6px;line-height:1.45}
+
+/* ---------- Acteurs ---------- */
+.actor{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:22px;align-self:start;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.actor:hover{border-color:var(--accent-soft-border);box-shadow:var(--sh-2)}
+.actor.is-open{border-color:var(--accent-soft-border);background:var(--accent-soft)}
+/* Seul l'en-tête est le contrôle : le corps contient des boutons de glossaire,
+   qu'un <button> englobant ne peut pas légalement contenir. */
+.actor-head{
+  display:flex;align-items:center;gap:14px;width:100%;
+  background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;
+  text-align:left;cursor:pointer;
+}
+.actor-head:focus-visible{outline:2px solid var(--accent);outline-offset:5px;border-radius:var(--r-sm)}
+.actor-ident{min-width:0}
+.actor-chevron{margin-left:auto;display:flex;color:var(--text-muted);transition:transform .2s,color .2s}
+.actor.is-open .actor-chevron{transform:rotate(90deg);color:var(--accent)}
+.actor-icon{
+  width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;
+  background:var(--accent-soft);color:var(--accent);
+}
+.actor.is-open .actor-icon{background:var(--surface)}
+.actor h3{font-size:17px}
+.actor .role{font-size:13px;color:var(--text-muted);font-weight:600}
+.actor-key{margin-top:14px;color:var(--signature);font-weight:650}
+.actor-body{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:14.5px;color:var(--text-secondary);line-height:1.7}
+.actor-body strong{color:var(--text)}
+.actor-body ul{margin-top:10px;display:grid;gap:7px}
+.actor-body li{display:flex;gap:9px;align-items:flex-start}
+.actor-body li svg{color:var(--signature);flex:none;margin-top:4px}
+
+/* ---------- Simulation du parcours ---------- */
+.sim{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--sh-2)}
+.sim-head{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding:18px 24px;background:var(--surface-2);border-bottom:1px solid var(--border);
+}
+.sim-progress{display:flex;gap:5px;flex:1;min-width:180px;max-width:340px}
+.sim-progress i{flex:1;height:6px;border-radius:3px;background:var(--border-strong);transition:background .3s}
+.sim-progress i.done{background:var(--accent)}
+.sim-progress i.current{background:var(--signature)}
+.sim-step-label{font-size:13px;font-weight:700;color:var(--text-secondary);white-space:nowrap}
+
+.sim-stage{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.sim-side{background:var(--surface);padding:24px;min-height:290px}
+.sim-side.acting{background:var(--accent-soft)}
+.sim-side-head{display:flex;align-items:center;gap:11px;margin-bottom:18px}
+.sim-avatar{
+  width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-weight:750;font-size:13px;background:var(--surface-2);color:var(--text-secondary);
+  border:1px solid var(--border-strong);
+}
+.sim-side.acting .sim-avatar{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sim-side-head strong{display:block;font-size:15.5px}
+.sim-side-head span{display:block;font-size:12.5px;color:var(--text-muted);font-weight:600}
+.sim-badge{
+  display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;
+  padding:5px 11px;border-radius:5px;margin-bottom:14px;
+}
+.sim-badge.wait{background:var(--surface-sunken);color:var(--text-secondary)}
+.sim-badge.act{background:var(--warning-soft);color:var(--warning)}
+.sim-badge.ok{background:var(--signature-soft);color:var(--signature)}
+.sim-badge.done{background:var(--success-soft);color:var(--success)}
+.sim-text{font-size:14.5px;color:var(--text-secondary);line-height:1.75}
+.sim-text strong{color:var(--text)}
+.sim-wallet{
+  margin-top:18px;border:1px solid var(--border);border-radius:var(--r-md);
+  padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--surface);font-size:13.5px;
+}
+.sim-wallet span{color:var(--text-muted);font-weight:600}
+.sim-wallet b{font-size:16px;font-variant-numeric:tabular-nums;font-weight:750}
+.sim-wallet.debited{border-color:var(--error);background:var(--error-soft)}
+.sim-wallet.debited b{color:var(--error)}
+
+.sim-middle{
+  grid-column:1/-1;background:var(--surface-2);padding:20px 24px;border-top:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:12px;font-size:14.5px;line-height:1.7;
+}
+.sim-middle svg{color:var(--accent);flex:none;margin-top:3px}
+.sim-middle strong{color:var(--text)}
+.sim-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 24px;border-top:1px solid var(--border)}
+@media(max-width:760px){ .sim-stage{grid-template-columns:1fr} .sim-side{min-height:0} }
+
+/* ---------- Argent ---------- */
+.money-flow{display:grid;grid-template-columns:1fr auto 1.25fr auto 1fr;gap:16px;align-items:center;margin:26px 0}
+.money-box{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;text-align:center;
+}
+.money-box .amount{font-size:26px;font-weight:750;font-variant-numeric:tabular-nums;letter-spacing:-.8px}
+.money-box .who{font-size:13px;color:var(--text-muted);font-weight:650;margin-top:4px}
+.money-arrow{display:grid;place-items:center;color:var(--accent)}
+.money-center{
+  background:var(--signature-soft);border:1px solid var(--signature-soft-border);
+  border-radius:var(--r-lg);padding:20px;text-align:center;
+}
+@media(max-width:860px){ .money-flow{grid-template-columns:1fr} .money-arrow{transform:rotate(90deg)!important} }
+
+/* ---------- Idées reçues ---------- */
+.faq{border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--surface)}
+.faq details{border-bottom:1px solid var(--border)}
+.faq details:last-child{border-bottom:0}
+.faq summary{
+  list-style:none;cursor:pointer;padding:20px 24px;font-size:16.5px;font-weight:650;
+  display:flex;align-items:center;gap:14px;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary:hover{background:var(--surface-2)}
+.faq summary .chev{margin-left:auto;color:var(--text-muted);transition:transform .2s;flex:none}
+.faq details[open] summary .chev{transform:rotate(90deg)}
+.faq .answer{padding:0 24px 22px 62px;font-size:15px;color:var(--text-secondary);line-height:1.75}
+.faq .answer strong{color:var(--text)}
+.faq .tag{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font-size:13px;font-weight:800;background:var(--accent-soft);color:var(--accent);
+}
+
+/* ---------- Quiz ---------- */
+.quiz{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:clamp(24px,4vw,36px);box-shadow:var(--sh-2)}
+.quiz-q{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:22px}
+.quiz-opts{display:grid;gap:11px}
+.quiz-opt{
+  display:flex;align-items:flex-start;gap:13px;padding:16px 18px;border-radius:var(--r-md);
+  border:1px solid var(--border-strong);background:var(--surface);cursor:pointer;
+  font:inherit;font-size:15px;color:var(--text);text-align:left;transition:border-color .2s,background .2s;
+}
+.quiz-opt:hover:not(:disabled){border-color:var(--accent)}
+.quiz-opt .letter{
+  width:26px;height:26px;border-radius:var(--r-sm);display:grid;place-items:center;flex:none;
+  font-size:13px;font-weight:750;background:var(--surface-2);color:var(--text-secondary);
+}
+.quiz-opt.right{border-color:var(--success);background:var(--success-soft)}
+.quiz-opt.right .letter{background:var(--success);color:#fff}
+.quiz-opt.wrong{border-color:var(--error);background:var(--error-soft)}
+.quiz-opt.wrong .letter{background:var(--error);color:#fff}
+.quiz-feedback{
+  margin-top:20px;padding:16px 18px;border-radius:var(--r-md);font-size:14.5px;line-height:1.7;
+  border:1px solid var(--accent-soft-border);background:var(--accent-soft);
+}
+.quiz-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.quiz-score{font-size:14px;font-weight:650;color:var(--text-secondary)}
+
+/* ---------- Résumé final ---------- */
+.recap{background:var(--navy);color:#fff;border-radius:var(--r-xl);padding:clamp(28px,4vw,44px)}
+.recap h2{color:#fff}
+.recap .lede{color:#c9dcf0}
+.recap ol{counter-reset:r;display:grid;gap:16px;margin-top:28px;padding:0;list-style:none}
+.recap li{display:flex;gap:16px;align-items:flex-start;counter-increment:r}
+.recap li::before{
+  content:counter(r);width:30px;height:30px;border-radius:50%;flex:none;
+  display:grid;place-items:center;font-size:13px;font-weight:800;
+  background:rgba(255,255,255,.14);color:#fff;
+}
+.recap li div{font-size:15.5px;line-height:1.7;color:#d8e6f4}
+.recap li strong{color:#fff;display:block;font-size:16px;margin-bottom:2px}
+
+footer{padding-block:40px;border-top:1px solid var(--border);color:var(--text-muted);font-size:13.5px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+.demo-ribbon{
+  background:var(--warning-soft);color:var(--text);border-bottom:1px solid var(--warning);
+  padding:9px 16px;font-size:13px;font-weight:650;display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{transition:none!important;animation:none!important}
+}
+</style>
+<link rel="stylesheet" href="css/comprendre-interactif.css?v=20261009-carte-2">
+<link rel="stylesheet" href="css/comprendre-accueil.css?v=20261009-carte-2">
+<link rel="stylesheet" href="css/menu-public.css?v=20261009-carte-2">
+<link rel="stylesheet" href="css/comprendre-scene.css?v=20261009-carte-2">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+  <symbol id="i-handshake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+</svg>
+
+<div class="demo-ribbon">
+  <svg width="15" height="15" aria-hidden="true"><use href="#i-info"/></svg>
+  Support pédagogique — les entreprises, les noms et les montants cités sont fictifs.
+</div>
+
+
+<main>
+
+<!-- ============================ HERO ============================ -->
+<section class="hero">
+  <div class="guide-public-header" id="guide-public-header"></div>
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Comprendre en 10 minutes</span>
+      <h1>La bourse de fret,<br><span>tout simplement.</span></h1>
+      <p class="lede">
+        Suivez Awa et Koffi dans deux scénarios : sans la Bourse de Fret, puis avec elle. Découvrez ensuite les acteurs, les actions et les frais, jusqu’à la livraison.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#probleme">Découvrir le fonctionnement <svg width="17" height="17" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        <a class="btn btn-secondary" href="#parcours">Voir les actions en détail</a>
+      </div>
+      <p class="reading-time">
+        <svg width="16" height="16" aria-hidden="true"><use href="#i-clock"/></svg>
+        Environ 10 minutes · aucune connaissance préalable requise
+      </p>
+    </div>
+    <div class="scene guide-visual"><img src="assets/bourse-fret-originale.png" alt="Camion et marchandises : la rencontre entre les acteurs du fret" fetchpriority="high"><div class="guide-visual-caption"><span>DEUX ENTREPRISES, UN ACCORD</span><strong>Chacun choisit.<br>Un accord partagé.</strong></div></div>
+  </div>
+</section>
+
+<div class="topbar guide-local-nav" aria-label="Navigation du guide">
+  <div class="wrap">
+    <nav aria-label="Sommaire">
+      <a href="#probleme">Le principe</a>
+      <a href="#acteurs">Les acteurs</a>
+      <a href="#parcours">Le parcours</a>
+      <a href="#argent">Les frais</a>
+      <a href="#idees">Vos questions</a>
+      <a href="#quiz">Quiz</a>
+      <a href="#essentiel">À retenir</a>
+            <a href="#glossaire">Glossaire</a>
+    </nav>
+    <button type="button" class="icon-btn" id="theme-toggle" aria-label="Changer le thème">
+      <svg width="18" height="18" aria-hidden="true"><use href="#i-sun"/></svg>
+    </button>
+  </div>
+</div>
+
+
+<section class="guide-entry" aria-label="Choisir votre besoin">
+  <div class="wrap">
+    <div class="guide-needs">
+      <a href="index.html#/explorer?type=camions" class="guide-need"><span class="guide-number">01</span><div><small>AFFRÉTEUR · CHARGEUR</small><h2>Je cherche un camion</h2><p>Consultez les disponibilités et trouvez un transport pour vos marchandises.</p><strong>Explorer les camions ↗</strong></div></a>
+      <a href="index.html#/explorer?type=frets" class="guide-need"><span class="guide-number">02</span><div><small>TRANSPORTEUR</small><h2>Je cherche du fret</h2><p>Repérez un chargement pour votre prochain départ ou votre trajet retour.</p><strong>Explorer les frets ↗</strong></div></a>
+    </div>
+    <div class="guide-public"><span class="eyebrow">D’abord découvrir, ensuite choisir</span><h2>Le marché se découvre sans compte.</h2><div class="guide-journey"><p><b>01 · Consultez</b>Les offres publiques et leur localisation sur la carte de Côte d’Ivoire.</p><p><b>02 · Choisissez</b>Une offre vous intéresse ? L’inscription ou la connexion vous est alors proposée.</p><p><b>03 · Agissez</b>Réservez ou proposez selon vos droits. Les coordonnées deviennent accessibles après confirmation de la mise en relation.</p></div><p class="note">Démonstration POC : annonces et entreprises fictives, inscription simulée et aucun paiement réel. La carte situe les offres ; elle ne représente pas un suivi GPS en direct.</p></div>
+  </div>
+</section>
+
+<!-- ============================ LE PROBLÈME ============================ -->
+<section id="probleme">
+  <div class="wrap">
+    <span class="eyebrow">1 — Le principe</span>
+    <h2>La même journée. Deux issues différentes.</h2>
+    <p class="lede">
+      Awa cherche un camion pour ses 24 tonnes de cacao. Koffi cherche du fret pour son camion de 25 tonnes. Même ville, même trajet : Abidjan → Bouaké. <strong>Sans la bourse, ils ne se trouvent pas. Avec elle, ils peuvent conclure un accord.</strong>
+    </p>
+
+    <p class="note" style="margin-top:22px">
+      Lancez l’histoire complète : le camion part d’abord à vide, puis la même journée recommence avec la Bourse de Fret. Vous pouvez aussi avancer à votre rythme.
+    </p>
+
+    <div class="stage stage-diorama">
+      <div class="story-scenarios" role="group" aria-label="Les deux scénarios">
+        <button type="button" data-story-scenario="sans" aria-pressed="true"><span class="story-scenario-number">01</span><span><strong>Sans la Bourse de Fret</strong><small>Les besoins ne se rencontrent pas · 7 étapes</small></span></button>
+        <button type="button" data-story-scenario="avec" aria-pressed="false"><span class="story-scenario-number">02</span><span><strong>Avec la Bourse de Fret</strong><small>De la publication à l’accord · 9 étapes</small></span></button>
+      </div>
+      <div class="stage-canvas">
+        <div class="scene-heading"><span>UN TRAJET, DEUX ENTREPRISES</span><strong>Abidjan <span aria-hidden="true">↗</span> Bouaké</strong></div>
+        <div class="scene-phase" aria-hidden="true">Camion disponible</div>
+<svg id="stage-svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" role="img"><title id="stage-desc">Awa exprime son besoin de transport et Koffi propose son camion. Leurs annonces se rencontrent sur la Bourse de Fret, puis ils donnent chacun leur accord.</title><defs><radialGradient id="site-shadow"><stop stop-color="#325675" stop-opacity=".18"/><stop offset="1" stop-color="#325675" stop-opacity="0"/></radialGradient><filter id="soft-shadow" x="-40%" y="-70%" width="180%" height="240%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#183852" flood-opacity=".1"/></filter><filter id="hub-shadow" x="-40%" y="-60%" width="180%" height="240%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#153e63" flood-opacity=".15"/></filter></defs><g class="diorama-world"><ellipse cx="510" cy="476" rx="379" ry="94" fill="url(#site-shadow)"/><polygon points="32.4,279.0 586.6,560.6 586.6,545.6 32.4,264.0" fill="#c5d3dc" /><polygon points="967.6,367.0 586.6,560.6 586.6,545.6 967.6,352.0" fill="#b0c3d1" /><polygon points="413.4,70.4 967.6,352.0 586.6,545.6 32.4,264.0" fill="#e8eff3" /><polygon points="151.0,220.1 329.4,310.7 329.4,307.7 151.0,217.1" fill="#c2d3de" /><polygon points="545.9,200.7 329.4,310.7 329.4,307.7 545.9,197.7" fill="#b2c7d5" /><polygon points="367.5,107.1 545.9,197.7 329.4,307.7 151.0,217.1" fill="#d7e3e8" /><polygon points="644.6,345.9 787.5,418.5 787.5,415.5 644.6,342.9" fill="#c2d3de" /><polygon points="930.4,345.9 787.5,418.5 787.5,415.5 930.4,342.9" fill="#b2c7d5" /><polygon points="787.5,270.3 930.4,342.9 787.5,415.5 644.6,342.9" fill="#d7e3e8" /><polyline points="127.6,216.4 270.5,289.0 690.5,291.2 855.1,374.8" fill="none" stroke="#f9fcfd" stroke-width="76" stroke-linecap="round" stroke-linejoin="round" /><polyline points="127.6,216.4 270.5,289.0 690.5,291.2 855.1,374.8" fill="none" stroke="#a4b8c7" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /><polyline points="127.6,216.4 270.5,289.0 690.5,291.2 855.1,374.8" fill="none" stroke="#819cad" stroke-width="51" stroke-linecap="round" stroke-linejoin="round" /><polyline points="127.6,216.4 270.5,289.0 690.5,291.2 855.1,374.8" fill="none" stroke="#eaf2f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="12 12"/><polyline points="127.6,216.4 270.5,289.0 690.5,291.2 855.1,374.8" fill="none" stroke="#159c71" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="scene-route-success" stroke-dasharray="9 11"/><polyline points="127.6,216.4 270.5,289.0 690.5,291.2 855.1,374.8" fill="none" stroke="#cc8050" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="scene-route-empty" stroke-dasharray="9 11"/><polygon points="117.2,257.5 121.6,259.7 121.6,247.7 117.2,245.5" fill="#cbd8e1" /><polygon points="125.9,257.5 121.6,259.7 121.6,247.7 125.9,245.5" fill="#90a9bb" /><polygon points="121.6,243.3 125.9,245.5 121.6,247.7 117.2,245.5" fill="#fff" /><polygon points="173.5,286.1 177.8,288.3 177.8,276.3 173.5,274.1" fill="#cbd8e1" /><polygon points="182.2,286.1 177.8,288.3 177.8,276.3 182.2,274.1" fill="#90a9bb" /><polygon points="177.8,271.9 182.2,274.1 177.8,276.3 173.5,274.1" fill="#fff" /><polygon points="714.8,349.9 719.1,352.1 719.1,340.1 714.8,337.9" fill="#cbd8e1" /><polygon points="723.4,349.9 719.1,352.1 719.1,340.1 723.4,337.9" fill="#90a9bb" /><polygon points="719.1,335.7 723.4,337.9 719.1,340.1 714.8,337.9" fill="#fff" /><polygon points="775.4,380.7 779.7,382.9 779.7,370.9 775.4,368.7" fill="#cbd8e1" /><polygon points="784.0,380.7 779.7,382.9 779.7,370.9 784.0,368.7" fill="#90a9bb" /><polygon points="779.7,366.5 784.0,368.7 779.7,370.9 775.4,368.7" fill="#fff" /><polygon points="758.9,314.2 858.5,364.8 858.5,311.8 758.9,261.2" fill="#afc5d7" /><polygon points="914.8,336.2 858.5,364.8 858.5,311.8 914.8,283.2" fill="#7396b3" /><polygon points="815.2,232.6 914.8,283.2 858.5,311.8 758.9,261.2" fill="#d4e2ec" /><polygon points="746.8,260.2 858.5,317.0 858.5,311.0 746.8,254.2" fill="#c4d6e4" /><polygon points="926.9,282.2 858.5,317.0 858.5,311.0 926.9,276.2" fill="#97b3ca" /><polygon points="815.2,219.5 926.9,276.2 858.5,311.0 746.8,254.2" fill="#e6eff5" /><polygon points="768.5,304.0 783.2,311.4 783.2,284.4 768.5,277.0" fill="#406b91" /><polyline points="768.5,291.0 783.2,298.4" fill="none" stroke="#91b9d5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /><polygon points="791.8,315.8 806.6,323.3 806.6,296.3 791.8,288.8" fill="#406b91" /><polyline points="791.8,302.8 806.6,310.3" fill="none" stroke="#91b9d5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /><polygon points="815.2,327.7 829.9,335.2 829.9,308.2 815.2,300.7" fill="#406b91" /><polyline points="815.2,314.7 829.9,322.2" fill="none" stroke="#91b9d5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /><polygon points="838.6,339.6 853.3,347.1 853.3,320.1 838.6,312.6" fill="#406b91" /><polyline points="838.6,326.6 853.3,334.1" fill="none" stroke="#91b9d5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /><polygon points="747.7,290.0 768.5,300.6 768.5,220.6 747.7,210.0" fill="#beced9" /><polygon points="785.8,291.8 768.5,300.6 768.5,220.6 785.8,211.8" fill="#8ca7bb" /><polygon points="765.0,201.2 785.8,211.8 768.5,220.6 747.7,210.0" fill="#e3ebf0" /><ellipse cx="407.3" cy="105.2" rx="15" ry="7" fill="#133f5912"/><path d="M407.3 102.2v-29" stroke="#667e72" stroke-width="4"/><ellipse cx="407.3" cy="64.2" rx="15" ry="24" fill="#99c5b0"/><ellipse cx="402.3" cy="60.2" rx="9" ry="18" fill="#bfdccc"/><ellipse cx="558.0" cy="221.3" rx="15" ry="7" fill="#133f5912"/><path d="M558.0 218.3v-29" stroke="#667e72" stroke-width="4"/><ellipse cx="558.0" cy="180.3" rx="15" ry="24" fill="#99c5b0"/><ellipse cx="553.0" cy="176.3" rx="9" ry="18" fill="#bfdccc"/><ellipse cx="686.2" cy="451.0" rx="15" ry="7" fill="#133f5912"/><path d="M686.2 448.0v-29" stroke="#667e72" stroke-width="4"/><ellipse cx="686.2" cy="410.0" rx="15" ry="24" fill="#99c5b0"/><ellipse cx="681.2" cy="406.0" rx="9" ry="18" fill="#bfdccc"/><ellipse cx="921.7" cy="341.9" rx="15" ry="7" fill="#133f5912"/><path d="M921.7 338.9v-29" stroke="#667e72" stroke-width="4"/><ellipse cx="921.7" cy="300.9" rx="15" ry="24" fill="#99c5b0"/><ellipse cx="916.7" cy="296.9" rx="9" ry="18" fill="#bfdccc"/><ellipse cx="350.2" cy="375.3" rx="15" ry="7" fill="#133f5912"/><path d="M350.2 372.3v-29" stroke="#667e72" stroke-width="4"/><ellipse cx="350.2" cy="334.3" rx="15" ry="24" fill="#99c5b0"/><ellipse cx="345.2" cy="330.3" rx="9" ry="18" fill="#bfdccc"/><ellipse cx="440.2" cy="400.0" rx="15" ry="7" fill="#133f5912"/><path d="M440.2 397.0v-29" stroke="#667e72" stroke-width="4"/><ellipse cx="440.2" cy="359.0" rx="15" ry="24" fill="#99c5b0"/><ellipse cx="435.2" cy="355.0" rx="9" ry="18" fill="#bfdccc"/><polygon points="506.1,185.8 570.1,218.3 570.1,192.3 506.1,159.8" fill="#41799f" /><polygon points="599.6,203.4 570.1,218.3 570.1,192.3 599.6,177.4" fill="#235b85" /><polygon points="535.5,144.8 599.6,177.4 570.1,192.3 506.1,159.8" fill="#79accd" /><polygon points="506.1,157.8 570.1,190.3 570.1,164.3 506.1,131.8" fill="#598eaf" /><polygon points="599.6,175.4 570.1,190.3 570.1,164.3 599.6,149.4" fill="#316989" /><polygon points="535.5,116.8 599.6,149.4 570.1,164.3 506.1,131.8" fill="#a0c8de" /><polyline points="513.0,185.2 513.0,167.2" fill="none" stroke="#c6deec" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><polyline points="521.6,189.6 521.6,171.6" fill="none" stroke="#c6deec" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><polyline points="530.3,194.0 530.3,176.0" fill="none" stroke="#c6deec" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><polyline points="539.0,198.4 539.0,180.4" fill="none" stroke="#c6deec" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><polyline points="547.6,202.8 547.6,184.8" fill="none" stroke="#c6deec" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><polyline points="556.3,207.2 556.3,189.2" fill="none" stroke="#c6deec" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" /><polygon points="203.8,208.2 338.1,276.4 338.1,269.4 203.8,201.2" fill="#bacbd6" /><polygon points="459.3,214.8 338.1,276.4 338.1,269.4 459.3,207.8" fill="#88a4ba" /><polygon points="325.1,139.6 459.3,207.8 338.1,269.4 203.8,201.2" fill="#eff4f7" /><polygon points="269.6,177.4 380.5,233.8 380.5,156.8 269.6,100.4" fill="#fff" /><polygon points="452.4,197.2 380.5,233.8 380.5,156.8 452.4,120.2" fill="#b6cddd" /><polygon points="341.5,63.9 452.4,120.2 380.5,156.8 269.6,100.4" fill="#e6eff5" /><polygon points="255.8,100.4 381.4,164.2 381.4,158.2 255.8,94.4" fill="#124d7f" /><polygon points="467.1,120.7 381.4,164.2 381.4,158.2 467.1,114.7" fill="#123e64" /><polygon points="341.5,50.9 467.1,114.7 381.4,158.2 255.8,94.4" fill="#1e669c" /><polyline points="348.4,56.9 270.5,96.5" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="362.3,64.0 284.4,103.6" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="376.2,71.0 298.2,110.6" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="390.0,78.0 312.1,117.6" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="403.9,85.1 325.9,124.7" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="417.7,92.1 339.8,131.7" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="431.6,99.2 353.6,138.8" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="445.4,106.2 367.5,145.8" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polyline points="459.3,113.2 381.4,152.8" fill="none" stroke="#4386b6" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /><polygon points="281.8,184.5 308.6,198.1 308.6,147.1 281.8,133.5" fill="#224968" /><polyline points="282.6,176.8 306.0,188.7" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="282.6,166.8 306.0,178.7" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="282.6,156.8 306.0,168.7" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="282.6,146.8 306.0,158.7" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="282.6,137.8 306.0,149.7" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polygon points="265.3,191.1 294.8,206.0 294.8,203.0 265.3,188.1" fill="#b9cad5" /><polygon points="306.0,200.3 294.8,206.0 294.8,203.0 306.0,197.3" fill="#849fb3" /><polygon points="276.6,182.4 306.0,197.3 294.8,203.0 265.3,188.1" fill="#d1dde4" /><polygon points="321.6,204.7 348.4,218.4 348.4,167.4 321.6,153.7" fill="#224968" /><polyline points="322.5,197.0 345.9,208.9" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="322.5,187.0 345.9,198.9" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="322.5,177.0 345.9,188.9" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="322.5,167.0 345.9,178.9" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="322.5,158.0 345.9,169.9" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polygon points="305.1,211.3 334.6,226.3 334.6,223.3 305.1,208.3" fill="#b9cad5" /><polygon points="345.9,220.6 334.6,226.3 334.6,223.3 345.9,217.6" fill="#849fb3" /><polygon points="316.4,202.6 345.9,217.6 334.6,223.3 305.1,208.3" fill="#d1dde4" /><polygon points="361.4,225.0 388.3,238.6 388.3,187.6 361.4,174.0" fill="#224968" /><polyline points="362.3,217.3 385.7,229.2" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="362.3,207.3 385.7,219.2" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="362.3,197.3 385.7,209.2" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="362.3,187.3 385.7,199.2" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="362.3,178.3 385.7,190.2" fill="none" stroke="#6b8ea7" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /><polygon points="345.0,231.6 374.4,246.5 374.4,243.5 345.0,228.6" fill="#b9cad5" /><polygon points="385.7,240.8 374.4,246.5 374.4,243.5 385.7,237.8" fill="#849fb3" /><polygon points="356.2,222.8 385.7,237.8 374.4,243.5 345.0,228.6" fill="#d1dde4" /><text x="308.6" y="135.1" transform="rotate(27 308.6 135.1)" fill="#155a9c" font-size="9" font-weight="800" letter-spacing="2">CHARGEMENT</text><polygon points="424.7,261.4 473.2,286.1 473.2,255.1 424.7,230.4" fill="#e49b41" /><polygon points="498.3,273.3 473.2,286.1 473.2,255.1 498.3,242.3" fill="#b86a22" /><polygon points="449.8,217.7 498.3,242.3 473.2,255.1 424.7,230.4" fill="#fbc984" /><g class="scene-cargo"><polygon points="239.3,227.1 261.9,238.6 261.9,235.6 239.3,224.1" fill="#bd9765" /><polygon points="281.8,228.4 261.9,238.6 261.9,235.6 281.8,225.4" fill="#a87b4e" /><polygon points="259.3,214.0 281.8,225.4 261.9,235.6 239.3,224.1" fill="#d4b78c" /><polygon points="242.8,224.1 261.9,233.8 261.9,210.8 242.8,201.1" fill="#edb264" /><polygon points="278.3,225.4 261.9,233.8 261.9,210.8 278.3,202.4" fill="#ce8b3f" /><polygon points="259.3,192.8 278.3,202.4 261.9,210.8 242.8,201.1" fill="#ffd398" /><polyline points="268.8,196.6 252.3,205.0 252.3,228.0" fill="none" stroke="#fff0cf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /><polygon points="263.6,239.4 286.1,250.9 286.1,247.9 263.6,236.4" fill="#bd9765" /><polygon points="306.0,240.8 286.1,250.9 286.1,247.9 306.0,237.8" fill="#a87b4e" /><polygon points="283.5,226.3 306.0,237.8 286.1,247.9 263.6,236.4" fill="#d4b78c" /><polygon points="267.0,236.4 286.1,246.1 286.1,223.1 267.0,213.4" fill="#edb264" /><polygon points="302.6,237.8 286.1,246.1 286.1,223.1 302.6,214.8" fill="#ce8b3f" /><polygon points="283.5,205.1 302.6,214.8 286.1,223.1 267.0,213.4" fill="#ffd398" /><polyline points="293.0,208.9 276.6,217.3 276.6,240.3" fill="none" stroke="#fff0cf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /><polygon points="268.8,223.6 291.3,235.0 291.3,232.0 268.8,220.6" fill="#bd9765" /><polygon points="311.2,224.9 291.3,235.0 291.3,232.0 311.2,221.9" fill="#a87b4e" /><polygon points="288.7,210.5 311.2,221.9 291.3,232.0 268.8,220.6" fill="#d4b78c" /><polygon points="272.2,220.6 291.3,230.3 291.3,207.3 272.2,197.6" fill="#edb264" /><polygon points="307.7,221.9 291.3,230.3 291.3,207.3 307.7,198.9" fill="#ce8b3f" /><polygon points="288.7,189.2 307.7,198.9 291.3,207.3 272.2,197.6" fill="#ffd398" /><polyline points="298.2,193.1 281.8,201.4 281.8,224.4" fill="none" stroke="#fff0cf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /><polygon points="268.8,200.6 291.3,212.0 291.3,209.0 268.8,197.6" fill="#bd9765" /><polygon points="311.2,201.9 291.3,212.0 291.3,209.0 311.2,198.9" fill="#a87b4e" /><polygon points="288.7,187.5 311.2,198.9 291.3,209.0 268.8,197.6" fill="#d4b78c" /><polygon points="272.2,197.6 291.3,207.3 291.3,184.3 272.2,174.6" fill="#edb264" /><polygon points="307.7,198.9 291.3,207.3 291.3,184.3 307.7,175.9" fill="#ce8b3f" /><polygon points="288.7,166.2 307.7,175.9 291.3,184.3 272.2,174.6" fill="#ffd398" /><polyline points="298.2,170.1 281.8,178.4 281.8,201.4" fill="none" stroke="#fff0cf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></g><polygon points="732.1,364.8 768.5,383.3 768.5,379.3 732.1,360.8" fill="#abcbbb" /><polygon points="792.7,371.0 768.5,383.3 768.5,379.3 792.7,367.0" fill="#7da897" /><polygon points="756.3,348.5 792.7,367.0 768.5,379.3 732.1,360.8" fill="#e4f4eb" /><g class="scene-destination"><ellipse cx="759.8" cy="358.6" rx="18" ry="8" fill="#088a4320"/><path d="M759.8 355.6c-8-10-15-18-15-27a15 15 0 0 1 30 0c0 9-7 17-15 27Z" fill="#16875b"/><circle cx="759.8" cy="327.6" r="5" fill="#fff"/></g><g class="scene-place"><text x="251" y="111" class="scene-city-title">ABIDJAN</text><text x="792" y="232" class="scene-city-title">BOUAKÉ</text></g><g class="scene-truck-position" transform="translate(266 292)"><g class="scene-truck"><ellipse cx="15" cy="17" rx="78" ry="20" fill="#0b284a22"/><g transform="translate(-500 -305)"><polygon points="429.0,273.5 501.7,310.5 501.7,306.5 429.0,269.5" fill="#102d44" /><polygon points="532.9,294.6 501.7,310.5 501.7,306.5 532.9,290.6" fill="#081e30" /><polygon points="460.2,253.7 532.9,290.6 501.7,306.5 429.0,269.5" fill="#173c59" /></g><g transform="translate(-500 -305)"><polygon points="427.3,267.6 493.9,301.5 493.9,259.5 427.3,225.6" fill="#216594" /><polygon points="525.1,285.7 493.9,301.5 493.9,259.5 525.1,243.7" fill="#164870" /><polygon points="458.4,209.8 525.1,243.7 493.9,259.5 427.3,225.6" fill="#5b93bd" /></g><g transform="translate(-500 -305)"><polygon points="497.4,304.3 525.1,318.4 525.1,287.4 497.4,273.3" fill="#d5e5f0" /><polygon points="556.3,302.5 525.1,318.4 525.1,287.4 556.3,271.5" fill="#adc7d9" /><polygon points="528.6,257.4 556.3,271.5 525.1,287.4 497.4,273.3" fill="#f5fafc" /></g><g transform="translate(-500 -305)"><polyline points="431.6,265.7 431.6,232.7" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polyline points="439.4,269.7 439.4,236.7" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polyline points="447.2,273.6 447.2,240.6" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polyline points="455.0,277.6 455.0,244.6" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polyline points="462.8,281.6 462.8,248.6" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polyline points="470.6,285.5 470.6,252.5" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polyline points="478.4,289.5 478.4,256.5" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polyline points="486.1,293.4 486.1,260.4" fill="none" stroke="#76a5c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></g><g transform="translate(-500 -305)"><polygon points="500.0,291.5 519.9,301.6 519.9,289.6 500.0,279.5" fill="#143c59" /><polygon points="553.7,288.7 527.7,301.9 527.7,290.9 553.7,277.7" fill="#1e4d6a" /></g><ellipse cx="-58.0" cy="-22.100000000000023" rx="8" ry="11" fill="#10273c" transform="rotate(-28 -58.0 -22.100000000000023)"/><ellipse cx="-58.0" cy="-22.100000000000023" rx="4" ry="6" fill="#9ab0c1" transform="rotate(-28 -58.0 -22.100000000000023)"/><circle cx="-58.0" cy="-22.100000000000023" r="2" fill="#e9f1f5"/><ellipse cx="-41.60000000000002" cy="-13.800000000000011" rx="8" ry="11" fill="#10273c" transform="rotate(-28 -41.60000000000002 -13.800000000000011)"/><ellipse cx="-41.60000000000002" cy="-13.800000000000011" rx="4" ry="6" fill="#9ab0c1" transform="rotate(-28 -41.60000000000002 -13.800000000000011)"/><circle cx="-41.60000000000002" cy="-13.800000000000011" r="2" fill="#e9f1f5"/><ellipse cx="13.899999999999977" cy="14.399999999999977" rx="8" ry="11" fill="#10273c" transform="rotate(-28 13.899999999999977 14.399999999999977)"/><ellipse cx="13.899999999999977" cy="14.399999999999977" rx="4" ry="6" fill="#9ab0c1" transform="rotate(-28 13.899999999999977 14.399999999999977)"/><circle cx="13.899999999999977" cy="14.399999999999977" r="2" fill="#e9f1f5"/><g transform="translate(-500 -305)"><polyline points="555.4,300.7 527.7,314.8" fill="none" stroke="#8faebf" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /><polyline points="552.0,297.4 546.8,300.0" fill="none" stroke="#ffdf90" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" /></g><g class="scene-truck-label"><rect x="-77" y="-82" width="116" height="26" rx="13" fill="#fff" filter="url(#soft-shadow)"/><circle cx="-63" cy="-69" r="4" fill="#16875b"/><text x="-52" y="-65" font-size="11" font-weight="750" fill="#183e5e" class="truck-status-available">25 t disponibles</text><text x="-52" y="-65" font-size="11" font-weight="800" fill="#b25d22" class="truck-status-empty">VIDE · 0 t</text><text x="-52" y="-65" font-size="11" font-weight="750" fill="#16875b" class="truck-status-loaded">24 t à bord</text></g></g></g><g class="scene-person person-awa" transform="translate(365 510)"><ellipse cx="1" cy="2" rx="20" ry="8" fill="#193f6020"/><path d="M-10-24-10-2M8-24 9-2" stroke="#244561" stroke-width="10" stroke-linecap="round"/><path d="M-9 0h-9M9 0h8" stroke="#0d2b43" stroke-width="6" stroke-linecap="round"/><path d="M-14-49Q0-60 14-48L18-22Q0-14-18-24Z" fill="#ecad57"/><path d="M8-51 14-47 18-23 8-21Z" fill="#d18c37"/><path d="M-13-46-21-30M14-45 21-33" stroke="#955d3f" stroke-width="7" stroke-linecap="round"/><path d="M-13-46-17-38M14-45 18-38" stroke="#ecad57" stroke-width="10" stroke-linecap="round"/><rect x="-3" y="-61" width="8" height="9" rx="3" fill="#9d6244"/><ellipse cx="0" cy="-66" rx="11" ry="14" fill="#ad7150"/><path d="M-10-67v-7q9-14 20 0v8q-5-7-8-9-3 5-12 8" fill="#332b29"/><ellipse cx="9" cy="-65" rx="2" ry="4" fill="#c08460"/><rect x="-37" y="14" width="77" height="38" rx="9" fill="#fff" filter="url(#soft-shadow)"/><text x="1" y="29" text-anchor="middle" font-size="13" font-weight="800" fill="#173c5e">Awa</text><text x="1" y="43" text-anchor="middle" font-size="9" fill="#687f93">Affréteur</text></g><g class="scene-person person-koffi" transform="translate(685 525)"><ellipse cx="1" cy="2" rx="20" ry="8" fill="#193f6020"/><path d="M-10-24-10-2M8-24 9-2" stroke="#244561" stroke-width="10" stroke-linecap="round"/><path d="M-9 0h-9M9 0h8" stroke="#0d2b43" stroke-width="6" stroke-linecap="round"/><path d="M-14-49Q0-60 14-48L18-22Q0-14-18-24Z" fill="#377caa"/><path d="M8-51 14-47 18-23 8-21Z" fill="#205978"/><path d="M-13-46-21-30M14-45 21-33" stroke="#955d3f" stroke-width="7" stroke-linecap="round"/><path d="M-13-46-17-38M14-45 18-38" stroke="#377caa" stroke-width="10" stroke-linecap="round"/><rect x="-3" y="-61" width="8" height="9" rx="3" fill="#9d6244"/><ellipse cx="0" cy="-66" rx="11" ry="14" fill="#ad7150"/><path d="M-10-67v-7q9-14 20 0v8q-5-7-8-9-3 5-12 8" fill="#332b29"/><ellipse cx="9" cy="-65" rx="2" ry="4" fill="#c08460"/><rect x="-37" y="14" width="77" height="38" rx="9" fill="#fff" filter="url(#soft-shadow)"/><text x="1" y="29" text-anchor="middle" font-size="13" font-weight="800" fill="#173c5e">Koffi</text><text x="1" y="43" text-anchor="middle" font-size="9" fill="#687f93">Transporteur</text></g><g class="scene-speech speech-awa"><path d="M350 425v20l20-20" fill="#fff" stroke="#e6bb77" stroke-width="1.5"/><rect x="220" y="364" width="246" height="65" rx="13" fill="#fff" stroke="#e6bb77" stroke-width="1.5" filter="url(#soft-shadow)"/><text x="237" y="393" class="voice-main" id="voice-awa-main"></text><text x="237" y="413" class="voice-sub" id="voice-awa-sub"></text></g><g class="scene-speech speech-koffi"><path d="M675 440v20l20-20" fill="#fff" stroke="#9fbfd5" stroke-width="1.5"/><rect x="545" y="379" width="262" height="65" rx="13" fill="#fff" stroke="#9fbfd5" stroke-width="1.5" filter="url(#soft-shadow)"/><text x="562" y="408" class="voice-main" id="voice-koffi-main"></text><text x="562" y="428" class="voice-sub" id="voice-koffi-sub"></text></g><g class="scene-human-match"><path d="M405 485Q525 526 645 500" stroke="#16875b" stroke-width="3" stroke-dasharray="6 7" fill="none"/><circle cx="525" cy="505" r="17" fill="#16875b"/><path d="m518 505 5 5 10-11" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g><g class="scene-match-label"><rect x="406" y="165" width="246" height="31" rx="10" fill="#e5f5ec" stroke="#c1dfcd"/><text x="529" y="185" text-anchor="middle" font-size="11" font-weight="800" fill="#16875b">MISE EN RELATION CONFIRMÉE</text></g><g class="scene-failed-link"><path d="M405 485Q455 505 495 506M554 506Q595 510 645 500" stroke="#cc8050" stroke-width="3" stroke-dasharray="5 7" fill="none"/><circle cx="525" cy="505" r="17" fill="#fff1e5" stroke="#e4b892"/><path d="m519 499 12 12m0-12-12 12" stroke="#b46f3d" stroke-width="2.5" stroke-linecap="round"/></g>
+<g class="scene-outcome-empty"><rect x="400" y="55" width="248" height="99" rx="15" fill="#fff" filter="url(#hub-shadow)"/><text x="419" y="80" fill="#a46334" font-size="10" font-weight="750" letter-spacing="1">UNE OCCASION MANQUÉE</text><text x="419" y="110" fill="#173c5e" font-size="19" font-weight="800">Le camion part vide.</text><text x="419" y="133" fill="#657d92" font-size="13">Les 24 t de cacao restent à quai.</text></g>
+<g class="scene-connection"><path d="M325 197 C335 110 394 133 437 116 M635 134 C720 135 759 194 793 249" fill="none" stroke="#4d90bd" stroke-width="2" stroke-dasharray="5 7"/><circle cx="325" cy="197" r="5" fill="#155a9c"/><circle cx="793" cy="249" r="5" fill="#16875b"/></g><g class="scene-hub"><rect x="417" y="43" width="226" height="107" rx="17" fill="#fff" filter="url(#hub-shadow)"/><rect x="430" y="56" width="38" height="38" rx="11" fill="#e9f2fa"/><path d="M439 68h16v15h-16zM455 73h5l5 6v4h-10M443 83v3M461 83v3" fill="none" stroke="#155a9c" stroke-width="2" stroke-linejoin="round"/><text x="480" y="73" font-size="15" font-weight="800" fill="#071b35">Bourse de Fret</text><text x="480" y="91" font-size="11" fill="#657d92">Les bonnes offres se rencontrent</text><g class="hub-ad-truck"><rect x="431" y="111" width="87" height="23" rx="8" fill="#e8f3fb"/><text x="474" y="126" text-anchor="middle" font-size="10" font-weight="700" fill="#155a9c">CAMION · 25 T</text></g><g class="hub-ad-cargo"><rect x="526" y="111" width="103" height="23" rx="8" fill="#fff1dc"/><text x="577" y="126" text-anchor="middle" font-size="10" font-weight="700" fill="#a86210">CACAO · 24 T</text></g></g>
+<g class="scene-match"><circle cx="656" cy="56" r="20" fill="#16875b" filter="url(#soft-shadow)"/><path d="m647 56 6 6 11-12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g></g></svg><div class="scene-mobile-dialogue" aria-hidden="true"><div class="mobile-speech speech-awa"><strong>Awa <small>· Affréteur</small></strong><span id="voice-awa-mobile"></span></div><div class="mobile-speech speech-koffi"><strong>Koffi <small>· Transporteur</small></strong><span id="voice-koffi-mobile"></span></div></div><div class="scene-legend"><span><i></i> Transporteur</span><span><i></i> Affréteur</span><span><i></i> Accord partagé</span></div>
+      </div>
+
+      <div class="stage-caption" id="stage-caption">
+        <span class="num" id="stage-num">1</span>
+        <div><span class="stage-chapter-label">L’HISTOIRE D’UNE RENCONTRE</span><h3 id="stage-title"></h3><p id="stage-text"></p><div class="stage-facts"><span><b>25 t</b>Capacité du camion</span><span><b>24 t</b>Cacao à transporter</span></div><p class="stage-hint">Suivez les deux scénarios ou choisissez une étape ci-dessous.</p></div>
+      </div>
+
+      <div class="stage-controls">
+        <div class="stage-dots" id="stage-dots" role="tablist" aria-label="Étapes de la scène"></div>
+        <button type="button" class="btn btn-sm btn-ghost" id="stage-replay">
+          <svg width="15" height="15" aria-hidden="true"><use href="#i-refresh"/></svg> Reprendre au début
+        </button>
+        <button type="button" class="btn btn-sm btn-secondary" id="stage-prev">
+          <svg width="15" height="15" aria-hidden="true"><use href="#i-arrow-left"/></svg> Précédent
+        </button>
+        <button type="button" class="btn btn-sm btn-primary" id="stage-next">
+          Suivant <svg width="15" height="15" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="stat-row" id="stat-row"></div>
+
+    <div class="grid grid-3" style="margin-top:28px">
+      <div class="card">
+        <h3>Pour l'entreprise qui expédie</h3>
+        <p class="note" style="margin-top:10px">
+          Dans le premier scénario, Awa dépend de son carnet d’adresses. Avec la Bourse, elle peut comparer
+          les camions publiés et repérer celui de Koffi sur le même trajet.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Pour le transporteur</h3>
+        <p class="note" style="margin-top:10px">
+          Un trajet à vide laisse des frais à payer sans recette pour ce chargement. Dans le second scénario,
+          Koffi trouve les 24 tonnes de cacao qui correspondent à sa disponibilité.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Pour le réseau de transport</h3>
+        <p class="note" style="margin-top:10px">
+          Rendre les besoins et les disponibilités visibles aide à repérer les trajets compatibles.
+          L’objectif est de limiter les départs à vide, sans imposer un partenaire aux entreprises.
+        </p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:28px;border-color:var(--accent-soft-border);background:var(--accent-soft)">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <svg width="22" height="22" aria-hidden="true" style="color:var(--accent);flex:none;margin-top:3px"><use href="#i-info"/></svg>
+        <div>
+          <h3>Alors, une bourse de fret, c'est quoi ?</h3>
+          <p style="margin-top:8px;font-size:15.5px;line-height:1.75;color:var(--text-secondary)">
+            Un lieu où les deux publient ce qu'ils ont : d'un côté
+            <button class="term" data-term="fret">le fret</button> à transporter,
+            de l'autre les camions disponibles. Chacun voit l'offre de l'autre, et quand les deux se conviennent,
+            la plateforme organise la rencontre. <strong>Elle ne transporte rien elle-même. Elle met en relation.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LES ACTEURS ============================ -->
+<section id="acteurs">
+  <div class="wrap">
+    <span class="eyebrow">2 — Qui fait quoi</span>
+    <h2>Qui agit, qui accompagne, qui contrôle ?</h2>
+    <p class="lede">
+      Sélectionnez un acteur pour comprendre son rôle, ses échanges et ses responsabilités.
+      Awa et Koffi portent les décisions commerciales. Les autres acteurs préparent les opérations, exploitent le service ou contrôlent les transports.
+    </p>
+    <div id="actors" class="actor-explorer"></div>
+    <details class="guide-profiles">
+      <summary>Et les autres profils de la plateforme ? <svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-right"/></svg></summary>
+      <div class="guide-profiles-body">
+        <p>Ces cinq familles présentent les responsabilités. Le POC distingue <strong>19 profils d’accès</strong>, avec des droits différents.</p>
+        <ul>
+          <li><strong>6 profils principaux :</strong> affréteur, transporteur, leurs deux auxiliaires, concessionnaire et DGTTC.</li>
+          <li><strong>3 variantes :</strong> transporteur privé, transporteur étranger et partenaire. Leurs droits diffèrent : le transporteur privé répond aux demandes sans publier d’offre publique ; le partenaire n’intervient pas sur le marché.</li>
+          <li><strong>10 profils de gestion :</strong> administration, comptabilité, caisse, comptes, contentieux, DUT et activation des inscriptions. Ils sont déclarés dans le POC ; leurs espaces spécialisés ne sont pas tous développés.</li>
+        </ul>
+        <a href="index.html#/connexion">Découvrir les espaces de démonstration ↗</a>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============================ LE PARCOURS ============================ -->
+<section id="parcours">
+  <div class="wrap">
+    <span class="eyebrow">3 — Le parcours en détail</span>
+    <h2>Du premier besoin au dossier clôturé</h2>
+    <p class="lede">
+      Retrouvons Awa et Koffi dans le scénario avec la Bourse. Ces sept actions détaillent leur mise en relation
+      et prolongent l’histoire jusqu’à la livraison et à la clôture du dossier.
+    </p>
+
+    <div class="sim" style="margin-top:32px">
+      <div class="sim-head">
+        <span class="sim-step-label" id="sim-label">Action 1 sur 7</span>
+        <div class="sim-progress" id="sim-progress" role="progressbar" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1" aria-label="Avancement"></div>
+        <button type="button" class="btn btn-sm btn-ghost" id="sim-reset">
+          <svg width="15" height="15" aria-hidden="true"><use href="#i-refresh"/></svg> Recommencer
+        </button>
+      </div>
+      <div class="chat-header">
+        <div class="chat-brand">B2F</div>
+        <div><strong>Awa &amp; Koffi · le même dossier</strong><span>Abidjan → Bouaké · 24 t de cacao · camion de 25 t</span></div>
+        <span class="chat-demo">Démonstration</span>
+      </div>
+      <p class="chat-disclaimer">Ces bulles racontent les actions de chacun ; elles ne représentent pas un échange privé avant confirmation. Les coordonnées restent masquées jusque-là.</p>
+      <div class="chat-thread" id="chat-thread" role="log" aria-live="polite" aria-relevant="additions" aria-label="Histoire de la mise en relation" tabindex="0"></div>
+      <div class="chat-typing" id="chat-typing" aria-live="off"></div>
+      <div class="chat-tools">
+        <button type="button" class="btn btn-secondary btn-sm" id="chat-play">Lire le parcours</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="chat-reveal">Afficher toute l’action</button>
+        <span id="chat-status" role="status"></span>
+      </div>
+      <div class="sim-foot">
+        <button type="button" class="btn btn-secondary" id="sim-prev">
+          <svg width="17" height="17" aria-hidden="true"><use href="#i-arrow-left"/></svg> Action précédente
+        </button>
+        <button type="button" class="btn btn-primary" id="sim-next">
+          Action suivante <svg width="17" height="17" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:28px">
+      <h3>Le point à retenir</h3>
+      <p style="margin-top:10px;font-size:15.5px;line-height:1.75;color:var(--text-secondary)">
+        <strong>Dans notre exemple : Awa réserve, Koffi accepte, Awa confirme.</strong>
+        C’est la <button class="term" data-term="double-validation">double validation</button> :
+        un accord partagé, puis une confirmation finale par l’affréteur. Les coordonnées deviennent alors accessibles.
+      </p>
+    </div>
+    <div class="guide-other-way">
+      <span class="guide-other-icon"><svg width="25" height="25" aria-hidden="true"><use href="#i-truck"/></svg></span>
+      <div><h3>Et si Koffi trouve le fret en premier ?</h3><p>Il consulte les demandes, puis propose son camion depuis son compte. Awa examine sa proposition, l’accepte et confirme la mise en relation. <strong>Le point de départ change ; l’accord reste partagé.</strong></p></div>
+      <a class="btn btn-secondary" href="index.html#/explorer?type=frets">Voir les frets <svg width="16" height="16" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ L'ARGENT ============================ -->
+<section id="argent">
+  <div class="wrap">
+    <span class="eyebrow">4 — Les frais</span>
+    <h2>Qui paie quoi, et à qui</h2>
+    <p class="lede">
+      Trois éléments sont distincts : <strong>l’abonnement, les frais de mise en relation et le prix du transport.</strong>
+      Dans le POC, les frais de mise en relation sont simulés sur les deux comptes à la confirmation par l’affréteur. Les tarifs officiels restent à confirmer auprès de l’OIC.
+    </p>
+
+    <p class="guide-demo-note">Même dossier Awa–Koffi · exemple à 15 000 FCFA par entreprise · aucun paiement réel</p>
+    <div class="money-flow">
+      <div class="money-box">
+        <div class="amount" data-example-fee="affreteur">15 000 F</div>
+        <div class="who">Awa · compte de l’affréteur</div>
+      </div>
+      <div class="money-arrow"><svg width="26" height="26" aria-hidden="true"><use href="#i-arrow-right"/></svg></div>
+      <div class="money-center">
+        <svg width="30" height="30" aria-hidden="true" style="color:var(--signature)"><use href="#i-handshake"/></svg>
+        <div class="amount" style="color:var(--signature)" data-example-fee="total">30 000 F</div>
+        <div class="who">total des frais simulés pour cette mise en relation</div>
+      </div>
+      <div class="money-arrow" style="transform:rotate(180deg)"><svg width="26" height="26" aria-hidden="true"><use href="#i-arrow-right"/></svg></div>
+      <div class="money-box">
+        <div class="amount" data-example-fee="transporteur">15 000 F</div>
+        <div class="who">Koffi · compte du transporteur</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:30px">
+      <div class="card">
+        <h3>Le prix du transport lui-même</h3>
+        <p class="note" style="margin-top:10px">
+          Awa et Koffi conviennent du prix du transport. Le tarif indicatif de l’offre les aide à comparer.
+          Ce montant est distinct des frais de mise en relation ; le POC ne règle pas le transport.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Le <button class="term" data-term="compte-prepaye">compte prépayé</button></h3>
+        <p class="note" style="margin-top:10px">
+          Chaque entreprise dispose de son propre solde fictif. Les frais de mise en relation sont déduits à la confirmation.
+          Chacune consulte son solde ; elle ne voit pas celui de l’autre entreprise.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Si un solde est insuffisant</h3>
+        <p class="note" style="margin-top:10px">
+          Le POC vérifie les deux comptes. Si l’un ne couvre pas ses frais, la confirmation est bloquée et aucun des deux comptes n’est débité. Les coordonnées restent masquées.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Et l'abonnement ?</h3>
+        <p class="note" style="margin-top:10px">
+          Le marché public se consulte sans connexion. Pour agir, une entreprise se connecte et doit disposer des droits et de l’abonnement requis ;
+          les frais de mise en relation sont simulés à la confirmation. La publication ne déclenche pas ces frais, mais reste soumise aux conditions d’accès de l’entreprise.
+        </p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:26px;border-color:var(--signature-soft-border);background:var(--signature-soft)">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <svg width="22" height="22" aria-hidden="true" style="color:var(--signature);flex:none;margin-top:3px"><use href="#i-check"/></svg>
+        <p style="font-size:15.5px;line-height:1.75">
+          <strong>Le principe tient en une phrase :</strong> consulter librement, puis se connecter pour agir. Les frais de mise en relation interviennent à la confirmation ; les conditions d’abonnement sont distinctes.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ IDÉES REÇUES ============================ -->
+<section id="idees">
+  <div class="wrap">
+    <span class="eyebrow">5 — Vos questions</span>
+    <h2>Les réponses avant de vous lancer</h2>
+    <p class="lede">Accès au marché, accords, frais et responsabilités : les points à clarifier.</p>
+    <div class="faq" style="margin-top:30px" id="faq"></div>
+  </div>
+</section>
+
+<!-- ============================ QUIZ ============================ -->
+<section id="quiz">
+  <div class="wrap">
+    <span class="eyebrow">6 — À vous de jouer</span>
+    <h2>Avez-vous retenu l’essentiel ?</h2>
+    <p class="lede">Cinq questions sur le parcours d’Awa et Koffi, avec une explication après chaque réponse.</p>
+    <div class="quiz" style="margin-top:30px" id="quiz-box"></div>
+  </div>
+</section>
+
+<!-- ============================ RÉSUMÉ ============================ -->
+<section id="essentiel">
+  <div class="wrap">
+    <div class="recap">
+      <span class="eyebrow" style="color:#9ec6ea">En résumé</span>
+      <h2>Sept phrases, et vous savez l'essentiel</h2>
+      <p class="lede">Si vous ne deviez retenir que ceci.</p>
+      <ol>
+        <li><div><strong>Le marché se consulte librement.</strong>Les annonces et la carte sont visibles sans compte ; la connexion intervient pour agir.</div></li>
+        <li><div><strong>Deux besoins se rencontrent.</strong>Awa cherche un camion. Koffi cherche un chargement. La plateforme rend leurs offres visibles.</div></li>
+        <li><div><strong>Le marché fonctionne dans les deux sens.</strong>L’affréteur réserve un camion, ou le transporteur propose le sien sur une demande de fret.</div></li>
+        <li><div><strong>Chacun donne son accord.</strong>Dans notre histoire, Koffi accepte puis Awa confirme. La confirmation finale revient à l’affréteur.</div></li>
+        <li><div><strong>La confirmation déclenche la mise en relation.</strong>Les frais sont simulés et les coordonnées deviennent accessibles. Si un solde est insuffisant, aucun débit n’a lieu.</div></li>
+        <li><div><strong>Les frais du service et le transport sont distincts.</strong>L’abonnement et la mise en relation concernent la plateforme ; le prix du transport se convient entre les entreprises.</div></li>
+        <li><div><strong>Le transporteur réalise et renseigne le trajet.</strong>L’affréteur clôture après livraison. L’historique conserve les actions déclarées, sans suivi GPS en direct.</div></li>
+      </ol>
+      <div class="guide-recap-actions"><a class="btn btn-primary" href="index.html#/explorer">Explorer les offres <svg width="17" height="17" aria-hidden="true"><use href="#i-arrow-right"/></svg></a><a href="#probleme">Revoir les deux scénarios</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ GLOSSAIRE ============================ -->
+<section id="glossaire">
+  <div class="wrap">
+    <span class="eyebrow">Pour finir</span>
+    <h2>Les mots du métier, en français simple</h2>
+    <p class="lede">
+      Les treize termes utilisés dans ce guide.
+      Vous pouvez aussi cliquer sur n'importe quel mot souligné dans la page.
+    </p>
+    <div class="grid grid-2" style="margin-top:30px" id="glossaire-liste"></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Bourse de Fret — Office Ivoirien des Chargeurs · support pédagogique</span>
+    <a href="index.html#/accueil">Revenir à l’accueil ↗</a><span>Entreprises, noms et montants fictifs</span>
+  </div>
+</footer>
+
+<script src="js/pages/comprendre.js?v=20261009-carte-2"></script>
+<script src="js/pages/comprendre-interactif.js?v=20261009-carte-2"></script>
+<script type="module">
+import { menuPublic } from "js/core/menu-public.js?v=20261009-carte-2";
+document.getElementById("guide-public-header").append(menuPublic("comprendre"));
+</script>
+</body>
+</html>

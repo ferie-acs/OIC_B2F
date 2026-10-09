@@ -1,0 +1,31 @@
+/* Indicateurs des espaces métier : un repère lisible et son écho en filigrane.
+   Les courbes restent séparées de la décoration pour préserver leur lecture. */
+.app-shell :is(.dash-kpi-overview,.dash-chart-total,.indicator-analysis-head){
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.app-shell :is(.dash-kpi-overview,.dash-chart-total,.indicator-analysis-head)>:not(.indicator-watermark){
+  position:relative;
+  z-index:1;
+}
+.app-shell .indicator-watermark{
+  pointer-events:none;
+  user-select:none;
+}
+.app-shell .dash-kpi-overview>.indicator-watermark{right:16px;bottom:9px}
+.app-shell .dash-kpi-chart-head .kpi-label-icon{align-items:flex-start}
+.app-shell .kpi-label-icon>span{min-width:0;overflow-wrap:anywhere}
+.app-shell .kpi-label-icon>svg{width:19px;height:19px;flex:0 0 19px;margin-top:1px}
+.app-shell .kpi-label-icon>svg:has(>use[href="#ic-truck"]){width:29px;flex-basis:29px}
+.app-shell .kpi-label-icon>svg:has(>use[href="#ic-package"]){width:22px;height:22px;flex-basis:22px}
+.app-shell .indicator-title{display:flex;align-items:center;gap:10px}
+.app-shell .indicator-title>svg{color:#6686ae;flex:0 0 20px}
+.app-shell .dash-chart-total{min-height:88px;margin-bottom:14px}
+.app-shell .indicator-analysis-head{min-height:78px;margin-bottom:12px}
+.app-shell .indicator-analysis-head>.indicator-watermark{right:6px;bottom:0}
+@media(max-width:640px){
+  .app-shell .kpi-label-icon{gap:7px}
+  .app-shell .dash-kpi-overview>.indicator-watermark{right:10px;bottom:12px}
+  .app-shell .indicator-title{gap:8px}
+}

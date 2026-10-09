@@ -1,0 +1,76 @@
+/* DUT : dossiers, aperçu documentaire et impression depuis la fiche projetée. */
+.dut-page{container-type:inline-size;container-name:dut;gap:24px;--dut-blue:#3265af;--dut-green:#3c795f;--dut-orange:#ae6427}
+.dut-page-header{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.app-shell .dut-page-header h1{font-size:28px;letter-spacing:-.8px;margin:7px 0 8px}
+.dut-page-header p{font-size:13px;line-height:1.6;color:var(--text-secondary);margin:0}
+.dut-header-icon{display:grid;place-items:center;width:62px;height:62px;background:var(--bo-blue-fill);color:var(--dut-blue);border-radius:15px;flex-shrink:0}
+.dut-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.dut-workspace{display:grid;grid-template-columns:minmax(270px,.8fr) minmax(0,1.7fr);gap:24px;align-items:start}
+.dut-page .dut-panel,.dut-sheet{background:var(--surface);border:1px solid var(--border);border-radius:15px}
+.dut-page h2{font-size:16px;line-height:1.4;margin:0;color:var(--text)}
+.dut-sidebar{padding:20px;position:sticky;top:20px;min-width:0}
+.dut-list-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dut-list-heading>span{padding:4px 9px;border-radius:15px;background:var(--surface-2);color:var(--text-secondary);font-size:11px}
+.dut-search{display:flex;align-items:center;gap:8px;background:var(--surface-2);padding:11px 12px;border:1px solid var(--border);border-radius:15px;margin:20px 0 14px;color:var(--text-muted)}
+.dut-search input{width:100%;min-width:0;padding:0;border:0;background:transparent;box-shadow:none;color:var(--text);font:inherit;font-size:12px;outline:none}
+.dut-search:focus-within{outline:2px solid var(--dut-blue);outline-offset:2px}
+.dut-filters{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
+.dut-filters button{border:0;background:transparent;border-radius:15px;padding:8px 10px;font-size:10px;color:var(--text-secondary);cursor:pointer}
+.dut-filters button.active{background:var(--bo-blue-fill);color:var(--dut-blue);font-weight:700}
+.dut-dossier-list{display:grid;gap:12px;max-height:650px;overflow-y:auto;padding:2px;scrollbar-width:thin}
+.dut-dossier{display:flex;flex-direction:column;gap:14px;text-align:left;padding:16px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:15px;cursor:pointer;color:var(--text);transition:border-color .18s,box-shadow .18s}
+.dut-dossier:hover{border-color:#9ab7db}.dut-dossier.selected{border-color:var(--dut-blue);box-shadow:0 0 0 1px var(--dut-blue)}
+.dut-dossier-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}.dut-dossier-top>strong{font-size:11px;overflow-wrap:anywhere}
+.dut-status{display:inline-flex;font-size:9px;line-height:1.4;font-weight:650;padding:5px 8px;background:var(--bo-blue-fill);color:var(--dut-blue);border-radius:15px;white-space:nowrap}
+.dut-status.is-ok{background:#edf6ef;color:var(--dut-green)}.dut-status.is-warn{background:#fff2e1;color:var(--dut-orange)}
+.dut-dossier-route{font-size:15px;line-height:1.5;letter-spacing:-.2px}
+.dut-dossier-meta,.dut-dossier-bottom{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-secondary)}
+.dut-dossier-meta>span{margin-left:auto}.dut-dossier-bottom{border-top:1px solid var(--border);padding-top:12px}.dut-dossier-bottom>svg:last-child{margin-left:auto}
+.dut-sidebar-note{display:flex;align-items:flex-start;gap:8px;font-size:11px;line-height:1.6;color:var(--text-secondary);margin:22px 0 0}.dut-sidebar-note svg{flex-shrink:0;margin-top:1px}
+.dut-detail{display:grid;gap:18px;min-width:0}
+.dut-detail-toolbar{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.dut-eyebrow{font-size:9px;font-weight:700;letter-spacing:1.2px;color:var(--text-muted);display:block;margin-bottom:6px}
+.dut-detail-toolbar .btn{font-size:12px;min-height:42px}.dut-detail-toolbar .action-refusee{max-width:290px}.dut-detail-toolbar .motif-refus{font-size:11px;line-height:1.5}
+.dut-steps{list-style:none;display:flex;gap:15px;margin:0;padding:15px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.dut-steps li{display:flex;align-items:center;gap:8px;font-size:10px;line-height:1.4;color:var(--text-muted);flex:1}
+.dut-steps li>span{width:24px;height:24px;display:grid;place-items:center;flex-shrink:0;border:1px solid var(--border);border-radius:15px;font-size:10px}
+.dut-steps li.done{color:var(--dut-green)}.dut-steps li.done>span{background:#edf6ef;border-color:#d2e6d9}
+.dut-sheet{padding:30px;box-shadow:0 8px 35px #20365506;min-width:0;color:var(--text)}
+.dut-sheet-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:23px;border-bottom:1px solid var(--border)}
+.dut-sheet-top>div{display:grid;gap:6px}.dut-sheet-brand{font-weight:800;font-size:13px;letter-spacing:.4px}.dut-sheet-top small{font-size:8px;letter-spacing:1.4px;color:var(--text-secondary)}
+.dut-demo-stamp{font-size:8px;letter-spacing:1px;color:var(--dut-orange);border:1px solid #e7d1b8;padding:7px 10px;border-radius:15px;font-weight:700}
+.dut-document-title{display:flex;align-items:center;gap:16px;margin:25px 0}.dut-document-title>span{font-size:26px;letter-spacing:-1px;font-weight:800;color:var(--dut-blue);padding-right:16px;border-right:1px solid var(--border)}
+.dut-sheet .dut-document-title h2{font-size:18px;line-height:1.35;letter-spacing:-.5px}.dut-document-title p{font-size:11px;color:var(--text-secondary);margin:6px 0 0}
+.dut-document-route{display:grid;gap:8px;border:1px solid var(--border);border-radius:15px;padding:18px 20px;margin-bottom:28px}
+.dut-document-route small{font-size:8px;letter-spacing:1.3px;font-weight:700;color:var(--dut-blue)}.dut-document-route strong{font-size:22px;line-height:1.4;letter-spacing:-.5px}.dut-document-route>span{font-size:12px;color:var(--text-secondary);line-height:1.5}
+.dut-document-section{margin:23px 0;break-inside:avoid}
+.dut-document-section h3{display:flex;align-items:center;gap:9px;font-size:12px;margin:0 0 15px;font-weight:700}
+.dut-document-section h3>span{font-size:8px;color:var(--dut-blue);background:var(--bo-blue-fill);border-radius:15px;padding:5px 6px}
+.dut-document-fields{display:grid;grid-template-columns:1fr 1fr;gap:17px 28px;margin:0;padding:0 0 22px;border-bottom:1px solid var(--border)}
+.dut-document-fields>div{min-width:0}.dut-document-fields dt{font-size:10px;color:var(--text-secondary);margin-bottom:6px}.dut-document-fields dd{margin:0;font-size:12px;font-weight:600;line-height:1.5;overflow-wrap:anywhere}
+.dut-document-footer{font-size:10px;line-height:1.7;color:var(--text-secondary)}.dut-document-footer p{margin:0 0 8px}.dut-document-footer strong{font-size:10px;font-weight:600;color:var(--dut-orange)}
+.dut-related{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;font-size:11px;color:var(--text-secondary)}.dut-related>span,.dut-related>a{display:flex;align-items:center;gap:7px}.dut-related>a{color:var(--dut-blue);font-weight:600}
+.dut-poc-note{font-size:11px;line-height:1.6;color:var(--text-muted);margin:0}.dut-print-sheet{display:none}
+.dut-page :is(a,button):focus-visible{outline:2px solid var(--dut-blue);outline-offset:3px}
+@container dut (max-width:950px){.dut-workspace{grid-template-columns:1fr}.dut-sidebar{position:static}.dut-dossier-list{display:flex;max-height:none;overflow-x:auto;padding:3px 3px 8px}.dut-dossier{flex:0 0 270px}.dut-sidebar-note{margin-top:13px}.dut-search{margin:15px 0 10px}.dut-sheet{padding:28px}.dut-kpis{gap:12px}}
+@container dut (max-width:540px){.dut-kpis{grid-template-columns:1fr}.dut-header-icon{display:none}.dut-sheet{padding:20px}.dut-document-title{gap:12px}.dut-sheet .dut-document-title h2{font-size:16px}.dut-document-route strong{font-size:19px}.dut-document-fields{gap:18px}.dut-steps{gap:8px}.dut-steps li{font-size:9px;flex-direction:column;align-items:flex-start}.dut-detail-toolbar{align-items:center}.dut-sheet-top{flex-wrap:wrap}.dut-page-header p{font-size:12px}}
+[data-theme=dark] .dut-status.is-ok,[data-theme=dark] .dut-steps li.done>span{background:#223b32;color:#a0d3b6}
+[data-theme=dark] .dut-status.is-warn{background:#3b3023;color:#edbb83}
+@media(prefers-reduced-motion:reduce){.dut-dossier{transition:none}}
+@media print{
+  body.dut-printing>*:not(.dut-print-sheet){display:none!important}
+  body.dut-printing{background:#fff!important;color:#193451!important;margin:0;padding:0}
+  body.dut-printing .dut-print-sheet{display:block;border:0;border-radius:0;box-shadow:none;padding:12mm;max-width:none;width:100%;font-family:Arial,sans-serif;--text:#193451;--text-secondary:#50647b;--border:#dce3eb;--surface:#fff;--bo-blue-fill:#edf3fc;--dut-blue:#3265af;--dut-orange:#925a2c}
+  .dut-print-sheet .dut-sheet-top{padding-bottom:15px}.dut-print-sheet .dut-document-title{margin:18px 0}.dut-print-sheet .dut-document-route{margin-bottom:18px;padding:15px}.dut-print-sheet .dut-document-section{margin:16px 0}.dut-print-sheet .dut-document-fields{padding-bottom:15px;gap:12px 25px}
+  @page{size:A4;margin:8mm}
+}
+.dut-empty-panel{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding-bottom:24px}
+.dut-empty-panel .empty{border:0;margin:0}.dut-demo-actions{display:grid;justify-items:center;gap:12px;padding:0 25px;text-align:center}.dut-demo-actions p{font-size:11px;line-height:1.6;color:var(--text-secondary);margin:0;max-width:330px}
+/* Tirage du PDF officiel : choix de l'exemplaire + bouton, alignés à droite. */
+.dut-toolbar-actions{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;justify-content:flex-end}
+.dut-tirage{display:grid;gap:8px;justify-items:end}
+.dut-tirage-copie{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--text-muted);text-transform:uppercase}
+.dut-tirage-copie .select{min-height:38px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:400}
+.dut-tirage-note{margin:0;max-width:300px;font-size:10px;line-height:1.5;color:var(--text-muted);text-align:right}
+.dut-tirage [aria-busy=true]{opacity:.6;cursor:progress}
+@container dut (max-width:540px){.dut-toolbar-actions{justify-content:flex-start}.dut-tirage{justify-items:start}.dut-tirage-note{text-align:left}}

@@ -1,0 +1,65 @@
+/* Composition logistique : grands visuels, alternance marine / clair, accents OIC.
+   L’illustration et l’assemblage interactif des acteurs restent inchangés. */
+.oic-landing{background:#f7fafc}
+.oic-landing .lp-top{background:linear-gradient(120deg,#102b4b,#155a9c);color:#fff;padding-bottom:0}
+.oic-landing .lp-nav{background:linear-gradient(120deg,#fffffff2,#ffffffdc);border-color:#fff;box-shadow:0 8px 25px #051c3220;border-radius:14px}
+.lp-hero{padding:72px 0 90px;gap:45px;grid-template-columns:1fr 1.15fr}
+.lp-hero h1{font-size:clamp(44px,4.5vw,66px);letter-spacing:-2.2px}
+.lp-hero h1 span{color:#ffab44}
+.lp-hero h1 span::after{display:none}
+.lp-hero .lp-eyebrow{color:#d4e6f5}
+.lp-hero-copy>p{color:#deebf5;max-width:460px}
+.lp-hero .lp-outline{background:#ffffff0a;color:#fff!important;border-color:#ffffff70}
+.lp-reassurance{color:#d4e8df}
+.lp-reassurance svg{color:#7fdbab}
+.lp-logistics{padding:12px 0}
+.lp-logistics-image{width:100%;margin-left:0;border-radius:16px;box-shadow:0 24px 55px #03182d40}
+.lp-sun{width:190px;height:190px;right:-15px;top:-25px;opacity:.8}
+.lp-tag-top{left:-18px;top:-8px}
+.lp-tag-bottom{right:-10px;bottom:18px}
+.lp-illustration-note{color:#c8ddea}
+.lp-strip{position:relative;margin:0 0 -34px;padding:28px;z-index:4;background:linear-gradient(120deg,#fffffff5,#ffffffe8);border:1px solid #fff;border-radius:14px;color:#193a61;box-shadow:0 15px 40px #102b4b18;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.lp-strip svg{color:#155a9c}
+.lp-city-ribbon{padding-top:62px;padding-bottom:24px;background:#f4f8fb;color:#38566f;border-bottom:1px solid #dce7ef;font-size:12px}
+.lp-city-ribbon svg{color:#dd7605}
+.lp-section{padding-top:80px;padding-bottom:80px}
+.lp-section-head{max-width:700px}
+.lp-section h2{font-size:clamp(30px,3vw,42px)}
+.lp-kicker{color:#b65b00}
+.lp-photo-story{min-height:390px}
+.lp-photo-shade,.lp-plateau .lp-photo-shade{background:linear-gradient(90deg,#102b4bf5,#102b4bbd 45%,#102b4b08 85%)}
+.lp-photo-copy{padding-block:64px}
+.lp-photo-copy h2{max-width:580px;font-size:clamp(32px,3.5vw,48px)}
+.lp-photo-copy .lp-eyebrow{color:#ffb456}
+.lp-product-showcase{background:#fff;gap:60px}
+.oic-landing .lp-product-showcase .lp-product{transform:none;border-width:1px;border-radius:14px}
+.oic-landing .lp-workspace{border-radius:14px;background:linear-gradient(125deg,#fff,#eaf3fbc9)}
+.lp-role-tabs button{border-radius:8px}
+/* L’écosystème conserve ses connexions et sa progression au scroll. */
+.lp-assembly{background:radial-gradient(ellipse at 50% 40%,#e0effb,transparent 70%),#f2f7fa}
+.lp-assembly-heading .lp-kicker{color:#b65b00}
+.oic-landing .lp-assembly-hub{border-radius:18px}
+.oic-landing .lp-actor-tile{border-radius:14px}
+.lp-how{background:#fff}
+.oic-landing .lp-how .lp-steps article:nth-child(n){background:linear-gradient(125deg,#ffffffed,#eaf3fbb8);color:#193a61;border:1px solid #dbe8f1;border-radius:14px;transform:none}
+.oic-landing .lp-how .lp-steps article:nth-child(n) p{color:#536b80}
+.oic-landing .lp-how .lp-steps article:nth-child(n) .lp-step-top{color:#155a9c}
+.lp-step-top span{color:#b65b00;font-size:28px}
+.lp-benefits{max-width:none;padding-inline:max(24px,calc((100vw - 1132px)/2));background:#102b4b;color:#fff;gap:65px}
+.lp-benefits .lp-kicker{color:#ffb456}
+.lp-benefits>div>p{color:#cbddeb}
+.lp-benefits .btn-primary{background:#f38a0b;color:#193a61;border-color:#f38a0b}
+.oic-landing .lp-benefit-grid article:nth-child(n){background:linear-gradient(125deg,#ffffff12,#ffffff06);border:1px solid #ffffff25;border-radius:12px;box-shadow:inset 0 1px 0 #ffffff15}
+.lp-benefit-grid p{color:#cbddeb}
+.lp-benefit-grid svg{color:#ffab44}
+.lp-faq{padding-top:80px;background:transparent}
+.lp-faq details{border-color:#dde8ef;border-radius:10px}
+.lp-final{position:relative;background:linear-gradient(90deg,#102b4bf5,#155a9cdd),url('../assets/port-abidjan.png') center/cover;color:#fff;padding:70px 24px}
+.lp-final .lp-eyebrow{color:#ffb456}
+.lp-final h2{font-size:clamp(32px,3.5vw,46px)}
+.lp-final .lp-orange{background:#f38a0b;color:#193a61!important;border-color:#f38a0b}
+.lp-final .lp-outline{color:#fff!important;border-color:#ffffff60}
+.lp-footer{background:transparent;padding-block:35px}
+@media(max-width:1050px){.lp-hero{gap:28px}.lp-hero h1{font-size:46px}.lp-strip{padding:23px 18px;gap:18px}.lp-benefits{gap:35px}}
+@media(max-width:760px){.lp-hero{grid-template-columns:1fr;padding:45px 0 65px;gap:38px}.lp-hero h1{font-size:48px}.lp-logistics{max-width:540px}.lp-tag-top{left:5px}.lp-tag-bottom{right:0}.lp-strip{padding:22px 16px;margin-bottom:-25px;gap:20px}.lp-city-ribbon{padding-top:48px}.lp-section{padding-block:55px}.lp-product-showcase{gap:30px}.lp-photo-story{min-height:420px}.lp-photo-copy{padding:55px 23px}.lp-photo-copy h2{font-size:35px}.lp-photo-copy p{max-width:100%}.lp-benefits{padding-inline:20px}.lp-faq{padding-top:55px}.lp-final{padding:55px 20px}}
+.oic-landing .lp-logistics .lp-tag-bottom{background:linear-gradient(125deg,#088a43f5,#08783be6);color:#fff}

@@ -1,0 +1,131 @@
+/* Back-offices uniquement. Palette de l’illustration : camion bleu,
+   conteneur orange, végétation sauge, cartons sable et ciel poudré. */
+.app-shell,body:has(.app-shell)>:is(.modal-overlay,.toasts){
+  --b2f-ink:#203655;--b2f-blue:#3265af;--b2f-blue-deep:#244e86;
+  --b2f-orange:#ee8b2b;--b2f-green:#70a384;--b2f-sand:#c69c6d;
+  --bo-blue:#244e86;--bo-blue-fill:#e2ecfc;--bo-blue-edge:#c5d7ef;
+  --bo-orange:#995014;--bo-orange-fill:#fff0dd;--bo-orange-edge:#edd5b7;
+  --bo-green:#396c50;--bo-green-fill:#e8f3e9;--bo-green-edge:#c7ddcd;
+  --bo-sand:#805b32;--bo-sand-fill:#f5ebdc;--bo-sand-edge:#e2d2ba;
+  --bo-page:linear-gradient(135deg,#eaf1fc,#f4f7fc 58%,#f3f2e9);
+  --bo-rail:#203b64;--bo-rail-active:#3d6296;
+}
+:root:not([data-theme="dark"]) .app-shell.app-fresh,
+:root:not([data-theme="dark"]) body:has(.app-shell)>:is(.modal-overlay,.toasts){
+  --bg:#f1f5fc;--surface:#fff;--surface-2:#edf3fc;--surface-sunken:#e4ecf8;
+  --text:var(--b2f-ink);--text-secondary:#526785;--text-muted:#60728b;
+  --border:#dce5f1;--border-strong:#bccde2;--border-hairline:#e8edf5;
+  --accent:var(--b2f-blue);--accent-hover:var(--b2f-blue-deep);
+  --accent-soft:var(--bo-blue-fill);--accent-soft-border:var(--bo-blue-edge);--accent-ring:#3265af30;
+  --navy:var(--b2f-ink);--navy-2:var(--b2f-blue);--navy-soft:var(--bo-blue-fill);
+  --signature:var(--bo-green);--signature-hover:#2c573e;
+  --signature-soft:var(--bo-green-fill);--signature-soft-border:var(--bo-green-edge);
+  --success:var(--bo-green);--success-soft:var(--bo-green-fill);
+  --warning:var(--bo-orange);--warning-soft:var(--bo-orange-fill);
+  --info:var(--bo-blue);--info-soft:var(--bo-blue-fill);
+  --sq-blue-bg:var(--bo-blue-fill);--sq-blue-fg:var(--bo-blue);
+  --sq-green-bg:var(--bo-green-fill);--sq-green-fg:var(--bo-green);
+  --sq-amber-bg:var(--bo-orange-fill);--sq-amber-fg:var(--bo-orange);
+  --sq-teal-bg:var(--bo-green-fill);--sq-teal-fg:var(--bo-green);
+}
+:root[data-theme="dark"] .app-shell,
+:root[data-theme="dark"] body:has(.app-shell)>:is(.modal-overlay,.toasts){
+  --bo-blue:#a5c7fa;--bo-blue-fill:#243a58;--bo-blue-edge:#395373;
+  --bo-orange:#f4bc7c;--bo-orange-fill:#493724;--bo-orange-edge:#645039;
+  --bo-green:#a5d1b0;--bo-green-fill:#263f33;--bo-green-edge:#3e5949;
+  --bo-sand:#ddc4a1;--bo-sand-fill:#3d382e;--bo-sand-edge:#585141;
+  --bo-page:linear-gradient(135deg,#19283d,#172536 60%,#202e2b);
+  --bo-rail:#122139;--bo-rail-active:#314e76;
+}
+
+/* Navigation : bleu ancré, repères verts et encart sable. */
+.app-shell.app-fresh{background:var(--bo-page)}
+.app-shell.app-fresh .app-rail{background:var(--bo-rail);border-color:transparent}
+.app-shell.app-fresh .rail-link{color:#d4e2f4}
+.app-shell.app-fresh .rail-link:hover,
+.app-shell.app-fresh .rail-link.active{background:var(--bo-rail-active);color:#fff}
+.app-shell.app-fresh .rail-logo{background:#e4edfb;color:var(--b2f-blue)}
+.app-shell.app-fresh .sidebar{background:var(--surface);border-color:var(--border)}
+.app-shell.app-fresh .brand-tag{background:var(--bo-green-fill);color:var(--bo-green)}
+.app-shell.app-fresh .sidebar-zone-title>svg{color:var(--bo-blue)}
+.app-shell.app-fresh .sidebar-zone:nth-child(2n) .sidebar-zone-title>svg{color:var(--bo-orange)}
+.app-shell.app-fresh .sidebar-zone:nth-child(3n) .sidebar-zone-title>svg{color:var(--bo-green)}
+.app-shell.app-fresh .nav-link.active{background:var(--bo-blue-fill);color:var(--bo-blue)}
+.app-shell.app-fresh .sidebar-note{background:var(--surface);border:1px solid var(--bo-sand-edge)}
+.app-shell.app-fresh .sidebar-note :is(svg,strong){color:var(--bo-sand)}
+.app-shell .nav-search{background:var(--surface-2)}
+.app-shell .topbar .icon-btn-ghost{background:var(--bo-blue-fill);color:var(--bo-blue)}
+.app-shell .topbar .btn-secondary{background:var(--bo-green-fill);color:var(--bo-green)}
+.app-shell .btn-primary{box-shadow:0 4px 10px #3265af18}
+.app-shell .btn-secondary:hover:not(:disabled){background:var(--bo-blue-fill);border-color:var(--bo-blue-edge);color:var(--bo-blue)}
+
+/* Les indicateurs génériques couvrent aussi les transporteurs, auxiliaires,
+   concessionnaires et contrôleurs, pas seulement le dashboard affréteur. */
+.app-shell .kpi-grid>.kpi-card{background:var(--surface);border-color:var(--bo-blue-edge)}
+.app-shell .kpi-grid>.kpi-card:nth-child(4n+2){background:var(--surface);border-color:var(--bo-orange-edge)}
+.app-shell .kpi-grid>.kpi-card:nth-child(4n+3){background:var(--surface);border-color:var(--bo-green-edge)}
+.app-shell .kpi-grid>.kpi-card:nth-child(4n+4){background:var(--surface);border-color:var(--bo-sand-edge)}
+.app-shell .dash-kpi{background:var(--surface);border-color:var(--bo-blue-edge)}
+.app-shell .dash-kpi:nth-child(2),.app-shell .dash-kpi.dash-tone-orange{background:var(--surface);border-color:var(--bo-orange-edge)}
+.app-shell .dash-kpi:nth-child(3),.app-shell .dash-kpi.dash-tone-green{background:var(--surface);border-color:var(--bo-green-edge)}
+.app-shell .dash-kpi:nth-child(4){background:var(--surface);border-color:var(--bo-sand-edge)}
+.app-shell .dash-kpi>.kpi-card{background:transparent;box-shadow:none;border:0}
+.app-shell .dash-kpi-footer{background:var(--surface);border-color:var(--border)}
+.app-shell .dash-kpi-comparison{background:var(--surface)}
+.app-shell .dash-tone-blue .dash-kpi-icon{background:var(--surface);color:var(--bo-blue)}
+.app-shell .dash-tone-orange .dash-kpi-icon{background:var(--surface);color:var(--bo-orange)}
+.app-shell .dash-tone-green .dash-kpi-icon{background:var(--surface);color:var(--bo-green)}
+.app-shell .dash-welcome{background:var(--surface);border-color:var(--bo-blue-edge)}
+.app-shell .dash-welcome h2{color:var(--text)}
+.app-shell .dash-welcome p{color:var(--text-secondary)}
+.app-shell .dash-welcome .dash-eyebrow{color:var(--bo-blue)}
+.app-shell .dash-balance{background:var(--surface);border-color:var(--bo-green-edge)}
+.app-shell .dash-balance-ok{color:var(--bo-green)}
+.app-shell .dash-next-icon.dash-tone-blue{background:var(--bo-blue-fill);color:var(--bo-blue)}
+.app-shell .dash-next-icon.dash-tone-orange{background:var(--bo-orange-fill);color:var(--bo-orange)}
+.app-shell .dash-next-icon.dash-tone-green{background:var(--bo-green-fill);color:var(--bo-green)}
+.app-shell .dash-route{background:var(--surface)}
+.app-shell .dash-route-line svg{background:var(--surface);color:var(--bo-sand)}
+.app-shell .dash-period{background:var(--bo-sand-fill);border-color:var(--bo-sand-edge);color:var(--bo-sand)}
+.app-shell .dash-panel-head>svg{color:var(--bo-blue)}
+.app-shell .data-table thead th{background:var(--bo-blue-fill);color:var(--bo-blue);border-color:var(--bo-blue-edge)}
+.app-shell .data-table tbody tr:hover td{background:var(--surface-2)}
+.app-shell .card-header .card-title{color:var(--text)}
+.app-shell .offer-card{background:var(--surface);border-color:var(--bo-blue-edge)}
+.app-shell .offer-head{color:var(--bo-blue)}
+.app-shell .offer-foot{background:var(--surface);padding:12px;border-radius:15px;border:0}
+
+/* Marché et réservation : disponibilité bleue, attente orange, accord vert. */
+.app-shell .market-offer{background:#f1f6ff;border-color:#c9d9ef;box-shadow:0 5px 14px #244b7e12;transition:background .15s,border-color .15s,box-shadow .15s}
+.app-shell .market-offer.selected{background:#eaf2ff;border-color:var(--accent);box-shadow:0 6px 18px #244b7e20,inset 0 0 0 1px var(--accent)}
+.app-shell .market-offer-select:hover{background:#e7f0ff}
+.app-shell .market-offer:hover{border-color:#8cadd9;box-shadow:0 7px 18px #244b7e22}
+.app-shell .market-offer .market-trip-connector .fret-truck{background:transparent}
+.app-shell .market-truck{background:var(--surface);color:var(--bo-blue)}
+.app-shell .market-capacity{background:var(--bo-green-fill);color:var(--bo-green)}
+.app-shell .market-trip-chips>span{background:var(--surface);color:var(--text-secondary)}
+.app-shell .market-trip-chips>span:last-child{background:var(--bo-green-fill);color:var(--bo-green)}
+.app-shell .market-trip-dot,.app-shell .market-trip-connector svg,
+.app-shell .market-offer.selected .market-trip-dot,.app-shell .market-offer.selected .market-trip-connector svg{background:var(--surface)}
+.app-shell .market-offer-bottom{border-color:var(--bo-blue-edge)}
+.app-shell .market-offer-bottom .btn{color:var(--bo-blue)}
+.app-shell .reservation-summary-card{background:var(--surface);border-color:var(--bo-orange-edge)}
+.app-shell .reservation-summary-card.summary-accepter{background:var(--surface);border-color:var(--bo-blue-edge)}
+.app-shell .reservation-summary-card.summary-valider{background:var(--surface);border-color:var(--bo-green-edge)}
+.app-shell .reservation-summary-icon{background:var(--surface);color:var(--bo-orange)}
+.app-shell .summary-accepter .reservation-summary-icon{color:var(--bo-blue)}
+.app-shell .summary-valider .reservation-summary-icon{color:var(--bo-green)}
+.app-shell .reservation-corridor{background:var(--surface)}
+.app-shell .reservation-route-line svg{background:var(--surface)}
+.app-shell .reservation-message{background:var(--surface)}
+.app-shell .state-reserver .reservation-message{background:var(--surface)}
+.app-shell .state-accepter .reservation-message{background:var(--surface)}
+.app-shell .state-valider .reservation-message{background:var(--surface)}
+.app-shell .reservation-reassurance{background:var(--surface);color:var(--bo-sand)}
+.app-shell .reservation-reassurance svg{color:var(--bo-sand)}
+body:has(.app-shell)>.modal-overlay .vehicle-detail-price{background:var(--surface)}
+body:has(.app-shell)>.modal-overlay .vehicle-detail-truck{background:var(--bo-blue-fill);color:var(--bo-blue)}
+body:has(.app-shell)>.modal-overlay .vehicle-availability{background:var(--bo-green-fill);color:var(--bo-green)}
+
+:root[data-theme="dark"] .app-shell .market-offer{background:#1d304a;border-color:#3e587b}
+:root[data-theme="dark"] .app-shell .market-offer.selected,:root[data-theme="dark"] .app-shell .market-offer-select:hover{background:#243d5e}

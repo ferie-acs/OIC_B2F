@@ -1,0 +1,91 @@
+/* Formulaires, assistant multi-étapes, bandeaux et états. */
+
+/* ==========================  Formulaires  ========================== */
+.field{display:flex;flex-direction:column;gap:7px;margin-bottom:var(--s3)}
+/* Un champ isolé dans une carte ne s'étire plus sur toute sa largeur : au-delà
+   d'environ 560px, le lien entre le label et son champ se perd, et un champ de
+   date large de 1100px n'a pas de sens. Dans une rangée, la colonne commande. */
+.card-body>.field{max-width:560px}
+.field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--s3)}
+/* Une action posée directement dans une rangée de champs (le « Rechercher » du
+   marché) n'a pas de label au-dessus : par défaut elle s'étirait sur toute la
+   hauteur de la cellule, label compris — un pavé de 88px à côté de champs de
+   44px. Elle s'aligne maintenant sur la ligne des champs, à la hauteur de
+   cible tactile minimale. */
+.field-row>.btn{align-self:end;margin-bottom:var(--s3);min-height:44px}
+.field label{font-size:13px;font-weight:650;color:var(--text-secondary);display:flex;align-items:center;gap:4px}
+.field label .req{color:var(--error)}
+.field .hint{font-size:12px;color:var(--text-muted)}
+.field .error-msg{font-size:12px;color:var(--error);display:flex;align-items:center;gap:5px}
+.input,.select,textarea.textarea{
+  width:100%;font-family:inherit;font-size:15px;color:var(--text);background:var(--surface);
+  border:1px solid var(--border-strong);border-radius:var(--r-control);
+  padding:12px 14px;transition:border-color .15s,box-shadow .15s;
+}
+.input::placeholder,textarea.textarea::placeholder{color:var(--text-muted);font-weight:400}
+.input:hover,.select:hover,textarea.textarea:hover{border-color:var(--text-secondary)}
+.input:focus,.select:focus,textarea.textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.input:disabled,.select:disabled{opacity:.55;cursor:not-allowed}
+.input[readonly]{background:var(--surface-sunken)}
+.field.has-error .input,.field.has-error .select,.field.has-error textarea.textarea{border-color:var(--error)}
+textarea.textarea{resize:vertical;min-height:84px}
+.select{appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2365768a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:38px;
+}
+.checkbox-row,.radio-row{
+  display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:14px;color:var(--text);
+  border:1px solid var(--border-strong);border-radius:var(--r-md);padding:12px 14px;
+}
+.checkbox-row:has(input:checked),.radio-row:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.checkbox-row input,.radio-row input{width:17px;height:17px;flex:none;cursor:pointer;accent-color:var(--accent);margin-top:1px}
+.checkbox-row .label-body strong{display:block;font-size:14px;font-weight:650}
+.checkbox-row .label-body span{display:block;font-size:12px;color:var(--text-muted);margin-top:2px}
+
+/* ==========================  Wizard  ========================== */
+.wizard{display:grid;grid-template-columns:2fr 1fr;gap:var(--s4);align-items:start}
+.stepper-h{display:flex;align-items:center;margin-bottom:var(--s4)}
+.stepper-h-step{display:flex;align-items:center;gap:10px;flex:none}
+.stepper-h-step .dot{
+  width:26px;height:26px;border-radius:var(--r-sm);display:grid;place-items:center;flex:none;
+  font-size:12px;font-weight:700;border:1px solid var(--border-strong);color:var(--text-muted);background:transparent;
+}
+.stepper-h-step .label{font-size:12.5px;font-weight:600;color:var(--text-muted);white-space:nowrap}
+.stepper-h-step.done .dot{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-soft)}
+.stepper-h-step.current .dot{background:var(--accent);color:#fff;border-color:var(--accent)}
+.stepper-h-step.current .label{color:var(--text);font-weight:700}
+.stepper-h-connector{flex:1;height:1px;background:var(--border);margin:0 10px}
+.stepper-h-connector.done{background:var(--accent)}
+.wizard-section-label{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);margin:var(--s4) 0 var(--s2);font-weight:700}
+.wizard-section-label:first-child{margin-top:0}
+/* `space-between` collait le bouton à gauche quand « Précédent » n'existe pas
+   encore (étape 1) : l'action principale doit rester à droite dans tous les cas. */
+.wizard-footer{display:flex;justify-content:flex-start;gap:var(--s2);margin-top:var(--s2);padding-top:var(--s4);border-top:1px solid var(--border)}
+.wizard-footer>.btn:last-child{margin-left:auto}
+/* Le panneau latéral d'un assistant est posé nu à côté d'une carte : sans
+   surface propre il flottait sur le fond de page, désaligné de sa voisine. */
+.live-recap{
+  position:sticky;top:96px;align-self:start;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:22px;box-shadow:var(--sh-1);
+}
+.live-recap>h3{font-size:17px;font-weight:700;margin-bottom:var(--s2)}
+.live-recap-list{margin:0}
+.live-recap-item{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-hairline);font-size:13px}
+.live-recap-item:last-child{border-bottom:none;padding-bottom:0}
+.live-recap-item dt,.live-recap-item dd{margin:0;min-width:0}
+.live-recap-item span{color:var(--text-muted)}
+.live-recap-item strong{color:var(--text);text-align:right;font-weight:650}
+
+/* ==========================  Timeline  ========================== */
+.timeline{display:flex;flex-direction:column}
+.timeline-item{display:flex;gap:var(--s3);padding-bottom:var(--s4);position:relative}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-item::before{content:"";position:absolute;left:5px;top:20px;bottom:0;width:1px;background:var(--border)}
+.timeline-item:last-child::before{display:none}
+.timeline-dot{width:11px;height:11px;border-radius:50%;background:var(--border-strong);flex:none;z-index:1;margin-top:5px}
+.timeline-dot.done{background:var(--signature)}
+.timeline-dot.current{background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.timeline-content strong{display:block;font-size:14px;font-weight:650}
+.timeline-content .meta{font-size:12px;color:var(--text-muted);margin-top:2px}
+.timeline-content .note{font-size:13px;color:var(--text-secondary);margin-top:4px}

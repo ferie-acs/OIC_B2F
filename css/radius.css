@@ -1,0 +1,78 @@
+/* Rayon commun aux surfaces et contrôles. Les repères cartographiques et
+   pastilles de statut restent circulaires pour conserver leur signification. */
+:is(.card,.kpi-card,.offer-card,.auth-card,.modal-card,.search-panel,.explore-stat,
+.public-offer,.public-empty,.map-panel,.selection-notice,.sidebar-note,
+.btn,.input,.select,textarea.textarea,.badge,.demo-account-btn,
+.th-nav,.th-button,.th-actor,.th-image-note,.th-photo-caption,
+.th-photo-stack>img,.th-trust-photo>img,
+.th-faq details,.th-map-workspace,.th-map-floating,.th-map-offer,
+.th-city-filter,.th-route-note,.th-map-badge,.th-signup,.th-signup-form input,
+.th-offer-tabs button,.th-relief-toolbar button,.th-map-empty button,
+.lp-nav,.lp-product,.lp-workspace,.lp-workspace-screen,.lp-mini-offer,
+.lp-actor-tile,.lp-assembly-hub,.lp-float-tag,.lp-benefit-grid article,
+.lp-steps article,.lp-role-tabs button,.lp-faq details,.lp-place-label,
+.view-switch,.view-switch a,.explore-field input,.explore-field select){border-radius:15px!important}
+
+/* Espaces privés uniquement : les jetons hérités et les ajouts ci-dessous
+   ne modifient ni l'accueil, ni le guide, ni les écrans publics. */
+.app-shell,body:has(.app-shell)>.modal-overlay{
+  --r-sm:15px;
+  --r-md:15px;
+  --r-lg:15px;
+  --r-xl:15px;
+  --r-control:15px;
+  --r-pill:15px;
+}
+
+/* Contrôles des back-offices. Les radios, cases à cocher, curseurs et
+   interrupteurs conservent leur forme native. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(
+  button:not([role="switch"]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,textarea,.btn,.icon-btn,.icon-btn-ghost,.input,.select,
+  .checkbox-row,.radio-row,.view-switch,.view-switch a,.chip-btn,
+  .pagination-pages button,.rail-link,.nav-link,.nav-search,.nav-search-results,
+  .nav-search-results a,.header-search,.header-search kbd
+){border-radius:15px!important}
+
+/* Cartes, panneaux, messages et indicateurs rectangulaires partagés. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(
+  .card,.kpi-card,.offer-card,.modal-card,.search-panel,.map-panel,
+  .selection-notice,.sidebar-note,.page>.empty-state,.refus,.empty,.refus-note,
+  .alert-banner,.delegation-bar,.ledger,.contact-reveal,.live-recap,.toast,
+  .badge,.brand-tag,.role-chip,.nav-link .pill,.availability-tag,.map-country-chip,
+  .rail-logo,.stat-icon,.kpi-icon,.sidebar-zone-title,.map-controls
+){border-radius:15px!important}
+
+/* Tableaux de bord, marché, véhicules et réservations, pour tous les rôles.
+   Les panneaux mobiles utilisent eux aussi quatre coins de 15px. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(
+  .dash-welcome,.dash-kpi,.dash-kpi-icon,.dash-next-icon,.dash-panel,
+  .dash-route,.dash-map-canvas,.dash-period,.dash-trend,.dash-road-map,
+  .dash-road-distance,.dash-road-reset,.dash-corridor-choice,.dash-corridor-symbol,
+  .dash-road-pin span,.market-workspace,.freight-market-map-status,
+  .market-sidebar,.market-offer,.market-offer-select,.market-truck,.market-capacity,
+  .market-trip-chips>span,.market-pin,.market-arrival,.vehicle-detail-truck,
+  .vehicle-detail-price,.vehicle-detail-map,.vehicle-availability,
+  .reservation-summary-card,.reservation-summary-icon,.reservation-filter,
+  .reservation-filter span,.reservation-list>.empty-state,.reservation-card,
+  .reservation-corridor,.reservation-reassurance
+){border-radius:15px!important}
+
+/* Aucun sélecteur universel : avatars, points de statut, repères de trajet,
+   roues et diagrammes conservent leur géométrie. */
+
+/* Ces notifications sont montées dans body par ui.js ; le shell privé
+   doit être présent pour que la règle leur soit appliquée. */
+body:has(.app-shell)>.toasts .toast{border-radius:15px!important}
+
+/* Tous les formulaires, publics comme privés : rayon unique de 15px.
+   Les cases, boutons radio, curseurs et sélecteurs de couleur gardent
+   leur géométrie fonctionnelle. Aucun changement d'épaisseur de bordure. */
+form,fieldset,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="hidden"]),
+select,textarea,
+form button:not([role="switch"]),
+.auth-password,.auth-password-toggle{
+  border-radius:15px!important;
+}

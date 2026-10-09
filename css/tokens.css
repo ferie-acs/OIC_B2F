@@ -1,0 +1,94 @@
+/* Jetons de conception — unique déclaration :root.
+   Base DUT consolidée (D33), palette OIC issue du logo fourni : bleu, orange et vert. */
+
+:root{
+  /* ---- Surfaces ---- */
+  --bg:#f8f9fc;
+  --surface:#fff;
+  --surface-2:#f7f8fb;
+  --surface-sunken:#eef0f6;
+
+  /* ---- Texte ---- */
+  --text:#192b3c;
+  --text-secondary:#52657c;
+  --text-muted:#65768a;
+
+  /* ---- Bordures ---- */
+  --border:#e9ebf2;
+  --border-strong:#d9dce7;
+  --border-hairline:#f0f1f6;
+
+  /* ---- Accent bleu OIC. ---- */
+  --oic-orange:#f38a0b;
+  --oic-green:#088a43;
+  --accent:#155a9c;
+  --accent-hover:#104b85;
+  --accent-soft:#eaf3fb;
+  --accent-soft-border:#cbdff1;
+  --accent-ring:#155a9c30;
+
+  --navy:#193a61;
+  --navy-2:#2869a6;
+  --navy-soft:#eaf3fb;
+
+  /* ---- B2F : couleur de signature (vert OIC). Identité + domaine « marché ». ---- */
+  --signature:#088a43;
+  --signature-hover:#066f35;
+  --signature-soft:#eaf6ef;
+  --signature-soft-border:#c5e6d3;
+  --signature-on:#fff;
+
+  /* ---- États ---- */
+  --success:#168766; --success-soft:#e4f6ee;
+  --warning:#a86b13; --warning-soft:#fff3db;
+  --error:#d64e67;   --error-soft:#fdebf0;
+  --info:#5273dc;    --info-soft:#eef2ff;
+
+  /* ---- Pastilles décoratives ---- */
+  --sq-blue-bg:#e9f2fb;  --sq-blue-fg:#155a9c;
+  --sq-green-bg:#e4f6ee; --sq-green-fg:#168766;
+  --sq-amber-bg:#fff3db; --sq-amber-fg:#ac771d;
+  --sq-rose-bg:#fdebf0;  --sq-rose-fg:#d64e67;
+  --sq-teal-bg:#eaf6ef;  --sq-teal-fg:#088a43;
+
+  /* ---- Rayons ---- */
+  --r-sm:15px; --r-md:15px; --r-lg:15px; --r-xl:15px; --r-control:15px; --r-pill:999px;
+
+  /* ---- Ombres ---- */
+  --sh-1:0 3px 12px #25283903;
+  --sh-2:0 8px 28px #25283908;
+  --sh-3:0 12px 40px rgba(18,43,70,.14);
+
+  /* ---- Espacements ---- */
+  --s1:4px; --s2:8px; --s3:16px; --s4:24px; --s5:32px; --s6:48px;
+
+  /* ---- Layout ---- */
+  --rail-w:70px;
+  --demo-h:0px; /* bandeau de demonstration retire */
+  --side-w:318px;
+  --top-h:78px;
+
+  --font:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-serif:var(--font);
+}
+
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#242424; --surface:#1d1d1d; --surface-2:#272727; --surface-sunken:#303030;
+  --text:#ececf3; --text-secondary:#b0b0bd; --text-muted:#9b9ba9;
+  --border:#343438; --border-strong:#4c4c55; --border-hairline:#303034;
+  --accent:#80baf0; --accent-hover:#a7d4fa; --accent-soft:#20364a; --accent-soft-border:#335978;
+  --navy:#16233a; --navy-soft:#20364a;
+  --signature:#5ecfc0; --signature-hover:#8ee0d5; --signature-soft:#153b37;
+  --signature-soft-border:#2a5f59; --signature-on:#08322e;
+  --success:#67c9a3; --success-soft:#163b31;
+  --warning:#edc16e; --warning-soft:#443821;
+  --error:#fa90a5;   --error-soft:#48272f;
+  --info:#8fa6ee;    --info-soft:#262c45;
+  --sq-blue-bg:#20364a;  --sq-blue-fg:#87bff2;
+  --sq-green-bg:#163b31; --sq-green-fg:#67c9a3;
+  --sq-amber-bg:#443821; --sq-amber-fg:#edc16e;
+  --sq-rose-bg:#48272f;  --sq-rose-fg:#fa90a5;
+  --sq-teal-bg:#153b37;  --sq-teal-fg:#5ecfc0;
+  --sh-1:none; --sh-2:none;
+}

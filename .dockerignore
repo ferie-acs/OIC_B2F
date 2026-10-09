@@ -1,0 +1,15 @@
+# Rien de ce qui suit n'a sa place dans une image servie publiquement.
+# Le Dockerfile ne copie de toute facon que `index.html`, `css/` et `js/` :
+# ce fichier est la seconde barriere, et il reduit le contexte de build.
+docs/
+tests/
+*.md
+.git/
+.gitignore
+.serena/
+.remember/
+.claude/
+.DS_Store
+Dockerfile
+.dockerignore
+railway.json

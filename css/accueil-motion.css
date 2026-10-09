@@ -1,0 +1,36 @@
+/* Mouvements réservés à l’accueil, sans défilement forcé. */
+.th-home{overflow:clip}
+.th-home.th-scroll-ready [data-scroll-reveal]{
+  --reveal-y:30px;opacity:0;translate:0 var(--reveal-y);scale:1;
+  transition:opacity .65s ease var(--reveal-delay,0ms),translate .85s cubic-bezier(.16,1,.3,1) var(--reveal-delay,0ms),scale .9s cubic-bezier(.16,1,.3,1) var(--reveal-delay,0ms)
+}
+.th-home.th-scroll-ready [data-scroll-reveal=soft]{--reveal-y:24px;scale:.985}
+.th-home.th-scroll-ready [data-scroll-reveal=photo]{--reveal-y:38px;scale:.975}
+.th-home.th-scroll-ready [data-scroll-reveal=offer]{--reveal-y:18px;transition-duration:.45s,.6s,.6s}
+.th-home.th-scroll-ready [data-scroll-reveal].is-revealed,
+.th-home.th-scroll-ready [data-scroll-reveal]:focus-within{opacity:1;translate:0 0;scale:1}
+.th-home .th-hero-picture{overflow:hidden}
+.th-home .th-hero-picture>img{transform:translate3d(0,var(--photo-drift,0px),0) scale(1.09);transform-origin:center}
+.th-photo-frame{position:relative;height:460px;width:100%;overflow:hidden;border-radius:15px;background:#deebf4}
+.th-home .th-photo-frame>img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;border-radius:0;transform:translate3d(0,var(--photo-drift,0px),0) scale(1.14)}
+.th-trust-photo .th-photo-frame{height:530px}
+.th-process-grid{position:relative;isolation:isolate;--route-progress:0}
+.th-process-grid::before,.th-process-grid::after{content:'';position:absolute;top:50px;left:16.666%;right:16.666%;height:2px;z-index:-1;pointer-events:none;border-radius:2px}
+.th-process-grid::before{background:#e2eaf2}
+.th-process-grid::after{background:linear-gradient(90deg,#f38a0b,#155a9c 65%,#088a43);transform:scaleX(var(--route-progress));transform-origin:left}
+.th-home .th-process-icon{box-shadow:0 0 0 12px #fff}
+.th-home.lp-motion-off [data-scroll-reveal]{opacity:1;translate:none;scale:1}
+.th-home.lp-motion-off .th-hero-picture>img,.th-home.lp-motion-off .th-photo-frame>img{transform:none}
+@media(max-width:760px){
+  .th-home.th-scroll-ready [data-scroll-reveal]{--reveal-y:16px;transition-delay:0ms;transition-duration:.5s,.65s,.65s}
+  .th-photo-frame,.th-trust-photo .th-photo-frame{height:330px}
+  .th-home .th-hero-picture>img,.th-home .th-photo-frame>img{transform:none}
+  .th-process-grid::before,.th-process-grid::after{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .th-home.th-scroll-ready [data-scroll-reveal]{opacity:1;translate:none;scale:1;transition:none}
+  .th-home .th-hero-picture>img,.th-home .th-photo-frame>img{transform:none}
+  .th-process-grid::after{transform:scaleX(1)}
+}
+/* Un contrôle utilisé au clavier reste immédiatement à sa place. */
+.th-home.th-scroll-ready [data-scroll-reveal]:focus-within{transition:none}

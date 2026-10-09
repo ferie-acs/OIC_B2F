@@ -1,0 +1,327 @@
+/* Formulaires et informations métier : même palette pour tous les espaces
+   privés. Les pages publiques et les données restent indépendantes. */
+
+/* Saisie : une surface nette, une cible confortable et un focus bien visible. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .field{
+  min-width:0;
+  gap:8px;
+  margin-bottom:20px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .field label{
+  color:var(--text);
+  font-size:13px;
+  font-weight:650;
+  line-height:1.45;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .field :is(small,.hint){
+  font-size:12px;
+  line-height:1.5;
+  color:var(--text-secondary);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.input,.select,textarea.textarea){
+  min-height:46px;
+  min-width:0;
+  border-radius:15px;
+  border-color:var(--border-strong);
+  background-color:var(--surface);
+  color:var(--text);
+  line-height:1.4;
+  box-shadow:none;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.input,.select,textarea.textarea):hover:not(:disabled){
+  border-color:var(--bo-blue);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.input,.select,textarea.textarea):focus{
+  background-color:var(--surface);
+  border-color:var(--bo-blue);
+  box-shadow:0 0 0 3px var(--accent-ring);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .select option{
+  background:var(--surface);
+  color:var(--text);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .select{
+  appearance:auto;
+  background-image:none;
+  padding-right:14px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(textarea.input,textarea.textarea){
+  min-height:106px;
+  resize:vertical;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.input[readonly],.input:disabled,.select:disabled){
+  background-color:var(--surface-2);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .field :is([aria-invalid="true"],.error-msg,[role="alert"]){
+  color:var(--error);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.field [aria-invalid="true"],.field.has-error .input,.field.has-error .select){
+  border-color:var(--error);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.field [aria-invalid="true"],.field.has-error .input,.field.has-error .select):focus{
+  box-shadow:0 0 0 3px var(--error-soft);
+}
+.app-shell .field-row{gap:20px}
+
+/* Sélection et étapes : bleu pour agir, sauge pour une étape déjà accomplie. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.checkbox-row,.radio-row){
+  background:var(--surface);
+  border-color:var(--border-strong);
+  border-radius:15px;
+  padding:14px 16px;
+  line-height:1.5;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.checkbox-row,.radio-row):has(input:checked){
+  border-color:var(--bo-blue);
+  background:var(--bo-blue-fill);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.checkbox-row,.radio-row):focus-within{
+  outline:2px solid var(--bo-blue);
+  outline-offset:3px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .chip-btn{
+  min-height:38px;
+  background:var(--surface);
+  border-color:var(--border-strong);
+  border-radius:15px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .chip-btn.active{
+  background:var(--bo-blue-fill);
+  border-color:var(--bo-blue);
+  color:var(--bo-blue);
+}
+.app-shell .stepper-h{
+  padding:18px 20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:15px;
+  margin-bottom:0;
+}
+.app-shell .stepper-h-step .dot{
+  width:32px;
+  height:32px;
+  background:var(--surface-2);
+  border-color:var(--border);
+  border-radius:15px;
+}
+.app-shell .stepper-h-step.current .dot{
+  background:var(--b2f-blue);
+  color:#fff;
+  border-color:var(--b2f-blue);
+}
+.app-shell .stepper-h-step.done .dot{
+  background:var(--bo-green-fill);
+  color:var(--bo-green);
+  border-color:var(--bo-green-edge);
+}
+.app-shell .stepper-h-connector.done{background:var(--bo-green-edge)}
+.app-shell .wizard-section-label{color:var(--bo-blue);letter-spacing:.08em}
+.app-shell .wizard-footer{
+  padding:18px 20px;
+  margin-top:0;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:15px;
+}
+.app-shell .selection-notice{
+  background:var(--bo-orange-fill);
+  border-color:var(--bo-orange-edge);
+  color:var(--text);
+  border-radius:15px;
+  line-height:1.55;
+}
+.app-shell .selection-notice strong{color:var(--bo-orange)}
+
+/* Les cartes restent blanches en thème clair ; la couleur porte les actions et états. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .recap-grid{
+  gap:12px;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .recap-grid>.recap-item{
+  min-width:0;
+  padding:15px 16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:15px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .recap-item>span{
+  font-size:11px;
+  font-weight:650;
+  letter-spacing:.055em;
+  line-height:1.45;
+  margin-bottom:7px;
+  color:var(--text-secondary);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .recap-item>strong{
+  font-size:14px;
+  line-height:1.55;
+  overflow-wrap:anywhere;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .recap-section{
+  padding:20px 0;
+  border-color:var(--border);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .recap-section>h3{
+  color:var(--bo-blue);
+  font-size:15px;
+  margin-bottom:14px;
+}
+.app-shell .live-recap{
+  background:var(--surface);
+  border-color:var(--border);
+  border-radius:15px;
+  box-shadow:none;
+}
+.app-shell .live-recap>h3{color:var(--text);font-size:16px}
+.app-shell .live-recap-item{gap:16px;padding:13px 0;border-color:var(--border)}
+.app-shell .live-recap-item :is(dt,dd){overflow-wrap:anywhere}
+.app-shell .live-recap-item dt{flex:1}
+.app-shell .live-recap-item dd{flex:1.4;text-align:right}
+.app-shell .live-recap-item strong{font-size:13px;line-height:1.5}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .ledger{
+  background:var(--surface);
+  border-color:var(--border);
+  border-radius:15px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .ledger-row.total{
+  background:var(--surface);
+  color:var(--bo-sand);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .contact-reveal{
+  background:var(--surface);
+  border-color:var(--bo-green-edge);
+  border-radius:15px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .contact-reveal .recap-grid>.recap-item{
+  background:var(--surface);
+  border-color:var(--bo-green-edge);
+}
+
+/* Messages persistants : teintes cohérentes sans changer le sens des alertes. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner{
+  background:var(--bo-blue-fill);
+  border-color:var(--bo-blue-edge);
+  border-radius:15px;
+  padding:16px 18px;
+  color:var(--text);
+  line-height:1.6;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner>svg{
+  flex:none;
+  color:var(--bo-blue);
+  margin-top:3px;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner:is(.success,.signature){
+  background:var(--bo-green-fill);
+  border-color:var(--bo-green-edge);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner:is(.success,.signature)>svg{color:var(--bo-green)}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner.warning{
+  background:var(--bo-orange-fill);
+  border-color:var(--bo-orange-edge);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner.warning>svg{color:var(--bo-orange)}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner.error{
+  background:var(--error-soft);
+  border-color:var(--error);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .alert-banner.error>svg{color:var(--error)}
+.app-shell .delegation-bar{background:var(--bo-green-fill);border-color:var(--bo-green-edge);border-radius:15px}
+.app-shell .delegation-bar>svg{color:var(--bo-green)}
+.app-shell .notif{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  padding:20px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:var(--surface);
+  list-style:none;
+}
+.app-shell .notif.is-unread{background:var(--surface);border-color:var(--bo-blue-edge)}
+.app-shell .notif.is-unread strong{color:var(--bo-blue)}
+.app-shell .notif>div{min-width:0}
+.app-shell .notif strong{display:block;color:var(--text);font-size:14px;line-height:1.5}
+.app-shell .notif p{margin:7px 0 10px;font-size:14px;line-height:1.65;color:var(--text-secondary);overflow-wrap:anywhere}
+.app-shell .notif small{color:var(--text-secondary);font-size:12px;font-variant-numeric:tabular-nums}
+.app-shell .notif .btn{flex:none;background:var(--surface);color:var(--bo-blue);border-color:var(--bo-blue-edge)}
+.app-shell .notif .btn:hover{background:var(--bo-blue-fill)}
+.app-shell .card-grid:has(>.notif){gap:12px}
+
+/* États vides et confirmations : une surface calme et la même hiérarchie. */
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .empty-state{
+  padding:40px 24px;
+  border-radius:15px;
+  background:var(--surface);
+  min-width:0;
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .empty-state>svg{
+  width:58px;
+  height:58px;
+  padding:14px;
+  border-radius:15px;
+  background:var(--bo-blue-fill);
+  color:var(--bo-blue);
+}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .empty-state h3{font-size:17px;color:var(--text);line-height:1.4}
+:is(.app-shell,body:has(.app-shell)>.modal-overlay) .empty-state p{line-height:1.7;color:var(--text-secondary)}
+.app-shell :is(.refus,.empty){background:var(--surface);border-color:var(--border);border-radius:15px}
+.app-shell :is(.refus,.empty)>svg{background:var(--bo-sand-fill);color:var(--bo-sand);border-radius:15px}
+
+/* Les modales sont montées hors du shell ; le préfixe garde ce thème privé. */
+body:has(.app-shell)>.modal-overlay .modal-card{
+  background:var(--surface);
+  border-color:var(--border);
+  border-radius:15px;
+  box-shadow:0 24px 70px #10233c30;
+}
+body:has(.app-shell)>.modal-overlay .modal-title{padding-right:40px;font-size:21px;line-height:1.35;color:var(--text)}
+body:has(.app-shell)>.modal-overlay .modal-text{font-size:14px;line-height:1.65}
+body:has(.app-shell)>.modal-overlay .modal-text>p{line-height:1.65;margin-bottom:20px;color:var(--text-secondary)}
+body:has(.app-shell)>.modal-overlay .modal-text>.recap-grid{margin-bottom:20px}
+body:has(.app-shell)>.modal-overlay .modal-text>:last-child{margin-bottom:0}
+body:has(.app-shell)>.modal-overlay .modal-footer{
+  padding-top:20px;
+  border-top:1px solid var(--border);
+}
+body:has(.app-shell)>.modal-overlay .modal-close{
+  background:var(--bo-blue-fill);
+  color:var(--bo-blue);
+  border-radius:15px;
+}
+body:has(.app-shell)>.modal-overlay .modal-close:hover{background:var(--bo-blue-edge)}
+
+/* Messages éphémères créés au niveau de body, uniquement en espace privé. */
+body:has(.app-shell)>.toasts .toast{
+  background:var(--surface);
+  border-color:var(--border-strong);
+  color:var(--text);
+  border-radius:15px;
+  padding:15px 18px;
+}
+body:has(.app-shell)>.toasts .toast-ok{background:var(--bo-green-fill);border-color:var(--bo-green-edge)}
+body:has(.app-shell)>.toasts .toast-ok svg{color:var(--bo-green)}
+body:has(.app-shell)>.toasts .toast-info{background:var(--bo-blue-fill);border-color:var(--bo-blue-edge)}
+body:has(.app-shell)>.toasts .toast-info svg{color:var(--bo-blue)}
+body:has(.app-shell)>.toasts .toast-err{background:var(--error-soft);border-color:var(--error)}
+body:has(.app-shell)>.toasts .toast-err svg{color:var(--error)}
+
+@media(max-width:700px){
+  .app-shell .field-row{grid-template-columns:minmax(0,1fr);gap:0}
+  :is(.app-shell,body:has(.app-shell)>.modal-overlay) :is(.input,.select,textarea.textarea){font-size:16px}
+  .app-shell .stepper-h{padding:16px;gap:10px;scrollbar-width:thin}
+  .app-shell .stepper-h-step{gap:8px}
+  .app-shell .stepper-h-connector{min-width:20px;margin:0 4px}
+  .app-shell .stepper-h-step .label{font-size:12px}
+  .app-shell .wizard-footer{padding:16px;flex-wrap:wrap;gap:12px}
+  .app-shell .wizard-footer .btn{flex:1;min-width:0;white-space:normal}
+  .app-shell .live-recap{padding:18px}
+  .app-shell .notif{flex-direction:column;gap:14px;padding:16px}
+  .app-shell .notif .btn{align-self:flex-start}
+  :is(.app-shell,body:has(.app-shell)>.modal-overlay) .ledger-row{align-items:flex-start;flex-wrap:wrap;padding:16px}
+  :is(.app-shell,body:has(.app-shell)>.modal-overlay) .ledger-amount{margin-left:auto}
+  :is(.app-shell,body:has(.app-shell)>.modal-overlay) .empty-state{padding:32px 18px}
+  body:has(.app-shell)>.modal-overlay .modal-card{padding:24px 20px;max-height:calc(100dvh - 32px)}
+  body:has(.app-shell)>.modal-overlay .modal-title{font-size:19px}
+}
