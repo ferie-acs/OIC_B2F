@@ -24,6 +24,7 @@ import { PORTEE } from '../domain/permissions.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { notifier } from './notification.service.js';
+import { transmettreEvenement } from './passerelle-dut.service.js';
 
 /**
  * Étape immédiatement suivante, ou `null` si le transport est clôturé.
@@ -122,7 +123,7 @@ export function avancer(ctx, transportId, options = {}) {
   }
 
   const maintenant = new Date().toISOString();
-  return stockageInterne().transaction((tx) => {
+  const resultat = stockageInterne().transaction((tx) => {
     const maj = depot('transport').modifier(
       transportId,
       {
@@ -165,6 +166,8 @@ export function avancer(ctx, transportId, options = {}) {
 
     return maj;
   });
+  transmettreEvenement(t, resultat?.journal?.at(-1));
+  return resultat;
 }
 
 /**
@@ -187,7 +190,7 @@ export function signalerIncident(ctx, transportId, { nature, description }) {
   if (!description) throw new Error('Une description est obligatoire.');
 
   const maintenant = new Date().toISOString();
-  return stockageInterne().transaction((tx) => {
+  const resultat = stockageInterne().transaction((tx) => {
     const maj = depot('transport').modifier(
       transportId,
       {
@@ -225,6 +228,8 @@ export function signalerIncident(ctx, transportId, { nature, description }) {
     });
     return maj;
   });
+  transmettreEvenement(t, resultat?.journal?.at(-1));
+  return resultat;
 }
 
 /**

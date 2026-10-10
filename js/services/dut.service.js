@@ -78,6 +78,22 @@ function apercuDe(ctx, a, sources) {
 }
 
 /**
+ * Données d'une mise en relation validée, destinées à préremplir le DUT de la
+ * plateforme DUT (passerelle, lot A). Mêmes sources et même projection que la
+ * fiche locale ; `null` si le dossier est incomplet ou non validé.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} appariementId
+ * @returns {Record<string, any>|null}
+ */
+export function donneesMissionPourDut(ctx, appariementId) {
+  const a = depot('appariement').brutParId(appariementId);
+  if (!a || a.etat !== ETAT_APPARIEMENT.VALIDER) return null;
+  const sources = sourcesDe(a);
+  if (sources.motif) return null;
+  return apercuDe(ctx, a, sources)?.donnees ?? null;
+}
+
+/**
  * Les parties voient leurs dossiers acceptés/validés ; les lecteurs globaux ne
  * voient que les fiches déjà générées. La portée DUT ne donne aucun accès au
  * journal de transport lorsque le rôle ne possède pas `transport.lire`.

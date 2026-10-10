@@ -44,6 +44,7 @@ import { depot, stockageInterne } from '../repositories/index.js';
 import { soldeDe } from './compte.service.js';
 import { journaliser } from './audit.service.js';
 import { notifier } from './notification.service.js';
+import { transmettreMission } from './passerelle-dut.service.js';
 
 /**
  * Erreur métier destinée à l'écran. Porte les motifs tels que la machine à états
@@ -491,7 +492,7 @@ export function valider(ctx, appariementId, options = {}) {
   const stockage = stockageInterne();
   const maintenant = new Date().toISOString();
 
-  return stockage.transaction(
+  const resultat = stockage.transaction(
     (tx) => {
       // Ce que cette transaction modifie réellement — au grain de l'objet, pour
       // que deux dossiers indépendants ne se bloquent pas (QA-07).
@@ -618,6 +619,9 @@ export function valider(ctx, appariementId, options = {}) {
     },
     { attendu: options.attendu },
   );
+  // Après validation seulement : la plateforme DUT reçoit la mission (passerelle, lot A).
+  transmettreMission(ctx, appariementId);
+  return resultat;
 }
 
 

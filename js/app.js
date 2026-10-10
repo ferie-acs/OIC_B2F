@@ -31,6 +31,7 @@ import { login } from './views/login.js?v=20261009-carte-2';
 import { explorer } from './views/explorer.js';
 import { documentsDut } from './views/dut.js';
 import { retourPublic, routeActionPublique, routePublication } from './services/marche-public.service.js';
+import { reprendreFileDut } from './services/passerelle-dut.service.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -210,6 +211,9 @@ async function demarrerApplication() {
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();
+
+  // Messages non encore remis à la plateforme DUT : renvoyés dès que le relais répond.
+  reprendreFileDut();
 
   declarerRoutes();
 
