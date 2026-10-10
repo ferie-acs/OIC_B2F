@@ -43,6 +43,7 @@ import { depot } from '../repositories/index.js';
 import { abonnementDe } from '../services/auth.service.js';
 import { soldeDe } from '../services/compte.service.js';
 import * as transportSvc from '../services/transport.service.js';
+import { demanderStatutsDut, statutDut, EVENEMENT_STATUT_DUT } from '../services/passerelle-dut.service.js';
 import { composer, marquerLue, mesNotifications } from '../services/notification.service.js';
 
 /* ================================================================== *
@@ -50,8 +51,19 @@ import { composer, marquerLue, mesNotifications } from '../services/notification
  * ================================================================== */
 
 /** @param {any} ctx */
+let ecouteStatutDut = false;
+
 export function suivi(ctx) {
   const transports = transportSvc.transportsVisibles(ctx);
+  // Passerelle DUT, lot B : le statut des DUT reliés arrive après l'affichage ;
+  // un changement redessine l'écran (une seule écoute pour toute la session).
+  demanderStatutsDut(transports.map((t) => t.appariementId));
+  if (!ecouteStatutDut) {
+    ecouteStatutDut = true;
+    globalThis.addEventListener?.(EVENEMENT_STATUT_DUT, () => {
+      if (/\/suivi$/.test(globalThis.location?.hash ?? '')) globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+  }
 
   if (transports.length === 0) {
     return el('div.page', {}, [
@@ -114,6 +126,7 @@ function ficheTransport(ctx, t) {
       }),
     ],
     corps: [
+      ligneStatutDut(t.appariementId),
       chronologieEtapes(t.etape),
       el('h3', { text: 'Journal des événements' }),
       tableau({
@@ -190,6 +203,17 @@ function observationLisible(ctx, evenement) {
   return el('span.subtitle', { text: 'non communiquée' });
 }
 
+/** Statut du DUT relié, tel que la plateforme DUT l'a communiqué (passerelle, lot B). */
+function ligneStatutDut(appariementId) {
+  const connu = statutDut(appariementId);
+  if (!connu) return el('p.text-muted', { text: 'DUT : statut en cours de vérification auprès de la plateforme DUT.' });
+  const ton = connu.statut === 'VALIDE' ? 'success' : connu.statut ? 'warning' : 'neutral';
+  return el('p', {}, [
+    el('span', { text: 'DUT : ' }),
+    el(`span.badge.badge-${ton}`, { text: connu.numero ? `${connu.libelle} · ${connu.numero}` : connu.libelle }),
+  ]);
+}
+
 function dialogueAvancement(ctx, t) {
   const fermer = modale({
     titre: `Passer à « ${labelOf(t.avancement.vers)} »`,
@@ -210,6 +234,7 @@ function dialogueAvancement(ctx, t) {
           try {
             transportSvc.avancer(ctx, t.id, {
               observation: document.getElementById('av-obs')?.value || undefined,
+              verifierDut: true,
             });
             fermer();
             toast('Étape enregistrée.');

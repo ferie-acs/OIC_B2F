@@ -25,7 +25,7 @@ import {
 
 import * as affreteur from './views/affreteur.js';
 import * as transporteur from './views/transporteur.js';
-import * as commun from './views/commun.js?v=20261009-carte-2';
+import * as commun from './views/commun.js?v=20261010-passerelle-dut';
 import * as supervision from './views/supervision.js';
 import { login } from './views/login.js?v=20261009-carte-2';
 import { explorer } from './views/explorer.js';

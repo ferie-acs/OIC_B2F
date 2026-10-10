@@ -13,7 +13,11 @@
  *
  * Seuls les champs nécessaires au DUT partent ; téléphones et e-mails (classés
  * CONTACT) ne sont jamais transmis. Les messages non acquittés restent en file
- * et repartent au chargement suivant : aucune action B2F n'est bloquée.
+ * et repartent au chargement suivant.
+ *
+ * Lot B : la Bourse de fret demande au DUT le statut du document relié à chaque
+ * transport et le mémorise ; « en route » est refusé à l'écran tant que ce DUT
+ * n'est pas validé (voir `exigenceDut`).
  *
  * @module services/passerelle-dut.service
  */
@@ -23,6 +27,16 @@ import { donneesMissionPourDut } from './dut.service.js';
 
 const PORT_DUT = '8080';
 const CLE_FILE = 'passerelle_dut_file';
+const CLE_STATUTS = 'passerelle_dut_statuts';
+const EVENEMENT_STATUT = 'passerelle-dut:statut';
+const STATUTS_DUT = Object.freeze({
+  EN_EDITION: 'en préparation',
+  TERMINE: 'soumis, en attente de validation',
+  VALIDE: 'validé',
+  REJETE: 'rejeté',
+  SUSPENDU: 'suspendu',
+  RETIRE: 'retiré',
+});
 const TAILLE_FILE = 500;
 const CHAMPS_MISSION = [
   'corridor', 'departPrevu', 'arriveePrevue', 'marchandise', 'poidsTotalT',
@@ -31,6 +45,7 @@ const CHAMPS_MISSION = [
 
 let relais = null;
 let pret = false;
+const demandesStatut = new Set();
 
 /** Origine de la plateforme DUT, déduite de la page : même hôte, port du DUT. */
 function origineDut() {
@@ -48,6 +63,31 @@ const ecrireFile = (file) => stockageInterne().ecrirePreference(CLE_FILE, file.s
 function vider() {
   if (!pret || !relais?.contentWindow) return;
   for (const message of lireFile()) relais.contentWindow.postMessage(message, origineDut());
+  for (const appariementId of demandesStatut) {
+    relais.contentWindow.postMessage({ v: 1, type: 'b2f.statut?', appariementId }, origineDut());
+  }
+  demandesStatut.clear();
+}
+
+const lireStatuts = () => {
+  const statuts = stockageInterne().lirePreference(CLE_STATUTS);
+  return statuts && typeof statuts === 'object' && !Array.isArray(statuts) ? statuts : {};
+};
+
+/** Réponse du DUT à une demande de statut : contrôlée, mémorisée, signalée si elle change. */
+function memoriserStatut(reponse) {
+  if (typeof reponse.appariementId !== 'string' || reponse.appariementId.length > 80) return;
+  const dut = reponse.dut;
+  const valide = dut === null || (dut && Object.hasOwn(STATUTS_DUT, dut.statut) &&
+    (dut.numero === null || (typeof dut.numero === 'string' && dut.numero.length <= 40)));
+  if (!valide) return;
+  const statuts = lireStatuts();
+  const avant = statuts[reponse.appariementId];
+  const apres = dut ? { statut: dut.statut, numero: dut.numero } : { statut: null, numero: null };
+  if (avant?.statut === apres.statut && avant?.numero === apres.numero) return;
+  statuts[reponse.appariementId] = { ...apres, recuLe: new Date().toISOString() };
+  stockageInterne().ecrirePreference(CLE_STATUTS, statuts);
+  globalThis.dispatchEvent?.(new Event(EVENEMENT_STATUT));
 }
 
 function surReponse(event) {
@@ -55,6 +95,7 @@ function surReponse(event) {
   const reponse = event.data;
   if (reponse?.v !== 1) return;
   if (reponse.type === 'dut.ready') { pret = true; vider(); return; }
+  if (reponse.type === 'dut.statut') { memoriserStatut(reponse); return; }
   if (reponse.type !== 'dut.ack' || typeof reponse.id !== 'string') return;
   // Appliqué, en attente côté DUT ou doublon : le DUT le détient. Refusé : le renvoyer n'y changerait rien.
   ecrireFile(lireFile().filter((m) => cleMessage(m) !== reponse.id));
@@ -118,4 +159,47 @@ export function transmettreEvenement(transport, entree) {
     observation: typeof entree.observation === 'string' ? entree.observation.slice(0, 2000) : '',
     horodatage: entree.horodatage,
   });
+}
+
+/** Demande au DUT le statut des documents reliés à ces transports ; la réponse arrive plus tard. */
+export function demanderStatutsDut(appariementIds) {
+  if (!origineDut()) return;
+  for (const id of appariementIds) if (typeof id === 'string') demandesStatut.add(id);
+  if (relais) vider(); else demarrerPasserelle();
+}
+
+/** Statut mémorisé du DUT relié : `{statut, numero, libelle}`, ou `null` si jamais reçu. */
+export function statutDut(appariementId) {
+  const connu = lireStatuts()[appariementId];
+  if (!connu) return null;
+  return { ...connu, libelle: connu.statut ? STATUTS_DUT[connu.statut] : 'aucun DUT créé' };
+}
+
+/** Nom de l'événement émis quand un statut de DUT change (pour rafraîchir l'écran). */
+export const EVENEMENT_STATUT_DUT = EVENEMENT_STATUT;
+
+/**
+ * Motif du refus de départ selon le statut connu du DUT, ou `null` si le départ est permis.
+ * Fonction pure : elle porte la règle, testée sans navigateur.
+ * @param {{statut: string|null}|null} connu
+ * @returns {string|null}
+ */
+export function motifDepartSansDut(connu) {
+  if (connu?.statut === 'VALIDE') return null;
+  if (!connu || !connu.statut) {
+    return 'Aucun DUT validé n’est connu pour ce transport : créez-le dans la plateforme DUT et faites-le valider avant le départ.';
+  }
+  return `Le DUT de ce transport est ${STATUTS_DUT[connu.statut]} : un camion ne part pas sans DUT validé.`;
+}
+
+/**
+ * Le départ (« en route ») exige-t-il un DUT validé, et l'est-il ?
+ * La règle ne s'applique que lorsque la passerelle est active (navigateur) :
+ * sous Node, sans plateforme DUT joignable, elle reste inactive.
+ * @param {string} appariementId
+ * @returns {{active: boolean, motif: string|null}}
+ */
+export function exigenceDut(appariementId) {
+  if (!origineDut()) return { active: false, motif: null };
+  return { active: true, motif: motifDepartSansDut(statutDut(appariementId)) };
 }

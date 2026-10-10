@@ -24,7 +24,7 @@ import { PORTEE } from '../domain/permissions.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { notifier } from './notification.service.js';
-import { transmettreEvenement } from './passerelle-dut.service.js';
+import { exigenceDut, transmettreEvenement } from './passerelle-dut.service.js';
 
 /**
  * Étape immédiatement suivante, ou `null` si le transport est clôturé.
@@ -47,7 +47,7 @@ export function etapeSuivante(etape) {
  * @param {Record<string, any>} appariement
  * @returns {{possible: boolean, vers: string|null, motif: string|null}}
  */
-export function avancementPossible(ctx, transport, appariement) {
+export function avancementPossible(ctx, transport, appariement, { verifierDut = false } = {}) {
   const vers = etapeSuivante(transport.etape);
   if (!vers) {
     return { possible: false, vers: null, motif: 'Ce transport est clôturé.' };
@@ -86,9 +86,14 @@ export function avancementPossible(ctx, transport, appariement) {
     };
   }
   const d = decide(ctx, 'transport.avancer');
-  return d.autorise
-    ? { possible: true, vers, motif: null }
-    : { possible: false, vers, motif: d.explication };
+  if (!d.autorise) return { possible: false, vers, motif: d.explication };
+  // Passerelle DUT, lot B : pas de départ sans DUT validé. Appliqué aux déclarations
+  // faites à l'écran ; l'historique de démonstration semé au démarrage n'y est pas soumis.
+  if (verifierDut && vers === ETAPE_TRANSPORT.EN_ROUTE) {
+    const { active, motif } = exigenceDut(appariement.id);
+    if (active && motif) return { possible: false, vers, motif };
+  }
+  return { possible: true, vers, motif: null };
 }
 
 /**
@@ -108,7 +113,7 @@ function decide(ctx, droit) {
  *
  * @param {import('../domain/access.js').Contexte} ctx
  * @param {string} transportId
- * @param {{observation?: string}} [options]
+ * @param {{observation?: string, verifierDut?: boolean}} [options] `verifierDut` : refuser « en route » sans DUT validé (déclarations à l'écran)
  * @returns {Record<string, any>}
  */
 export function avancer(ctx, transportId, options = {}) {
@@ -116,7 +121,7 @@ export function avancer(ctx, transportId, options = {}) {
   if (!t) throw new Error('Transport introuvable.');
   const a = depot('appariement').brutParId(t.appariementId);
 
-  const { possible, vers, motif } = avancementPossible(ctx, t, a);
+  const { possible, vers, motif } = avancementPossible(ctx, t, a, { verifierDut: options.verifierDut === true });
   if (!possible) throw new Error(motif ?? 'Avancement impossible.');
   if (!etapeSuivanteValide(t.etape, vers)) {
     throw new Error('Aucun saut d’étape n’est possible.');
@@ -272,7 +277,7 @@ export function transportsVisibles(ctx) {
       return {
         ...projeter(ctx, 'transport', t, { proprietaireId: contrepartie }),
         appariement: projeter(ctx, 'appariement', a, { proprietaireId: contrepartie }),
-        avancement: avancementPossible(ctx, t, a),
+        avancement: avancementPossible(ctx, t, a, { verifierDut: true }),
       };
     })
     .sort((a, b) => new Date(b.demarreLe) - new Date(a.demarreLe));
