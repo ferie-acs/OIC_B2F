@@ -57,6 +57,7 @@ export const ENTREPRISES_LOT_B1 = Object.freeze([
       contactEmail: 'contact@negoce-atlantique.invalid',
       inscriptionEtat: ETAT_INSCRIPTION.EN_ATTENTE,
       inscritLe: il(3),
+      verificationEtat: ETAT_VERIFICATION.A_VERIFIER,
     },
     utilisateur: ['u-b1-aff', 'inscrit.affreteur@demo.invalid', 'ADJOUA', 'Clarisse', 'affreteur', '+225 00 21 02 11', 'Directrice générale'],
     pieces: [
@@ -114,8 +115,9 @@ export const ENTREPRISES_LOT_B1 = Object.freeze([
       contactEmail: 'contact@lagune-transit.invalid',
       inscriptionEtat: ETAT_INSCRIPTION.EN_ATTENTE,
       inscritLe: il(1),
+      verificationEtat: ETAT_VERIFICATION.A_VERIFIER,
     },
-    utilisateur: ['u-b1-int', 'inscrit.intermediaire@demo.invalid', 'ZADI', 'Marius', 'auxiliaire_affreteur', '+225 00 23 02 34', 'Responsable des opérations'],
+    utilisateur: ['u-b1-int', 'inscrit.intermediaire@demo.invalid', 'ZADI', 'Marius', 'intermediaire', '+225 00 23 02 34', 'Responsable des opérations'],
     pieces: [
       ['pce-b1-int-1', 'rccm', 'CI-DEMO-2026-I-0233', null, ETAT_PIECE.DEPOSEE, null, 'rccm-lagune-transit.pdf'],
       ['pce-b1-int-2', 'attestation_fiscale', 'DEMO-CC-0233', null, ETAT_PIECE.DEPOSEE, null, 'dfe-lagune-transit.pdf'],
@@ -154,6 +156,15 @@ export async function amorcerLotB1() {
     });
 
     for (const a of AGENTS_LOT_B1) if (empreinte) ajouter('users', utilisateur(a));
+
+    // Intégration : un jeu amorcé avant l'intégration des lots b1 et b2 est mis à
+    // niveau (rôle du responsable de l'intermédiaire, état de vérification écrit).
+    const aMettreANiveau = new Map(ENTREPRISES_LOT_B1.map((e) => [e.groupement.id, e]));
+    tx.ecrire('groupements', tx.lire('groupements').map((g) => (
+      aMettreANiveau.has(g.id) && g.verificationEtat == null && g.inscriptionEtat !== ETAT_INSCRIPTION.ACTIVEE
+        ? { ...g, verificationEtat: ETAT_VERIFICATION.A_VERIFIER } : g)));
+    tx.ecrire('users', tx.lire('users').map((u) => (
+      u.id === 'u-b1-int' && u.roleId === 'auxiliaire_affreteur' ? { ...u, roleId: 'intermediaire' } : u)));
 
     for (const e of ENTREPRISES_LOT_B1) {
       const g = e.groupement;

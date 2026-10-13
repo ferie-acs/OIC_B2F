@@ -162,7 +162,9 @@ export async function inscrire(donnees) {
     if (texte(donnees[c.nom])) groupement[c.nom] = texte(donnees[c.nom]);
   }
   groupement.contactNom = `${texte(donnees.prenom)} ${texte(donnees.nom)}`.trim();
-  if (type === TYPE_GROUPEMENT.TRANSPORTEUR) groupement.verificationEtat = ETAT_VERIFICATION.A_VERIFIER;
+  // Intégration b1 / b2 : l'état de vérification est écrit pour tout type
+  // d'entreprise ; c'est lui que lisent les filiales et l'annuaire des intermédiaires.
+  groupement.verificationEtat = ETAT_VERIFICATION.A_VERIFIER;
 
   const utilisateur = {
     id: utilisateurId,

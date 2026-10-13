@@ -26,7 +26,7 @@ export function intermediairesVue(ctx) {
   function rendre() {
     const q = (recherche.value || '').trim().toLocaleLowerCase('fr');
     const visibles = liste.filter((i) => `${i.nom} ${i.mandant} ${i.role}`.toLocaleLowerCase('fr').includes(q));
-    compteur.textContent = `${visibles.length} intermédiaire(s)`;
+    compteur.textContent = `${visibles.length} ligne(s)`;
     zone.replaceChildren(tableau({
       colonnes: ['Nom', 'Qualité', 'Pour le compte de', 'Localité', 'État', 'Inscrit le'],
       lignes: visibles.map((i) => [i.nom, i.role, i.mandant, refDe(i.localiteId), badgeEtat(i.etat), date(i.creeLe)]),
@@ -43,7 +43,7 @@ export function intermediairesVue(ctx) {
         'Son identité vous est servie ; ses coordonnées ne le sont pas.',
     }),
     el('div.kpi-grid', {}, [
-      kpi({ libelle: 'Intermédiaires', valeur: liste.length, icon: 'users' }),
+      kpi({ libelle: 'Intermédiaires', valeur: new Set(liste.map((i) => i.groupementId)).size, icon: 'users' }), // Intégration : entreprises distinctes
       kpi({ libelle: 'Intermédiaires de fret', valeur: liste.filter((i) => i.mandantType === 'affreteur').length, icon: 'package' }),
       kpi({ libelle: 'Intermédiaires de transport', valeur: liste.filter((i) => i.mandantType === 'transporteur').length, icon: 'truck' }),
     ]),

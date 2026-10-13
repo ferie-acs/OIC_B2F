@@ -114,7 +114,9 @@ describe('Lot b1 — configuration de l’inscription (domaine pur)', () => {
     assert.deepEqual(dom.TYPES_INSCRIPTION.map((t) => t.type), ['affreteur', 'transporteur', 'intermediaire']);
     assert.equal(TYPE_GROUPEMENT.INTERMEDIAIRE, 'intermediaire');
     assert.equal(labelOf('intermediaire'), 'Intermédiaire de fret');
-    assert.equal(dom.typeInscription('intermediaire').role, 'auxiliaire_affreteur');
+    // Intégration b1 / b2 : le responsable d'un intermédiaire reçoit le rôle `intermediaire`.
+    assert.equal(dom.typeInscription('intermediaire').role, 'intermediaire');
+    assert.equal(dom.typeInscription('intermediaire').roleAuxiliaire, 'collaborateur_intermediaire');
   });
 
   it('reprend les pièces transporteur de la vérification existante', () => {
@@ -156,7 +158,8 @@ describe('Lot b1 — configuration de l’inscription (domaine pur)', () => {
   it('requalifie les rôles : responsable → rôle principal, sous-compte → auxiliaire', () => {
     assert.equal(dom.roleApresRequalification('affreteur', 'affreteur', 'transporteur'), 'transporteur');
     assert.equal(dom.roleApresRequalification('auxiliaire_affreteur', 'affreteur', 'transporteur'), 'auxiliaire_transporteur');
-    assert.equal(dom.roleApresRequalification('auxiliaire_affreteur', 'intermediaire', 'affreteur'), 'affreteur');
+    assert.equal(dom.roleApresRequalification('intermediaire', 'intermediaire', 'affreteur'), 'affreteur');
+    assert.equal(dom.roleApresRequalification('affreteur', 'affreteur', 'intermediaire'), 'intermediaire');
   });
 
   it('n’accorde l’activation qu’aux deux agents, et garde `groupement.verifier` au seul agent transporteur', () => {
@@ -231,10 +234,11 @@ describe('Lot b1 — inscription publique', () => {
     assert.equal(ctx.inscriptionActivee, false);
   });
 
-  it('inscrit un intermédiaire de fret comme entreprise, au rôle auxiliaire d’affréteur', async () => {
+  it('inscrit un intermédiaire de fret comme entreprise, au rôle intermédiaire du lot b2', async () => {
     const r = await inscription.inscrire(saisie('intermediaire'));
     assert.equal(depot('groupement').brutParId(r.groupementId).type, 'intermediaire');
-    assert.equal(depot('utilisateur').brutParId(r.utilisateurId).roleId, 'auxiliaire_affreteur');
+    assert.equal(depot('utilisateur').brutParId(r.utilisateurId).roleId, 'intermediaire');
+    assert.equal(depot('groupement').brutParId(r.groupementId).verificationEtat, 'a_verifier');
   });
 
   it('inscrit un transporteur « à vérifier »', async () => {

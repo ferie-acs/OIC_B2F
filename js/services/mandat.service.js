@@ -33,8 +33,8 @@ import {
   ETAT_APPARIEMENT,
   ETAT_COMPTE,
   ETAT_DEMANDE,
+  ETAT_INSCRIPTION,
   ETAT_MANDAT,
-  ETAT_VERIFICATION,
   EVENEMENT_AUDIT,
   SENS_APPARIEMENT,
   STATUT_MANDAT,
@@ -48,7 +48,8 @@ import {
   mandatEnVigueur,
   statutMandat,
 } from '../domain/mandat.js';
-import { entiteOperationnelle } from '../domain/organisation.js';
+import { entiteOperationnelle, entrepriseVerifiee } from '../domain/organisation.js';
+import { etatInscription } from '../domain/inscription.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { abonnementDe, basculerMandat, enregistrerContexteDelegue } from './auth.service.js';
@@ -69,8 +70,8 @@ function operationnelle(g) {
 }
 
 /**
- * Intermédiaire présent dans l'annuaire : actif, abonné, et dont le dossier
- * n'a pas été refusé (le lot de vérification des dossiers écrira cet état).
+ * Intermédiaire présent dans l'annuaire : actif, inscription activée, dossier
+ * vérifié par l'agent d'activation (même règle que les filiales) et abonné.
  * @param {Record<string, any>|undefined} g
  */
 function intermediaireActif(g) {
@@ -78,7 +79,8 @@ function intermediaireActif(g) {
     g &&
       g.type === TYPE_GROUPEMENT.INTERMEDIAIRE &&
       operationnelle(g) &&
-      (g.verificationEtat == null || g.verificationEtat === ETAT_VERIFICATION.VERIFIE) &&
+      etatInscription(g) === ETAT_INSCRIPTION.ACTIVEE &&
+      entrepriseVerifiee(g) &&
       abonnementDe(g.id).actif,
   );
 }

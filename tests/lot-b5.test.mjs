@@ -27,6 +27,8 @@ const { backendMemoire } = await import('../js/core/storage.js');
 const { initialiserPersistance, depot } = await import('../js/repositories/index.js');
 const { amorcer, completerJeuAntiFraude } = await import('../js/seed.js');
 const { amorcerLotB5 } = await import('../js/seed-lot-b5.js');
+// Intégration b2 / b5 : les intermédiaires de fret sont les entreprises du lot b2.
+const { completerJeuLotB2 } = await import('../js/seed-lot-b2.js');
 const { connecter, contexteDe } = await import('../js/services/auth.service.js');
 const agents = await import('../js/services/agents.service.js');
 const habilitations = await import('../js/services/habilitations.service.js');
@@ -414,12 +416,16 @@ describe('Lot b5 — flux public des offres', () => {
 });
 
 describe('Lot b5 — DGTTC : consultation et exports sans montant', () => {
-  before(installer);
+  before(async () => { await installer(); await completerJeuLotB2(); });
 
   it('liste les intermédiaires avec leur mandant, sans coordonnée', () => {
     const liste = dgttc.intermediaires(ctxDe('u-dgttc'));
     assert.ok(liste.length >= 2);
     assert.ok(liste.every((i) => !('email' in i) && i.mandant !== '—'));
+    // Intégration : une ligne par mandat de l'entreprise intermédiaire, de fret et de transport.
+    assert.deepEqual([...new Set(liste.map((i) => i.role))].sort(), ['Intermédiaire de fret', 'Intermédiaire de transport']);
+    assert.equal(new Set(liste.map((i) => i.groupementId)).size, 1);
+    assert.equal(dgttc.repartitions(ctxDe('u-dgttc')).totaux.intermediaires, 1);
   });
 
   it('calcule les répartitions et filtre par période', () => {
