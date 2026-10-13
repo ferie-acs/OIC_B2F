@@ -651,7 +651,6 @@ export const LIBELLES = Object.freeze({
   [STATUT_MESSAGE.SIMULE]: Object.freeze({ [POV.NEUTRE]: 'Remis — envoi simulé' }),
   [STATUT_MESSAGE.NON_REMIS]: Object.freeze({ [POV.NEUTRE]: 'Non remis' }),
   /* --- Lot b2 : organisation interne --- */
-  [TYPE_GROUPEMENT.INTERMEDIAIRE]: Object.freeze({ [POV.NEUTRE]: 'Intermédiaire de fret' }),
   [STATUT_MANDAT.EN_VIGUEUR]: Object.freeze({ [POV.NEUTRE]: 'En vigueur' }),
   [STATUT_MANDAT.A_VENIR]: Object.freeze({ [POV.NEUTRE]: 'À venir' }),
   [STATUT_MANDAT.ECHU]: Object.freeze({ [POV.NEUTRE]: 'Échu' }),
