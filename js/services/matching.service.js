@@ -34,6 +34,7 @@ import {
   SENS_OPERATION,
   CODE_TARIF,
   MOTIF_CLOTURE,
+  labelOf,
 } from '../domain/enums.js';
 import { deciderSurAppariement, exiger, projeter } from '../domain/access.js';
 import {
@@ -219,7 +220,8 @@ export function engager(ctx, { offreId, demandeId, sens = SENS_APPARIEMENT.OFFRE
     const destinataire =
       sens === SENS_APPARIEMENT.OFFRE_VERS_DEMANDE ? offre.groupementId : demande.groupementId;
     notifier(destinataire, EVENEMENT_AUDIT.APPARIEMENT_RESERVE, {
-      code: 'appariement.reserve',
+      // Lot b3 : en sens B, c'est l'affréteur qui reçoit — et qui doit répondre.
+      code: sens === SENS_APPARIEMENT.OFFRE_VERS_DEMANDE ? 'appariement.reserve' : 'proposition.recue',
       params: { reference: appariement.reference },
       cibleType: 'appariement',
       cibleId: appariement.id,
@@ -309,9 +311,14 @@ export function repondre(ctx, appariementId, { accepte, motif, precision }) {
       details: `Mise en relation ${a.reference} : ${accepte ? 'acceptée' : 'rejetée'}.`,
       tx,
     });
-    notifier(a.groupementAffreteurId, evt, {
-      code: accepte ? 'appariement.accepte' : 'appariement.rejete',
-      params: { reference: a.reference, motif: motif ?? '' },
+    // Lot b3 : la réponse est adressée à l'initiateur — l'affréteur en sens A,
+    // le transporteur qui a proposé son véhicule en sens B.
+    const sensB = a.sens === SENS_APPARIEMENT.DEMANDE_VERS_OFFRE;
+    notifier(sensB ? a.groupementTransporteurId : a.groupementAffreteurId, evt, {
+      code: sensB
+        ? accepte ? 'proposition.acceptee' : 'proposition.refusee'
+        : accepte ? 'appariement.accepte' : 'appariement.rejete',
+      params: { reference: a.reference, motif: sensB && motif ? labelOf(motif) : motif ?? '' },
       cibleType: 'appariement',
       cibleId: appariementId,
       tx,

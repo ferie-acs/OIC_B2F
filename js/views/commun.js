@@ -516,9 +516,22 @@ export function accueilMinimal(ctx) {
   // Correctif anti-fraude n° 3 : l'agent d'activation a désormais un écran métier.
   // Lot b1 : étendu à l'agent d'activation des affréteurs et intermédiaires.
   const verification = decider(ctx, 'inscription.activer').autorise;
+  // Lot b3 : l'agent de contrôle sur route a lui aussi un écran métier.
+  const controleRoute = decider(ctx, 'controle.verifier').autorise;
 
   return el('div.page', {}, [
-    verification ? bandeau({
+    controleRoute ? bandeau({
+      ton: 'info',
+      titre: 'Votre espace de contrôle sur route',
+      message:
+        'Scannez le QR code d’une attestation de bourse de fret, ou saisissez son code : ' +
+        'vous voyez si elle est authentique, en vigueur, expirée ou annulée. Chaque ' +
+        'vérification est enregistrée dans votre historique.',
+      actions: [
+        el('a.btn.btn-primary', { href: `#/${segmentEspace(ctx)}/controle`, text: 'Vérifier une attestation' }),
+        el('a.btn.btn-secondary', { href: `#/${segmentEspace(ctx)}/controles`, text: 'Mes contrôles' }),
+      ],
+    }) : verification ? bandeau({
       ton: 'info',
       titre: 'Votre espace de vérification et d’activation',
       message:

@@ -1,0 +1,81 @@
+/* Lot b3 : marché, flotte, attestation et contrôle sur route.
+   Uniquement des jetons de tokens.css ; aucun code couleur littéral. */
+
+/* ---- Fiche du chauffeur -------------------------------------------- */
+.fiche-section-titre{margin:var(--s4) 0 var(--s3);font-size:13px;font-weight:700;letter-spacing:.4px;color:var(--text-secondary);text-transform:uppercase}
+.flotte-formulaire>.fiche-section-titre:first-child{margin-top:0}
+.fiche-categories{border:0;margin:0 0 var(--s3);padding:0;min-width:0}
+.fiche-categories legend{display:flex;gap:4px;padding:0;font-size:13px;font-weight:650;color:var(--text-secondary)}
+.fiche-categories legend .req{color:var(--error)}
+.fiche-categories .subtitle{margin:6px 0 12px}
+.fiche-categories-liste{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.fiche-alertes{list-style:none;margin:0;padding:12px 14px;display:grid;gap:8px;background:var(--warning-soft);border-radius:var(--r-md);color:var(--warning);font-size:13px}
+.fiche-alertes li{display:flex;align-items:center;gap:8px}
+.fiche-retrait{display:flex;align-items:flex-start;gap:8px;margin:0;font-size:13px;line-height:1.5;color:var(--text-secondary)}
+.fiche-retrait svg{flex-shrink:0;margin-top:2px}
+.carrier-person-card.is-retire{background:var(--surface-2)}
+.carrier-person-card .carrier-card-footer{flex-wrap:wrap}
+.carrier-person-card .carrier-card-top>div{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+
+/* ---- Offres : modifier, dupliquer ----------------------------------- */
+.offre-actions{display:flex;gap:10px;flex-wrap:wrap}
+.offre-actions .action-refusee{max-width:100%}
+
+/* ---- Demandes : référence, marchandises ------------------------------ */
+.demande-reference{display:grid;gap:3px}
+.demande-reference small{font-size:11px;color:var(--text-muted)}
+.demande-lignes{display:grid;gap:var(--s3);margin-bottom:var(--s3)}
+.demande-ligne{display:grid;gap:8px;padding:var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2)}
+.demande-ligne>.btn,.demande-ligne>.action-refusee{justify-self:start}
+.carrier-form-section .demande-ligne .field-row{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+
+/* ---- QR code --------------------------------------------------------- */
+.qr-code{display:block;max-width:100%;height:auto}
+.qr-fond{fill:var(--surface)}
+.qr-modules{fill:var(--text)}
+/* Un QR se lit sombre sur clair : en thème sombre, les rôles s'inversent. */
+:root[data-theme="dark"] .qr-fond{fill:var(--text)}
+:root[data-theme="dark"] .qr-modules{fill:var(--surface)}
+
+/* ---- Attestation (aperçu calqué sur la fiche DUT) -------------------- */
+.attestation-entete{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);flex-wrap:wrap}
+.attestation-entete .dut-document-title{flex:1 1 260px}
+.attestation-qr{display:grid;justify-items:center;gap:8px;margin:0 0 var(--s4);padding:10px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface)}
+.attestation-qr figcaption{display:grid;justify-items:center;gap:4px;text-align:center}
+.attestation-qr small{font-size:8px;letter-spacing:1.3px;font-weight:700;color:var(--text-muted)}
+.attestation-qr strong{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.4px;max-width:150px;overflow-wrap:anywhere}
+
+/* ---- Contrôle sur route ---------------------------------------------- */
+.controle-page{gap:var(--s4)}
+.controle-grille{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:var(--s4);align-items:start}
+.controle-formulaire{margin-top:0}
+.controle-formulaire .field-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.controle-formulaire input[name="code"]{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.6px;text-transform:uppercase}
+.controle-resultat{display:grid;gap:var(--s3)}
+.controle-verdict{display:flex;align-items:flex-start;gap:var(--s3);padding:var(--s3) 18px;border-radius:var(--r-md);border:1px solid var(--border)}
+.controle-verdict strong{display:block;font-size:17px;line-height:1.35;margin-bottom:4px}
+.controle-verdict p{margin:0;font-size:13px;line-height:1.55;color:var(--text-secondary)}
+.controle-verdict-icone{display:grid;place-items:center;flex-shrink:0}
+.controle-verdict.is-success{background:var(--success-soft);color:var(--success)}
+.controle-verdict.is-warning{background:var(--warning-soft);color:var(--warning)}
+.controle-verdict.is-error{background:var(--error-soft);color:var(--error)}
+.controle-verdict:focus{outline:2px solid var(--accent);outline-offset:3px}
+.controle-fiche{padding:4px 2px}
+.controle-resultat>.subtitle{display:flex;align-items:center;gap:6px;margin:0}
+.controle-resultat .subtitle,.verification-publique .subtitle{color:var(--text-secondary);font-size:13px;line-height:1.55}
+.controle-video{display:block;width:100%;max-height:60vh;border-radius:var(--r-md);background:var(--surface-sunken)}
+
+/* ---- Page publique de vérification ----------------------------------- */
+.verification-publique{min-height:100vh;padding:var(--s4) var(--s3) var(--s6);background:var(--bg);color:var(--text);box-sizing:border-box}
+.verification-publique-corps{max-width:760px;margin:var(--s5) auto 0;display:grid;gap:var(--s4)}
+.verification-publique-corps:focus{outline:none}
+
+@media(max-width:900px){
+  .controle-grille{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+  .controle-formulaire .field-row{grid-template-columns:1fr}
+  .attestation-entete{justify-content:center}
+  .offre-actions>*{flex:1 1 auto}
+  .verification-publique{padding:var(--s3) var(--s3) var(--s5)}
+}

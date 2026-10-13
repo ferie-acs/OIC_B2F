@@ -29,7 +29,7 @@ import {
   afficherErreur,
 } from '../core/ui.js';
 import { aller } from '../core/router.js';
-import { routeDut, segmentEspace } from '../core/nav.js';
+import { localiser, routeDut, segmentEspace } from '../core/nav.js';
 import { POV, CODE_TARIF, ETAPE_TRANSPORT, ETAT_APPARIEMENT, ETAT_DEMANDE, labelOf } from '../domain/enums.js';
 import { decider } from '../domain/access.js';
 import {
@@ -52,6 +52,9 @@ import * as transportSvc from '../services/transport.service.js';
 import { rafraichirContexte } from '../services/auth.service.js';
 import { echeanceDe } from '../domain/matching.state.js';
 import { blocConfiance, resumeConfiance } from './confiance.js';
+/* Lot b3 : demandes (modification, republication) et propositions reçues (sens B) */
+import { vueDemandes } from './demandes-affreteur.js';
+import { actionsProposition, estPropositionRecue } from './propositions-affreteur.js';
 
 /** Libellé d'une entrée de référentiel. */
 
@@ -329,7 +332,13 @@ export function nouvelleDeclaration(ctx) {
  * ================================================================== */
 
 /** @param {any} ctx */
-export function demandes(ctx) {
+export function demandes(ctx, params = {}) {
+  // Lot b3 : modification et republication des demandes, avec trace.
+  return vueDemandes(ctx, params);
+}
+
+/** Ancienne liste des demandes, conservée pour mémoire. @param {any} ctx */
+export function demandesListeSimple(ctx) {
   const liste = fret.mesDemandes(ctx);
   return el('div.page', {}, [
     carte({
@@ -488,6 +497,8 @@ export function reservations(ctx) {
 }
 
 function actionsReservation(ctx, a) {
+  // Lot b3 : sens B — l'affréteur accepte ou refuse la proposition du transporteur.
+  if (estPropositionRecue(a)) return actionsProposition(ctx, a);
   if (a.etat === ETAT_APPARIEMENT.ACCEPTER) {
     return el('a', { class: 'btn btn-primary btn-sm', href: `#/affreteur/validation/${a.id}`, text: 'Valider' });
   }
@@ -561,8 +572,9 @@ function ecranValidation(ctx, appariementId) {
       badge(a.etat, POV.AFFRETEUR),
     ]),
     el('div.validation-progress',{},[
-      el('span',{},[icone('check-circle',20),'Réservation envoyée']),
-      el('span',{},[icone('check-circle',20),'Transporteur d’accord']),
+      // Lot b3 : en sens B, le transporteur a proposé et l'affréteur a accepté.
+      el('span',{},[icone('check-circle',20),a.sens==='demande_vers_offre'?'Proposition reçue':'Réservation envoyée']),
+      el('span',{},[icone('check-circle',20),a.sens==='demande_vers_offre'?'Vous avez accepté':'Transporteur d’accord']),
       el('strong',{},[icone('handshake',24),'Votre validation']),
     ]),
     p.possible
@@ -687,8 +699,8 @@ function ecranValidation(ctx, appariementId) {
         el('div.validation-timeline',{},[
         el('h3', { text: 'Ce qui s’est passé, ce qui va suivre' }),
         el('ul.timeline', {}, [
-          etapeChrono('Vous avez réservé', dateHeure(a.reserveLe), true),
-          etapeChrono('Le transporteur a accepté', dateHeure(a.reponduLe), true),
+          etapeChrono(a.sens==='demande_vers_offre'?'Le transporteur a proposé son véhicule':'Vous avez réservé', dateHeure(a.reserveLe), true),
+          etapeChrono(a.sens==='demande_vers_offre'?'Vous avez accepté sa proposition':'Le transporteur a accepté', dateHeure(a.reponduLe), true),
           etapeChrono('Vous validez', 'Maintenant', false, true),
           etapeChrono('Les deux comptes sont débités', `${montant(p.fraisAffreteur + p.fraisTransporteur)} au total`, false),
           etapeChrono('Le nom et les coordonnées vous sont transmis', 'Transporteur, véhicule, chauffeur, contacts', false),
@@ -830,6 +842,10 @@ function ficheRelation(ctx, appariementId) {
     el('div.table-toolbar', {}, [
       el('a', { class: 'btn btn-primary', href: `#/${espace}/suivi`, text: 'Suivre le transport' }),
       documentDut ? el('a.btn', { href: documentDut, text: preparationDut ? 'Préparer le DUT' : 'Consulter le DUT' }) : null,
+      // Lot b3 : l'attestation de bourse de fret, côté transporteur.
+      a.etat === ETAT_APPARIEMENT.VALIDER && localiser(ctx, 'attestations')
+        ? el('a.btn', { href: `#/${espace}/attestations?selection=${encodeURIComponent(a.id)}`, text: 'Attestation de bourse de fret' })
+        : null,
     ]),
   ]);
 }

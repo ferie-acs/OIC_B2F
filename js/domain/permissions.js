@@ -364,6 +364,31 @@ export const DROITS = Object.freeze({
       'Ouvre un contexte délégué borné par le mandat (périmètre et période). Chaque ' +
       'action y est tracée au nom du mandant. La validation n’est jamais déléguée.',
   },
+
+  /* --- Lot b3 : marché, attestation et contrôle sur route ----- */
+  'demande.modifier': {
+    categorie: 'Fret',
+    libelle: 'Modifier une demande de transport',
+    mutation: true,
+    note: 'Possible tant qu’aucune réservation n’est engagée sur la demande.',
+  },
+  'attestation.lire': { categorie: 'Transport', libelle: 'Consulter les attestations de bourse de fret' },
+  'attestation.generer': {
+    categorie: 'Transport',
+    libelle: 'Émettre ou annuler une attestation de bourse de fret',
+    mutation: true,
+    note: 'Pour une mise en relation validée et payée, par l’équipe du transporteur.',
+  },
+  'controle.verifier': {
+    categorie: 'Contrôle sur route',
+    libelle: 'Vérifier une attestation sur route',
+    mutation: true,
+    note: 'Chaque vérification est journalisée, quel qu’en soit le verdict.',
+  },
+  'controle.historique': {
+    categorie: 'Contrôle sur route',
+    libelle: 'Consulter l’historique de ses contrôles',
+  },
 });
 
 /* ================================================================== *
@@ -420,6 +445,8 @@ const AFFRETEUR = Object.freeze({
   'filiale.creer': GROUPEMENT,
   'mandat.lire': GROUPEMENT,
   'mandat.gerer': GROUPEMENT,
+  /* Lot b3 : modification d'une demande sans réservation engagée */
+  'demande.modifier': GROUPEMENT,
 });
 
 /** Droits du transporteur de plein exercice. */
@@ -452,6 +479,9 @@ const TRANSPORTEUR = Object.freeze({
   'filiale.creer': GROUPEMENT,
   'mandat.lire': GROUPEMENT,
   'mandat.gerer': GROUPEMENT,
+  /* Lot b3 : attestation de bourse de fret */
+  'attestation.lire': GROUPEMENT,
+  'attestation.generer': GROUPEMENT,
 });
 
 /**
@@ -623,6 +653,8 @@ export const MATRICE = Object.freeze({
     'coordonnees.lire': GROUPEMENT,
     'dut.lire': GROUPEMENT,
     'dut.generer': GROUPEMENT,
+    /* Lot b3 : il imprime les documents de transport, il lit donc l'attestation */
+    'attestation.lire': GROUPEMENT,
   }),
 
   /* ---- Niveau 3 — modélisés ----------------------------------- *
@@ -739,6 +771,18 @@ export const MATRICE = Object.freeze({
     'appariement.repondre': GROUPEMENT,
     'appariement.annuler': GROUPEMENT,
   }),
+
+  /* ---- Lot b3 : contrôle sur route ----------------------------- */
+
+  /**
+   * Vérifie une attestation et retrouve ses propres contrôles. Ni marché, ni
+   * compte, ni coordonnées : le contrôle ne sert que l'authenticité, l'état et
+   * le strict nécessaire (immatriculation, trajet, dates).
+   */
+  agent_controle_route: Object.freeze({
+    'controle.verifier': TOUT,
+    'controle.historique': PROPRE,
+  }),
 });
 
 /* ================================================================== *
@@ -797,6 +841,8 @@ export const CLASSIFICATIONS_LISIBLES = Object.freeze({
   // d'autre que ce qu'un acteur du marché lit sur son propre périmètre.
   mandataire_affreteur: LECTURE_MARCHE,
   mandataire_transporteur: LECTURE_MARCHE,
+  /* Lot b3 : l'agent lit l'immatriculation, jamais un contact ni un montant. */
+  agent_controle_route: Object.freeze([PUBLIC, IDENTITE]),
 });
 
 /* ================================================================== *
