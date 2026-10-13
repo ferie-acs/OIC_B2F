@@ -619,9 +619,6 @@ const INTERMEDIAIRE = Object.freeze({
   'filiale.creer': GROUPEMENT,
   'mandat.lire': GROUPEMENT,
   'mandat.agir': GROUPEMENT,
-  // Lot b4 : le titulaire renouvelle son abonnement et recharge son compte.
-  'abonnement.prolonger': GROUPEMENT,
-  'compte.recharger': GROUPEMENT,
 });
 
 /**
