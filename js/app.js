@@ -34,6 +34,10 @@ import { explorer } from './views/explorer.js';
 import { documentsDut } from './views/dut.js';
 import { retourPublic, routeActionPublique, routePublication } from './services/marche-public.service.js';
 import { reprendreFileDut } from './services/passerelle-dut.service.js';
+/* Lot b1 : inscription, dossier, profil, messagerie */
+import { amorcerLotB1 } from './seed-lot-b1.js';
+import { declarerPublique } from './core/router.js';
+import * as lotB1 from './views/lot-b1.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -100,6 +104,17 @@ function declarerRoutes() {
   declarer('minimal/groupements', supervision.groupements);
   declarer('minimal/verifications', verifications);
   declarer('minimal/duts', documentsDut);
+
+  // --- Lot b1 : dossier, profil, messages, messagerie sortante ------
+  for (const espace of ['affreteur', 'transporteur']) declarer(`${espace}/dossier`, lotB1.dossier);
+  for (const espace of ['affreteur', 'transporteur', 'concessionnaire', 'dgttc', 'minimal']) {
+    declarer(`${espace}/profil`, lotB1.profil);
+    declarer(`${espace}/messages`, lotB1.messages);
+  }
+  declarer('concessionnaire/messagerie', lotB1.messagerie);
+  declarerPublique('inscription', (_ctx, params) => { monter(lotB1.inscription(params)); window.scrollTo(0, 0); });
+  declarerPublique('mot-de-passe-oublie', () => { monter(lotB1.motDePasseOublie()); window.scrollTo(0, 0); });
+  declarerPublique('boite-simulee', () => { monter(lotB1.boiteSimulee()); window.scrollTo(0, 0); });
 }
 
 /* ------------------------------------------------------------------ *
@@ -213,6 +228,7 @@ async function demarrerApplication() {
 
   if (!dejaAmorce()) await amorcer();
   await completerJeuAntiFraude();
+  await amorcerLotB1();
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();

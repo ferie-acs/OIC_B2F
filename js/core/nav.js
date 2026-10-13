@@ -104,6 +104,17 @@ const AFFRETEUR = [
       { route: 'utilisateurs', libelle: 'Utilisateurs et auxiliaires', droit: 'utilisateur.lire' },
     ],
   },
+  /* --- Lot b1 : dossier, profil et messages de l'utilisateur --- */
+  {
+    id: 'moncompte',
+    libelle: 'Mon compte',
+    icone: 'user',
+    pages: [
+      { route: 'dossier', libelle: 'Mon dossier', droit: 'inscription.lire' },
+      { route: 'profil', libelle: 'Mon profil' },
+      { route: 'messages', libelle: 'Mes messages' },
+    ],
+  },
 ];
 
 /** Zones de l'espace Transporteur. @type {Zone[]} */
@@ -167,6 +178,17 @@ const TRANSPORTEUR = [
       { route: 'utilisateurs', libelle: 'Utilisateurs et auxiliaires', droit: 'utilisateur.lire' },
     ],
   },
+  /* --- Lot b1 : dossier, profil et messages de l'utilisateur --- */
+  {
+    id: 'moncompte',
+    libelle: 'Mon compte',
+    icone: 'user',
+    pages: [
+      { route: 'dossier', libelle: 'Mon dossier', droit: 'inscription.lire' },
+      { route: 'profil', libelle: 'Mon profil' },
+      { route: 'messages', libelle: 'Mes messages' },
+    ],
+  },
 ];
 
 /** Zones de l'espace Concessionnaire — l'exploitant. @type {Zone[]} */
@@ -213,6 +235,13 @@ const CONCESSIONNAIRE = [
     libelle: 'Journal',
     icone: 'history',
     pages: [{ route: 'audit', libelle: "Journal d'audit", droit: 'audit.lire' }],
+  },
+  /* --- Lot b1 : messagerie sortante --- */
+  {
+    id: 'messagerie',
+    libelle: 'Messagerie',
+    icone: 'mail',
+    pages: [{ route: 'messagerie', libelle: 'Messages envoyés', droit: 'message.journal' }],
   },
 ];
 
@@ -268,8 +297,9 @@ const MINIMAL = [
     pages: [
       { route: 'dashboard', libelle: 'Accueil' },
       { route: 'groupements', libelle: 'Groupements', droit: 'groupement.lire' },
-      // Correctif anti-fraude n° 3 : ouverte au seul agent d'activation par la matrice.
-      { route: 'verifications', libelle: 'Vérification des transporteurs', droit: 'groupement.verifier' },
+      // Correctif anti-fraude n° 3, étendu par le lot b1 à toutes les entreprises
+      // inscrites : ouverte aux deux agents d'activation par la matrice.
+      { route: 'verifications', libelle: 'Vérification et activation', droit: 'inscription.activer' },
       { route: 'duts', libelle: 'Documents de transport', droit: 'dut.lire' },
     ],
   },
@@ -349,8 +379,23 @@ export function localiser(ctx, route) {
       if (page.route === route) return { zone, page };
     }
   }
+  // Lot b1 : pages personnelles, ouvertes à tout utilisateur connecté.
+  const personnelle = PAGES_PERSONNELLES.find((p) => p.route === route);
+  if (personnelle) return { zone: { id: 'moncompte', libelle: 'Mon compte', icone: 'user', pages: [...PAGES_PERSONNELLES] }, page: personnelle };
   return null;
 }
+
+/**
+ * Lot b1 — pages personnelles : le profil et les messages de l'utilisateur
+ * connecté. Elles ne relèvent d'aucun droit métier (chacun n'y lit que ses
+ * propres données) et ne figurent donc pas dans le menu des rôles qui n'en ont
+ * aucun : on les atteint depuis le bloc d'identité de la barre supérieure.
+ * @type {ReadonlyArray<Page>}
+ */
+export const PAGES_PERSONNELLES = Object.freeze([
+  { route: 'profil', libelle: 'Mon profil' },
+  { route: 'messages', libelle: 'Mes messages' },
+]);
 
 /**
  * Droit attaché à une route, même si le rôle ne l'a pas — pour formuler le refus.

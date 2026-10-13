@@ -36,8 +36,31 @@ import {
   EVENEMENT_AUDIT,
   PIECE_DOSSIER,
   TYPE_GROUPEMENT,
+  /* Lot b1 */
+  CANAL_MESSAGE,
+  CODE_TARIF,
+  ETAT_ABONNEMENT,
+  ETAT_INSCRIPTION,
+  ETAT_PIECE,
+  labelOf,
 } from '../domain/enums.js';
-import { exiger } from '../domain/access.js';
+import { exiger, projeter, projeterListe } from '../domain/access.js';
+import { identifiant } from '../core/crypto.js';
+import {
+  agentTraiteType,
+  bilanDossier,
+  codeBfci,
+  estTypeInscriptible,
+  etatInscription,
+  libellePiece,
+  periodeInitiale,
+  piecesCourantes,
+  piecesDuType,
+  roleApresRequalification,
+  typeInscription,
+  typesTraitesPar,
+} from '../domain/inscription.js';
+import { envoyerAuGroupement, envoyerModele } from './messagerie.service.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { notifier } from './notification.service.js';
@@ -369,4 +392,487 @@ export const CHAMPS_CONTROLES = Object.freeze({
 export function pieceModifiee(entite, avant, apres) {
   if (!avant) return true;
   return CHAMPS_CONTROLES[entite].some((c) => String(avant[c] ?? '') !== String(apres[c] ?? ''));
+}
+
+/* ================================================================== *
+ * Lot b1 : vérification et activation de toutes les entreprises inscrites
+ *
+ * La vérification des transporteurs ci-dessus est **étendue**, pas doublée :
+ * affréteurs, transporteurs et intermédiaires de fret passent par la même file.
+ * Pour un transporteur, l'activation prononce aussi la vérification de son
+ * dossier (mêmes pièces : RCCM, carte de transporteur, assurance) ; le contrôle
+ * de ses véhicules et chauffeurs reste celui des fonctions précédentes.
+ *
+ * Règles :
+ * - un agent ne traite que les types que `domain/inscription.js` lui attribue ;
+ * - chaque pièce obligatoire est déclarée conforme avant l'activation ;
+ * - **quatre yeux** : la personne qui active n'est pas celle qui a déclaré les
+ *   pièces conformes (modèle de la validation des crédits) ;
+ * - tout motif (non-conformité, complément, refus, requalification) est
+ *   obligatoire et communiqué à l'entreprise.
+ * ================================================================== */
+
+/**
+ * L'agent traite-t-il ce type ? Lève sinon.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {Record<string, any>} g
+ */
+function exigerTypeTraite(ctx, g) {
+  if (!agentTraiteType(ctx.roleId, g.type)) {
+    throw new Error(
+      `Les dossiers « ${labelOf(g.type)} » sont traités par un autre agent d’activation.`,
+    );
+  }
+}
+
+/** Groupement inscrit, brut, contrôlé pour l'agent. */
+function entrepriseDe(ctx, groupementId) {
+  exiger(ctx, 'inscription.activer', { groupementId });
+  const g = depot('groupement').brutParId(groupementId);
+  if (!g) throw new Error('Entreprise introuvable.');
+  if (!estTypeInscriptible(g.type)) throw new Error('Ce groupement n’a pas de dossier d’inscription.');
+  exigerTypeTraite(ctx, g);
+  return g;
+}
+
+/** Ajoute un échange au fil du dossier. */
+function echange(g, auteur, nature, texte) {
+  return [...(g.inscriptionEchanges ?? []), { le: new Date().toISOString(), auteur, nature, texte }];
+}
+
+/** Motif obligatoire, borné. */
+function motifExige(motif, message) {
+  const t = String(motif ?? '').trim();
+  if (!t) throw new Error(message);
+  return t.slice(0, 500);
+}
+
+/**
+ * Ce qui reste à faire sur un dossier, du point de vue de l'agent.
+ * @param {Record<string, any>} g
+ * @param {Array<Record<string, any>>} pieces
+ * @returns {{aTraiter: boolean, raison: string}}
+ */
+function aFaire(g, pieces) {
+  const etat = etatInscription(g);
+  if (etat === ETAT_INSCRIPTION.EN_ATTENTE) {
+    const b = bilanDossier(g.type, pieces);
+    return { aTraiter: true, raison: b.complet ? 'Prêt à activer' : b.aControler.length ? 'Pièces à contrôler' : 'Dossier incomplet' };
+  }
+  if (etat === ETAT_INSCRIPTION.A_COMPLETER) return { aTraiter: false, raison: 'Complément attendu de l’entreprise' };
+  if (g.modificationProposee) return { aTraiter: true, raison: 'Modification à contrôler' };
+  if (etat === ETAT_INSCRIPTION.ACTIVEE && pieces.some((p) => p.etat === ETAT_PIECE.DEPOSEE)) {
+    return { aTraiter: true, raison: 'Pièce renouvelée à contrôler' };
+  }
+  if (g.type === TYPE_GROUPEMENT.TRANSPORTEUR && etat === ETAT_INSCRIPTION.ACTIVEE
+    && (g.verificationEtat ?? ETAT_VERIFICATION.A_VERIFIER) !== ETAT_VERIFICATION.VERIFIE) {
+    return { aTraiter: true, raison: 'Vérification du transporteur' };
+  }
+  return { aTraiter: false, raison: '' };
+}
+
+/**
+ * File des dossiers de l'agent : les entreprises des types qu'il traite.
+ * **Lecture bornée** : ni téléphone, ni courriel, ni adresse, ni montant.
+ *
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @returns {Array<Record<string, any>>}
+ */
+export function dossiersInscription(ctx) {
+  exiger(ctx, 'inscription.activer', { groupementId: null });
+  const types = typesTraitesPar(ctx.roleId);
+  const pieces = depot('piece').brutTous();
+  const vehicules = depot('vehicule').brutTous();
+  const chauffeurs = depot('chauffeur').brutTous();
+  return depot('groupement')
+    .brutOu((g) => types.includes(g.type))
+    .map((g) => {
+      const siennes = pieces.filter((p) => p.groupementId === g.id);
+      const b = bilanDossier(g.type, siennes);
+      const moyens = g.type === TYPE_GROUPEMENT.TRANSPORTEUR
+        ? vehicules.filter((v) => v.groupementId === g.id && !v.verifieLe).length
+          + chauffeurs.filter((c) => c.groupementId === g.id && !c.verifieLe).length
+        : 0;
+      return {
+        id: g.id,
+        raisonSociale: g.raisonSociale,
+        type: g.type,
+        rccm: g.rccm ?? null,
+        codeBfci: g.codeBfci ?? null,
+        etat: etatInscription(g),
+        inscritLe: g.inscritLe ?? g.creeLe,
+        activeLe: g.activeLe ?? null,
+        verificationEtat: g.type === TYPE_GROUPEMENT.TRANSPORTEUR ? (g.verificationEtat ?? ETAT_VERIFICATION.A_VERIFIER) : null,
+        piecesConformes: b.conformes.length,
+        piecesRequises: typeInscription(g.type).piecesRequises.length,
+        piecesAControler: siennes.filter((p) => p.etat === ETAT_PIECE.DEPOSEE).length,
+        moyensAControler: moyens,
+        modificationProposee: Boolean(g.modificationProposee),
+        ...(() => {
+          const f = aFaire(g, siennes);
+          return !f.aTraiter && moyens > 0 ? { aTraiter: true, raison: 'Véhicules ou chauffeurs à contrôler' } : f;
+        })(),
+      };
+    })
+    .sort((a, b) => Number(b.aTraiter) - Number(a.aTraiter)
+      || new Date(a.inscritLe) - new Date(b.inscritLe));
+}
+
+/**
+ * Dossier complet d'une entreprise pour l'agent : identité, pièces, échanges.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} groupementId
+ * @returns {Record<string, any>}
+ */
+export function dossierInscription(ctx, groupementId) {
+  const g = entrepriseDe(ctx, groupementId);
+  const pieces = depot('piece').brutOu((p) => p.groupementId === g.id);
+  const bilan = bilanDossier(g.type, pieces);
+  const etat = etatInscription(g);
+  const courantes = piecesCourantes(pieces);
+  const controleursConformes = new Set(
+    typeInscription(g.type).piecesRequises
+      .map((c) => courantes.get(c))
+      .filter((p) => p?.etat === ETAT_PIECE.CONFORME)
+      .map((p) => p.decideParUtilisateurId),
+  );
+  return {
+    // Projeté : l'agent reçoit l'identité (`public`, `identite`), jamais les coordonnées.
+    groupement: projeter(ctx, 'groupement', g),
+    type: typeInscription(g.type),
+    etat,
+    pieces: projeterListe(ctx, 'piece', [...pieces].sort((a, b) => new Date(b.deposeLe) - new Date(a.deposeLe))),
+    attendues: piecesDuType(g.type),
+    bilan,
+    echanges: [...(g.inscriptionEchanges ?? [])].reverse(),
+    modificationProposee: g.modificationProposee ?? null,
+    motifActivation: motifNonActivable(ctx, g, bilan, etat, controleursConformes),
+    utilisateurs: depot('utilisateur').brutOu((u) => u.groupementId === g.id).length,
+  };
+}
+
+/**
+ * Motif pour lequel l'agent ne peut pas activer ce dossier, ou `null`.
+ * @returns {string|null}
+ */
+function motifNonActivable(ctx, g, bilan, etat, controleursConformes) {
+  if (etat === ETAT_INSCRIPTION.ACTIVEE) return 'Ce compte est déjà activé.';
+  if (etat === ETAT_INSCRIPTION.REFUSEE) return 'Cette inscription a été refusée.';
+  if (etat === ETAT_INSCRIPTION.A_COMPLETER) return 'Un complément est demandé : l’entreprise doit transmettre son dossier complété.';
+  if (!bilan.complet) {
+    const reste = [...bilan.manquantes, ...bilan.aControler, ...bilan.nonConformes];
+    return `Chaque pièce obligatoire doit être déclarée conforme. Reste : ${reste.map(libellePiece).join(', ')}.`;
+  }
+  if (controleursConformes.has(ctx.utilisateurId)) {
+    return 'Vous avez déclaré des pièces conformes : l’activation revient à un autre agent (principe des quatre yeux).';
+  }
+  return null;
+}
+
+/**
+ * Décision sur une pièce : conforme, ou non conforme avec motif.
+ *
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} pieceId
+ * @param {{conforme: boolean, motif?: string}} decision
+ * @returns {Record<string, any>}
+ */
+export function deciderPiece(ctx, pieceId, { conforme, motif }) {
+  const p = depot('piece').brutParId(pieceId);
+  if (!p) throw new Error('Pièce introuvable.');
+  const g = entrepriseDe(ctx, p.groupementId);
+  const etat = etatInscription(g);
+  if (p.etat === ETAT_PIECE.REMPLACEE) throw new Error('Cette pièce a été remplacée par l’entreprise : contrôlez la plus récente.');
+  if (etat === ETAT_INSCRIPTION.REFUSEE) throw new Error('Cette inscription a été refusée.');
+  if (etat === ETAT_INSCRIPTION.ACTIVEE && p.etat !== ETAT_PIECE.DEPOSEE) {
+    throw new Error('Le compte est activé : seule une pièce nouvellement déposée se contrôle.');
+  }
+  if (!typeInscription(g.type).piecesRequises.concat(typeInscription(g.type).piecesFacultatives).includes(p.typePiece)) {
+    throw new Error('Cette pièce n’est pas prévue pour ce type d’entreprise.');
+  }
+  if (conforme && p.expireLe && new Date(`${p.expireLe}T23:59:59`) < new Date()) {
+    throw new Error('Cette pièce est échue : elle ne peut pas être déclarée conforme.');
+  }
+  const texte = conforme ? null : motifExige(motif, 'Une pièce non conforme porte son motif : l’entreprise doit savoir quoi corriger.');
+
+  return stockageInterne().transaction((tx) => {
+    const maj = depot('piece').modifier(p.id, {
+      etat: conforme ? ETAT_PIECE.CONFORME : ETAT_PIECE.NON_CONFORME,
+      motif: texte,
+      decideLe: new Date().toISOString(),
+      decideParUtilisateurId: ctx.utilisateurId,
+    }, { tx });
+    journaliser(ctx, EVENEMENT_AUDIT.PIECE_CONTROLEE, {
+      cibleType: 'groupement',
+      cibleId: g.id,
+      details: `${libellePiece(p.typePiece)} : ${conforme ? 'conforme' : 'non conforme'}.`,
+      tx,
+    });
+    return maj;
+  });
+}
+
+/**
+ * Demande un complément : le dossier revient à l'entreprise avec le motif.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} groupementId
+ * @param {string} motif
+ */
+export function demanderComplement(ctx, groupementId, motif) {
+  const g = entrepriseDe(ctx, groupementId);
+  if (etatInscription(g) !== ETAT_INSCRIPTION.EN_ATTENTE) {
+    throw new Error('Un complément ne se demande que sur un dossier en attente de vérification.');
+  }
+  const texte = motifExige(motif, 'Précisez le complément attendu : l’entreprise doit savoir quoi fournir.');
+  return transitionInscription(ctx, g, {
+    etat: ETAT_INSCRIPTION.A_COMPLETER, texte, nature: 'complement',
+    evenement: EVENEMENT_AUDIT.COMPLEMENT_DEMANDE, details: 'Complément demandé à l’entreprise.',
+    modele: 'complement.demande',
+  });
+}
+
+/**
+ * Refuse l'inscription, motif à l'appui. Le compte reste limité à son dossier,
+ * en lecture.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} groupementId
+ * @param {string} motif
+ */
+export function refuserInscription(ctx, groupementId, motif) {
+  const g = entrepriseDe(ctx, groupementId);
+  if (![ETAT_INSCRIPTION.EN_ATTENTE, ETAT_INSCRIPTION.A_COMPLETER].includes(etatInscription(g))) {
+    throw new Error('Seule une inscription en cours d’examen peut être refusée.');
+  }
+  const texte = motifExige(motif, 'Un refus porte son motif : il est communiqué à l’entreprise.');
+  return transitionInscription(ctx, g, {
+    etat: ETAT_INSCRIPTION.REFUSEE, texte, nature: 'refus',
+    evenement: EVENEMENT_AUDIT.INSCRIPTION_REFUSEE, details: 'Inscription refusée par l’agent d’activation.',
+    modele: 'inscription.refusee',
+  });
+}
+
+function transitionInscription(ctx, g, { etat, texte, nature, evenement, details, modele }) {
+  return stockageInterne().transaction((tx) => {
+    const maj = depot('groupement').modifier(g.id, {
+      inscriptionEtat: etat,
+      inscriptionMotif: texte,
+      inscriptionEchanges: echange(g, 'oic', nature, texte),
+    }, { tx });
+    journaliser(ctx, evenement, { cibleType: 'groupement', cibleId: g.id, details, tx });
+    envoyerModele({
+      modele, params: { raisonSociale: g.raisonSociale, motif: texte }, groupementId: g.id, tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+    });
+    return maj;
+  });
+}
+
+/**
+ * **Active** le compte d'une entreprise : code d'entreprise, période
+ * d'abonnement initiale au tarif du catalogue, message d'activation. Pour un
+ * transporteur, prononce aussi la vérification de son dossier.
+ *
+ * Impossible tant qu'une pièce obligatoire n'est pas conforme, et par la personne
+ * qui a déclaré les pièces conformes.
+ *
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} groupementId
+ * @returns {Record<string, any>} Le groupement activé.
+ */
+export function activerEntreprise(ctx, groupementId) {
+  const g = entrepriseDe(ctx, groupementId);
+  const d = dossierInscription(ctx, groupementId);
+  if (d.motifActivation) throw new Error(d.motifActivation);
+  const courantes = piecesCourantes(depot('piece').brutOu((p) => p.groupementId === g.id));
+  for (const code of typeInscription(g.type).piecesRequises) {
+    const p = courantes.get(code);
+    if (p?.expireLe && new Date(`${p.expireLe}T23:59:59`) < new Date()) {
+      throw new Error(`${libellePiece(code)} est échue depuis son contrôle : demandez une pièce à jour.`);
+    }
+  }
+  const tarif = depot('tarif').brutParId(CODE_TARIF.ABONNEMENT_ANNUEL);
+  if (!tarif || tarif.actif === false) {
+    throw new Error('Le catalogue ne porte pas de tarif d’abonnement actif : l’activation est impossible.');
+  }
+
+  const maintenant = new Date();
+  const annee = maintenant.getFullYear();
+  const prefixe = `BFCI-${annee}-`;
+  const rang = depot('groupement').brutOu((x) => String(x.codeBfci ?? '').startsWith(prefixe)).length + 1;
+  const code = codeBfci(annee, rang);
+  const periode = periodeInitiale(maintenant);
+
+  return stockageInterne().transaction((tx) => {
+    /** @type {Record<string, any>} */
+    const maj = {
+      inscriptionEtat: ETAT_INSCRIPTION.ACTIVEE,
+      codeBfci: code,
+      activeLe: maintenant.toISOString(),
+      activeParUtilisateurId: ctx.utilisateurId,
+      inscriptionMotif: null,
+      inscriptionEchanges: echange(g, 'oic', 'activation', `Compte activé — code d’entreprise ${code}.`),
+    };
+    if (g.type === TYPE_GROUPEMENT.TRANSPORTEUR) {
+      Object.assign(maj, {
+        verificationEtat: ETAT_VERIFICATION.VERIFIE,
+        verificationPieces: Object.values(PIECE_DOSSIER),
+        verifieLe: maintenant.toISOString(),
+        verifieParUtilisateurId: ctx.utilisateurId,
+        verificationMotif: null,
+      });
+    }
+    const active = depot('groupement').modifier(g.id, maj, { tx });
+    depot('abonnement').creer({
+      id: identifiant('abo'),
+      groupementId: g.id,
+      montant: tarif.montant,
+      devise: tarif.devise,
+      debuteLe: periode.debuteLe,
+      finitLe: periode.finitLe,
+      etat: ETAT_ABONNEMENT.ACTIF,
+      creeLe: maintenant.toISOString(),
+      demo: true,
+    }, { tx });
+    journaliser(ctx, EVENEMENT_AUDIT.ENTREPRISE_ACTIVEE, {
+      cibleType: 'groupement',
+      cibleId: g.id,
+      details: `Compte activé (${labelOf(g.type)}) — code ${code}, abonnement initial ouvert.`,
+      tx,
+    });
+    envoyerModele({
+      modele: 'entreprise.activee',
+      params: {
+        raisonSociale: g.raisonSociale,
+        code,
+        debut: formatJour(periode.debuteLe),
+        fin: formatJour(periode.finitLe),
+      },
+      groupementId: g.id,
+      canaux: [CANAL_MESSAGE.COURRIEL, CANAL_MESSAGE.SMS],
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+    });
+    return active;
+  });
+}
+
+/** JJ/MM/AAAA, sans dépendre de la vue. */
+function formatJour(iso) {
+  const [a, m, j] = iso.split('-');
+  return `${j}/${m}/${a}`;
+}
+
+/**
+ * Requalifie une entreprise : change son type, avec motif et trace. Les comptes
+ * de ses utilisateurs suivent (responsable → rôle principal du nouveau type,
+ * sous-comptes → rôle auxiliaire). Les champs propres au nouveau type sont
+ * fournis par l'agent s'ils manquent.
+ *
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} groupementId
+ * @param {{type: string, motif: string, champs?: Record<string, string>}} saisie
+ * @returns {Record<string, any>}
+ */
+export function requalifierEntreprise(ctx, groupementId, { type, motif, champs = {} }) {
+  const g = entrepriseDe(ctx, groupementId);
+  if (!estTypeInscriptible(type)) throw new Error('Choisissez le nouveau type de l’entreprise.');
+  if (type === g.type) throw new Error('L’entreprise est déjà de ce type.');
+  if (etatInscription(g) === ETAT_INSCRIPTION.REFUSEE) throw new Error('Cette inscription a été refusée.');
+  const texte = motifExige(motif, 'Une requalification porte son motif : il est communiqué à l’entreprise.');
+  const nouveau = typeInscription(type);
+
+  /** @type {Record<string, any>} */
+  const propres = {};
+  for (const c of nouveau.champs) {
+    const v = String(champs[c.nom] ?? g[c.nom] ?? '').trim();
+    if (c.requis && !v) throw new Error(`Renseignez « ${c.libelle} » pour requalifier l’entreprise.`);
+    if (v) propres[c.nom] = v;
+  }
+  const avant = labelOf(g.type);
+  const apres = labelOf(type);
+
+  return stockageInterne().transaction((tx) => {
+    /** @type {Record<string, any>} */
+    const maj = {
+      ...propres,
+      type,
+      inscriptionEchanges: echange(g, 'oic', 'requalification', `Requalifiée : ${avant} → ${apres}. ${texte}`),
+    };
+    if (type === TYPE_GROUPEMENT.TRANSPORTEUR && !g.verificationEtat) maj.verificationEtat = ETAT_VERIFICATION.A_VERIFIER;
+    const res = depot('groupement').modifier(g.id, maj, { tx });
+    for (const u of tx.lire('users').filter((x) => x.groupementId === g.id)) {
+      const roleId = roleApresRequalification(u.roleId, g.type, type);
+      if (roleId !== u.roleId) depot('utilisateur').modifier(u.id, { roleId }, { tx });
+    }
+    journaliser(ctx, EVENEMENT_AUDIT.ENTREPRISE_REQUALIFIEE, {
+      cibleType: 'groupement',
+      cibleId: g.id,
+      details: `Type modifié : ${avant} → ${apres}.`,
+      tx,
+    });
+    envoyerModele({
+      modele: 'entreprise.requalifiee',
+      params: { raisonSociale: g.raisonSociale, avant, apres, motif: texte },
+      groupementId: g.id,
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+    });
+    return res;
+  });
+}
+
+/**
+ * Accepte ou refuse la modification d'identité demandée après activation.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} groupementId
+ * @param {{accepter: boolean, motif?: string}} decision
+ */
+export function deciderModification(ctx, groupementId, { accepter, motif }) {
+  const g = entrepriseDe(ctx, groupementId);
+  const proposee = g.modificationProposee;
+  if (!proposee?.champs) throw new Error('Aucune modification n’est en attente sur ce dossier.');
+  const texte = accepter ? null : motifExige(motif, 'Un refus porte son motif : il est communiqué à l’entreprise.');
+  if (accepter) {
+    const autres = depot('groupement').brutOu((x) => x.id !== g.id);
+    const norme = (v) => String(v ?? '').toUpperCase().replace(/[\s.\-_/]/g, '');
+    for (const champ of ['rccm', 'compteContribuable']) {
+      const v = proposee.champs[champ];
+      if (v && autres.some((x) => x[champ] && norme(x[champ]) === norme(v))) {
+        throw new Error('Le numéro demandé appartient déjà à une autre entreprise : la modification ne peut pas être acceptée.');
+      }
+    }
+  }
+  return stockageInterne().transaction((tx) => {
+    const maj = depot('groupement').modifier(g.id, {
+      ...(accepter ? proposee.champs : {}),
+      modificationProposee: null,
+      inscriptionEchanges: echange(g, 'oic', 'modification', accepter ? 'Modification de la fiche acceptée.' : `Modification refusée : ${texte}`),
+    }, { tx });
+    journaliser(ctx, EVENEMENT_AUDIT.MODIFICATION_DECIDEE, {
+      cibleType: 'groupement',
+      cibleId: g.id,
+      details: accepter ? 'Modification d’identité acceptée et appliquée.' : 'Modification d’identité refusée.',
+      tx,
+    });
+    envoyerModele({
+      modele: accepter ? 'modification.acceptee' : 'modification.refusee',
+      params: { raisonSociale: g.raisonSociale, motif: texte },
+      groupementId: g.id,
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+    });
+    return maj;
+  });
+}
+
+/**
+ * Contacte l'entreprise depuis son dossier. L'agent ne voit pas ses
+ * coordonnées : le message part à l'adresse enregistrée de chaque utilisateur.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {string} groupementId
+ * @param {{objet: string, corps: string, canaux: string[]}} saisie
+ */
+export function contacterEntreprise(ctx, groupementId, saisie) {
+  entrepriseDe(ctx, groupementId);
+  return envoyerAuGroupement(ctx, groupementId, saisie);
 }
