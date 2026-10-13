@@ -21,6 +21,8 @@
 import { decider } from '../domain/access.js';
 import { ESPACE } from '../domain/roles.js';
 import { espaceDe } from '../domain/access.js';
+// Lot b2 : organisation interne
+import { INTERMEDIAIRE, PAGES_ORGANISATION } from './nav-lot-b2.js';
 
 /**
  * @typedef {object} Page
@@ -102,6 +104,8 @@ const AFFRETEUR = [
     pages: [
       { route: 'groupement', libelle: 'Fiche du groupement', droit: 'groupement.lire' },
       { route: 'utilisateurs', libelle: 'Utilisateurs et auxiliaires', droit: 'utilisateur.lire' },
+      // Lot b2 : organisation interne
+      ...PAGES_ORGANISATION,
     ],
   },
   /* --- Lot b1 : dossier, profil et messages de l'utilisateur --- */
@@ -176,6 +180,8 @@ const TRANSPORTEUR = [
     pages: [
       { route: 'groupement', libelle: 'Fiche du groupement', droit: 'groupement.lire' },
       { route: 'utilisateurs', libelle: 'Utilisateurs et auxiliaires', droit: 'utilisateur.lire' },
+      // Lot b2 : organisation interne
+      ...PAGES_ORGANISATION,
     ],
   },
   /* --- Lot b1 : dossier, profil et messages de l'utilisateur --- */
@@ -312,6 +318,8 @@ const PAR_ESPACE = {
   [ESPACE.CONCESSIONNAIRE]: CONCESSIONNAIRE,
   [ESPACE.DGTTC]: DGTTC,
   [ESPACE.MINIMAL]: MINIMAL,
+  // Lot b2 : organisation interne
+  [ESPACE.INTERMEDIAIRE]: INTERMEDIAIRE,
 };
 
 /**

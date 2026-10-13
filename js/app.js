@@ -40,6 +40,10 @@ import { installerListesRecherche } from './core/liste-recherche.js';
 import { amorcerLotB1 } from './seed-lot-b1.js';
 import { declarerPublique } from './core/router.js';
 import * as lotB1 from './views/lot-b1.js';
+// Lot b2 : organisation interne
+import * as organisation from './views/organisation.js';
+import * as intermediaire from './views/intermediaire.js';
+import { completerJeuLotB2 } from './seed-lot-b2.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -117,6 +121,22 @@ function declarerRoutes() {
   declarerPublique('inscription', (_ctx, params) => { monter(lotB1.inscription(params)); window.scrollTo(0, 0); });
   declarerPublique('mot-de-passe-oublie', () => { monter(lotB1.motDePasseOublie()); window.scrollTo(0, 0); });
   declarerPublique('boite-simulee', () => { monter(lotB1.boiteSimulee()); window.scrollTo(0, 0); });
+
+  // --- Lot b2 : organisation interne ---------------------------------
+  // Les écrans « Utilisateurs » deviennent administrables (même route).
+  declarer('affreteur/utilisateurs', organisation.utilisateurs);
+  declarer('transporteur/utilisateurs', organisation.utilisateurs);
+  declarer('affreteur/filiales', organisation.filialesEtEntites);
+  declarer('transporteur/filiales', organisation.filialesEtEntites);
+  declarer('affreteur/intermediaires', organisation.intermediaires);
+  declarer('transporteur/intermediaires', organisation.intermediaires);
+  declarer('intermediaire/dashboard', intermediaire.dashboard);
+  declarer('intermediaire/notifications', commun.notifications);
+  declarer('intermediaire/mandants', intermediaire.mandants);
+  declarer('intermediaire/abonnement', commun.abonnement);
+  declarer('intermediaire/groupement', intermediaire.ficheEntreprise);
+  declarer('intermediaire/filiales', organisation.filialesEtEntites);
+  declarer('intermediaire/utilisateurs', organisation.utilisateurs);
 }
 
 /* ------------------------------------------------------------------ *
@@ -232,6 +252,7 @@ async function demarrerApplication() {
   if (!dejaAmorce()) await amorcer();
   await completerJeuAntiFraude();
   await amorcerLotB1();
+  await completerJeuLotB2(); // Lot b2 : intermédiaire, mandats, filiale de démonstration
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();

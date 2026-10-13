@@ -139,6 +139,7 @@ export function dashboard(ctx) {
   const transports = transportsVisibles(ctx);
   const enRoute = transports.filter(t => t.etape === ETAPE_TRANSPORT.EN_ROUTE);
   const { solde, suffisant } = couverture(ctx.groupementId, tarifDe(CODE_TARIF.FRAIS_AFFRETEUR) ?? 0);
+  const voitSolde = decider(ctx, 'compte.lire', { groupementId: ctx.groupementId }).autorise; // Lot b2
   const peutValider = decider(ctx, 'appariement.valider', { groupementId: ctx.groupementId }).autorise;
   const peutCreer = decider(ctx, 'declaration.creer', { groupementId: ctx.groupementId }).autorise;
   const parId = new Map(declarations.map(d => [d.id, d]));
@@ -215,10 +216,12 @@ export function dashboard(ctx) {
         carteCorridors(declarations),
         el('section.dash-panel.dash-balance', {}, [
           el('span.indicator-watermark', {'aria-hidden':'true'}, [icone('wallet',104)]),
-          el('div.dash-panel-head', {}, [el('h2', { text: 'Solde du compte' }), icone('wallet', 20)]),
-          el('strong.dash-balance-value', { text: montant(solde) }),
+          // Lot b2 : sans `compte.lire` (intermédiaire au nom d'un mandant), la
+          // couverture des frais seulement, jamais le montant du solde.
+          el('div.dash-panel-head', {}, [el('h2', { text: voitSolde ? 'Solde du compte' : 'Couverture des frais' }), icone('wallet', 20)]),
+          el('strong.dash-balance-value', { text: voitSolde ? montant(solde) : (suffisant ? 'Provisionné' : 'À provisionner') }),
           el('p', { class: suffisant ? 'dash-balance-ok' : 'dash-balance-low' }, [icone(suffisant ? 'check-circle' : 'alert', 14), suffisant ? 'Suffisant pour une validation' : 'Insuffisant pour une validation']),
-          lien('Voir les mouvements', 'compte'),
+          voitSolde ? lien('Voir les mouvements', 'compte') : null,
         ]),
       ]),
     ]),

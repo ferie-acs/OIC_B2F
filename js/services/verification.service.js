@@ -77,6 +77,11 @@ import { notifier } from './notification.service.js';
  */
 export function etatVerification(groupementId) {
   const g = groupementId ? depot('groupement').brutParId(groupementId) : null;
+  // Lot b2 : une filiale sans décision propre hérite de la vérification de sa
+  // mère — dynamiquement : si la mère la perd, la filiale la perd aussi.
+  if (g && g.verificationEtat == null && g.parentId && g.parentId !== g.id) {
+    return etatVerification(g.parentId);
+  }
   return g?.verificationEtat ?? ETAT_VERIFICATION.A_VERIFIER;
 }
 
@@ -175,7 +180,7 @@ export function dossiersTransporteurs(ctx) {
       carteTransporteurEcheance: g.carteTransporteurEcheance ?? null,
       pays: g.pays,
       creeLe: g.creeLe,
-      etat: g.verificationEtat ?? ETAT_VERIFICATION.A_VERIFIER,
+      etat: etatVerification(g.id), // Lot b2 : héritage de la mère pour une filiale
       pieces: g.verificationPieces ?? [],
       verifieLe: g.verifieLe ?? null,
       motif: g.verificationMotif ?? null,

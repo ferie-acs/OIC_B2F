@@ -7,6 +7,8 @@
 import { el, icone } from '../core/dom.js';
 import { champ, toast } from '../core/ui.js';
 import { COMPTES_DEMO, MOT_DE_PASSE_DEMO } from '../seed.js';
+// Lot b2 : activation d'un compte avec le code remis par l'administrateur.
+import { lienActivation } from './activation-compte.js';
 
 /**
  * @param {(email: string, motDePasse: string) => Promise<void>} surConnexion
@@ -86,6 +88,7 @@ export function login(surConnexion, { retour = '#/explorer', intention } = {}) {
       el('span', { text: 'Envie de découvrir les offres ? ' }),
       el('a', { href: retour, text: 'Explorer le marché' }),
     ]),
+    lienActivation(), // Lot b2
     el('details.auth-demo', {}, [
     el('summary', {}, [icone('users', 17), el('span', { text: 'Essayer un compte de démonstration' })]),
     el('div.auth-demo-accounts', {}, [

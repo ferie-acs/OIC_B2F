@@ -47,6 +47,8 @@ import { demanderStatutsDut, statutDut, EVENEMENT_STATUT_DUT } from '../services
 import { composer, marquerLue, mesNotifications } from '../services/notification.service.js';
 import { avisPossible, donnerAvis } from '../services/avis.service.js';
 import { ETAT_VERIFICATION } from '../domain/enums.js';
+// Lot b2 : organisation interne — vérification héritée d'une filiale.
+import { etatVerification } from '../services/verification.service.js';
 import { blocConfiance } from './confiance.js';
 
 /* ================================================================== *
@@ -429,7 +431,7 @@ export function groupement(ctx) {
   if (!g) return etatVide({ message: 'Aucun groupement rattaché à votre compte.' });
 
   const verification = g.type === 'transporteur'
-    ? (g.verificationEtat ?? ETAT_VERIFICATION.A_VERIFIER)
+    ? etatVerification(g.id) // Lot b2 : une filiale hérite de la vérification de sa mère
     : null;
 
   return el('div.page', {}, [

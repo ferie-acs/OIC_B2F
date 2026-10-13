@@ -68,6 +68,7 @@ export function dashboard(ctx) {
   const offres = flotte.mesOffres(ctx);
   const frais = tarifDe(CODE_TARIF.FRAIS_TRANSPORTEUR) ?? 0;
   const { solde, suffisant } = couverture(ctx.groupementId, frais);
+  const voitSolde = droit('compte.lire').autorise; // Lot b2 : pas de solde chiffré pour un intermédiaire
   const validees = matching.mesAppariements(ctx, (a) => a.etat === ETAT_APPARIEMENT.VALIDER);
   const repondus = matching.mesAppariements(ctx, (a) =>
     a.sens === SENS_APPARIEMENT.OFFRE_VERS_DEMANDE && [ETAT_APPARIEMENT.ACCEPTER, ETAT_APPARIEMENT.REJETER, ETAT_APPARIEMENT.VALIDER].includes(a.etat),
@@ -127,8 +128,8 @@ export function dashboard(ctx) {
           ton: 'err',
           titre: 'Votre solde ne couvre pas les frais de mise en relation',
           message:
-            `Les frais s’élèvent à ${montant(frais)} et votre compte affiche ` +
-            `${montant(solde)}. Une validation d’affréteur échouera tant que votre ` +
+            `Les frais s’élèvent à ${montant(frais)}${voitSolde ? ` et votre compte affiche ${montant(solde)}` : ''}. ` +
+            'Une validation d’affréteur échouera tant que votre ' +
             'compte n’est pas provisionné. Faites-le créditer par le concessionnaire.',
         }),
 
@@ -142,8 +143,8 @@ export function dashboard(ctx) {
         valeur: repondus.length ? `${Math.round((acceptes / repondus.length) * 100)} %` : '—',
       }),
       kpi({
-        libelle: 'Solde du compte',
-        valeur: montant(solde),
+        libelle: voitSolde ? 'Solde du compte' : 'Couverture des frais',
+        valeur: voitSolde ? montant(solde) : (suffisant ? 'Provisionné' : 'À provisionner'),
         ton: suffisant ? 'ok' : 'err',
         note: suffisant ? 'Suffisant' : 'Insuffisant',
       }),
@@ -529,7 +530,10 @@ function dialogueAcceptation(ctx, a, frais) {
           'que l’affréteur n’a pas validé ou annulé.',
       }),
       el('div.recap-grid', {}, [
-        el('div.recap-item', {}, [el('span', { text: 'Votre solde' }), el('strong', { text: montant(solde) })]),
+        // Lot b2 : un intermédiaire ne voit pas le solde chiffré de son mandant.
+        decider(ctx, 'compte.lire', { groupementId: ctx.groupementId }).autorise
+          ? el('div.recap-item', {}, [el('span', { text: 'Votre solde' }), el('strong', { text: montant(solde) })])
+          : el('div.recap-item', {}, [el('span', { text: 'Compte du mandant' }), el('strong', { text: solde < frais ? 'À provisionner' : 'Provisionné' })]),
         el('div.recap-item', {}, [el('span', { text: 'Frais à venir' }), el('strong', { text: montant(frais) })]),
       ]),
       solde < frais

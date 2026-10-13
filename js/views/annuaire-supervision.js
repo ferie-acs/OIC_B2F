@@ -3,6 +3,8 @@ import {carte,kpi,badge} from '../core/ui.js';
 import {depot} from '../repositories/index.js';
 import {abonnementDe} from '../services/auth.service.js';
 import {soldeDe} from '../services/compte.service.js';
+// Lot b2 : organisation interne — vérification héritée d'une filiale.
+import {etatVerification} from '../services/verification.service.js';
 import {decider} from '../domain/access.js';
 import {refDe} from './_donnees.js';
 
@@ -37,7 +39,7 @@ export function annuaireSupervision(ctx,{abonnements=false}={}) {
           el('div',{},[el('dt',{text:'RCCM'}),el('dd',{text:g.rccm||'Non renseigné'})]),
           el('div',{},[el('dt',{text:'État du groupement'}),el('dd',{},[el('span',{class:`badge ${g.etat==='actif'?'badge-success':'badge-warning'}`,text:g.etat==='actif'?'Actif':g.etat==='suspendu'?'Suspendu':g.etat})])]),
           // Correctif anti-fraude n° 3 : l'état du contrôle des pièces, pour l'exploitant comme pour le contrôleur.
-          g.type==='transporteur'?el('div',{},[el('dt',{text:'Vérification'}),el('dd',{},[badge(g.verificationEtat||'a_verifier')])]):null,
+          g.type==='transporteur'?el('div',{},[el('dt',{text:'Vérification'}),el('dd',{},[badge(etatVerification(g.id))])]):null,
           !institution&&decider(ctx,'compte.lire',{groupementId:g.id}).autorise?el('div',{},[el('dt',{text:'Solde du compte'}),el('dd',{text:montant(soldeDe(g.id))})]):null,
         ]),
         !abonnements?el('div.supervision-directory-foot',{},[icone('calendar',18),el('span',{text:institution?'Abonnement non requis':`${statut}${abo.finitLe?' · '+date(abo.finitLe):''}`})]):null,
