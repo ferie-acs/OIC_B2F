@@ -10,6 +10,8 @@ import {
   ETAT_OFFRE,
   ETAT_VEHICULE,
   EVENEMENT_AUDIT,
+  SENS_APPARIEMENT,
+  STATUT_OFFRE_PROPOSEE,
 } from '../domain/enums.js';
 import { exiger } from '../domain/access.js';
 import { champsManquantsPourRole } from '../domain/permissions.js';
@@ -413,6 +415,18 @@ export function retirabilite(offreId) {
   const enAttente = depot('appariement').brutOu(
     (a) => a.offreId === offreId && a.etat === ETAT_APPARIEMENT.RESERVER,
   );
+  // Intégration (défaut du lot b3) : en sens B, c'est le transporteur qui a
+  // proposé ; la réponse attendue est celle de l'affréteur.
+  if (enAttente.length > 0 && enAttente.every((a) => a.sens === SENS_APPARIEMENT.DEMANDE_VERS_OFFRE)) {
+    return {
+      retirable: true,
+      motif: null,
+      propositionEnAttente: true,
+      avertissement:
+        'Votre proposition sur cette offre attend la réponse de l’affréteur. La retirer ' +
+        'clôt cette proposition et rend la demande au marché ; l’affréteur en sera informé.',
+    };
+  }
   if (enAttente.length > 0) {
     return {
       retirable: true,
@@ -433,7 +447,12 @@ export function retirabilite(offreId) {
 export function mesOffres(ctx) {
   return depot('offre')
     .lisiblesPar(ctx, 'offre.lire')
-    .map((o) => ({ ...o, ...retirabilite(o.id) }))
+    .map((o) => {
+      const r = retirabilite(o.id);
+      // Intégration : statut à afficher, distinct de l'état stocké en sens B.
+      const statutAffiche = o.etat === ETAT_OFFRE.RESERVEE && r.propositionEnAttente ? STATUT_OFFRE_PROPOSEE : o.etat;
+      return { ...o, ...r, statutAffiche };
+    })
     .sort((a, b) => new Date(b.publieeLe) - new Date(a.publieeLe));
 }
 

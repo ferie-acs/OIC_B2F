@@ -726,6 +726,12 @@ export const ETAT_DECISION = Object.freeze({
  * ------------------------------------------------------------------ */
 
 /**
+ * Intégration : statut **affiché** d'une offre réservée par la proposition de son
+ * transporteur (sens B). Ce n'est pas un état stocké : l'offre reste `reservee`.
+ */
+export const STATUT_OFFRE_PROPOSEE = 'offre_proposee';
+
+/**
  * Table de correspondance valeur stockée → libellé, par point de vue.
  *
  * Un même état porte deux libellés selon le rôle qui le lit : `reserver` se lit
@@ -896,6 +902,13 @@ export const LIBELLES = Object.freeze({
   [ACTION_GROUPEMENT.SUSPENDRE]: Object.freeze({ [POV.NEUTRE]: 'Suspension' }),
   [ACTION_GROUPEMENT.REACTIVER]: Object.freeze({ [POV.NEUTRE]: 'Réactivation' }),
   [ETAT_DECISION.CONFIRMEE]: Object.freeze({ [POV.NEUTRE]: 'Confirmée' }),
+  /* --- Intégration (défaut du lot b3) : offre que le transporteur a lui-même
+         proposée sur une demande (sens B). C'est l'affréteur qui doit répondre. --- */
+  [STATUT_OFFRE_PROPOSEE]: Object.freeze({
+    [POV.TRANSPORTEUR]: 'Proposée — en attente de la réponse de l’affréteur',
+    [POV.AFFRETEUR]: 'Proposition reçue — à vous de répondre',
+    [POV.NEUTRE]: 'Proposée à un affréteur',
+  }),
 });
 
 /**
