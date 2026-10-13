@@ -146,6 +146,8 @@ const TRANSPORTEUR = [
       { route: 'relations', libelle: 'Mises en relation validées', droit: 'appariement.lire' },
       { route: 'suivi', libelle: 'Suivi des transports', droit: 'transport.lire' },
       { route: 'dut', libelle: 'Documents de transport', droit: 'dut.lire' },
+      /* Lot b3 : attestation de bourse de fret */
+      { route: 'attestations', libelle: 'Attestations de bourse de fret', droit: 'attestation.lire' },
     ],
   },
   {
@@ -271,6 +273,9 @@ const MINIMAL = [
       // Correctif anti-fraude n° 3 : ouverte au seul agent d'activation par la matrice.
       { route: 'verifications', libelle: 'Vérification des transporteurs', droit: 'groupement.verifier' },
       { route: 'duts', libelle: 'Documents de transport', droit: 'dut.lire' },
+      /* Lot b3 : contrôle sur route */
+      { route: 'controle', libelle: 'Vérifier une attestation', droit: 'controle.verifier' },
+      { route: 'controles', libelle: 'Mes contrôles', droit: 'controle.historique' },
     ],
   },
 ];

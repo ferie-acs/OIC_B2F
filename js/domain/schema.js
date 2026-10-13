@@ -53,6 +53,12 @@ import {
   SENS_APPARIEMENT,
   SENS_OPERATION,
   TYPE_GROUPEMENT,
+  /* Lot b3 : marché, flotte, attestation et contrôle sur route */
+  CATEGORIE_PERMIS,
+  ETAT_ATTESTATION,
+  MODE_CONTROLE,
+  RESULTAT_CONTROLE,
+  TYPE_PIECE_IDENTITE,
 } from './enums.js';
 
 /* ================================================================== *
@@ -389,6 +395,24 @@ export const ENTITES = Object.freeze({
       creeeParUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
       publieeLe: f('datetime'),
       annuleeLe: f('datetime'),
+      /* --- Lot b3 : modification et republication, avec trace --- */
+      modifieeLe: f('datetime'),
+      modifieeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      republieeLe: f('datetime'),
+      historique: f('array', {
+        classification: CLASSIFICATION.IDENTITE,
+        note:
+          'Trace des modifications et republications : date, action, auteur et ' +
+          'nature des champs changés — jamais leurs valeurs. Servie au seul ' +
+          'propriétaire et aux rôles institutionnels.',
+        elements: Object.freeze({
+          id: f('id', { requis: true }),
+          le: f('datetime', { requis: true }),
+          action: f('enum', { valeurs: Object.freeze(['modification', 'republication']) }),
+          parUtilisateurId: f('id'),
+          resume: f('text', { max: 300 }),
+        }),
+      }),
       demo: f('boolean', { requis: true }),
     }),
     invariants: Object.freeze([
@@ -538,9 +562,75 @@ export const ENTITES = Object.freeze({
         classification: CLASSIFICATION.IDENTITE,
       }),
       creeLe: f('datetime', { requis: true }),
+      /* --- Lot b3 : fiche complète du chauffeur et retrait d'un chauffeur parti --- */
+      pieceType: f('enum', {
+        valeurs: Object.freeze(Object.values(TYPE_PIECE_IDENTITE)),
+        classification: CLASSIFICATION.IDENTITE,
+      }),
+      pieceNumero: f('string', { max: 40, classification: CLASSIFICATION.IDENTITE }),
+      pieceDelivreeLe: f('date', { classification: CLASSIFICATION.IDENTITE }),
+      pieceExpireLe: f('date', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Contrôlée par l’agent d’activation avec le permis (correctif anti-fraude n° 3).',
+      }),
+      nationalite: f('string', { max: 60, classification: CLASSIFICATION.IDENTITE }),
+      dateNaissance: f('date', { classification: CLASSIFICATION.IDENTITE }),
+      permisCategories: f('array', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: `Valeurs admises : ${Object.values(CATEGORIE_PERMIS).join(', ')}.`,
+      }),
+      cacrNumero: f('string', { max: 40, classification: CLASSIFICATION.IDENTITE }),
+      cacrDelivreLe: f('date', { classification: CLASSIFICATION.IDENTITE }),
+      photo: f('object', {
+        classification: CLASSIFICATION.IDENTITE,
+        note:
+          'Métadonnées seulement (nom, type, taille) : le POC ne conserve aucun ' +
+          'fichier dans le navigateur.',
+        champs: Object.freeze({
+          nom: f('string', { max: 160, classification: CLASSIFICATION.IDENTITE }),
+          type: f('string', { max: 60, classification: CLASSIFICATION.IDENTITE }),
+          taille: f('integer', { min: 0, classification: CLASSIFICATION.IDENTITE }),
+        }),
+      }),
+      actif: f('boolean', {
+        note:
+          'Absent ou vrai : le chauffeur fait partie de l’équipe. Faux : il est ' +
+          'retiré, n’est plus proposé pour une nouvelle mission, et son historique ' +
+          'est conservé.',
+      }),
+      retireLe: f('datetime'),
+      dateDepart: f('date', { classification: CLASSIFICATION.IDENTITE }),
+      motifRetrait: f('text', { max: 300, classification: CLASSIFICATION.IDENTITE }),
+      mouvements: f('array', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Historique des retraits et réactivations, en ajout seul.',
+        elements: Object.freeze({
+          id: f('id', { requis: true }),
+          type: f('enum', { valeurs: Object.freeze(['retrait', 'reactivation']) }),
+          le: f('datetime', { requis: true }),
+          dateEffet: f('date'),
+          motif: f('text', { max: 300 }),
+          parUtilisateurId: f('id'),
+        }),
+      }),
       demo: f('boolean', { requis: true }),
     }),
-    invariants: Object.freeze([]),
+    invariants: Object.freeze([
+      /* Lot b3 */
+      {
+        nom: 'retraitMotive',
+        message: 'Le retrait d’un chauffeur porte une date de départ et un motif.',
+        verifier: (c) => c.actif !== false || (Boolean(c.dateDepart) && Boolean(c.motifRetrait)),
+      },
+      {
+        nom: 'categoriesPermisConnues',
+        message: 'Les catégories de permis doivent appartenir à la liste A, B, C, D, E.',
+        verifier: (c) =>
+          c.permisCategories == null ||
+          (Array.isArray(c.permisCategories) &&
+            c.permisCategories.every((x) => Object.values(CATEGORIE_PERMIS).includes(x))),
+      },
+    ]),
   }),
 
   /* ---------------------------------------------------------------- *
@@ -578,6 +668,14 @@ export const ENTITES = Object.freeze({
       publieeLe: f('datetime', { requis: true }),
       retireeLe: f('datetime'),
       creeeParUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
+      /* --- Lot b3 : modification et duplication (« partage ») d'une offre --- */
+      modifieeLe: f('datetime'),
+      modifieeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      dupliqueeDeOffreId: ref('offre', {
+        requis: false,
+        onDelete: 'detach',
+        note: 'Offre d’origine quand celle-ci en est une copie ajustée.',
+      }),
       demo: f('boolean', { requis: true }),
     }),
     invariants: Object.freeze([
@@ -1165,6 +1263,96 @@ export const ENTITES = Object.freeze({
         verifier: (r) => r.parentId == null || r.parentId !== r.id,
       },
     ]),
+  }),
+
+  /* ---------------------------------------------------------------- *
+   * Lot b3 : attestation de bourse de fret et contrôle sur route
+   * ---------------------------------------------------------------- */
+
+  attestation: Object.freeze({
+    collection: 'attestations',
+    proprietaire: 'groupementTransporteurId',
+    libelle: 'Attestation de bourse de fret',
+    legacy: 'vue/transporteur/docattbdefret.php (PDF à QR code)',
+    description:
+      'Document imprimable émis pour une mise en relation validée et payée. Le QR ' +
+      'code pointe vers une page publique de vérification par un **jeton non ' +
+      'devinable**, jamais par l’identifiant ni la référence. Les données de contrôle ' +
+      'sont figées à l’émission.',
+    champs: Object.freeze({
+      id: idPropre(),
+      reference: f('string', { requis: true, unique: true, note: 'Format ABF-AAAA-NNNN.' }),
+      appariementId: ref('appariement'),
+      groupementTransporteurId: ref('groupement'),
+      groupementAffreteurId: ref('groupement'),
+      jeton: f('string', {
+        requis: true,
+        unique: true,
+        classification: CLASSIFICATION.SYSTEME,
+        note:
+          'Aléa de 120 bits. Jamais projeté : seul le service le rend au ' +
+          'transporteur titulaire, pour l’impression.',
+      }),
+      immatriculation: f('string', { requis: true, max: 24, classification: CLASSIFICATION.IDENTITE }),
+      localiteDepartId: ref('referentiel'),
+      localiteArriveeId: ref('referentiel'),
+      departPrevu: f('datetime', { requis: true }),
+      arriveePrevue: f('datetime', { requis: true }),
+      valableJusquau: f('datetime', { requis: true }),
+      etat: f('enum', {
+        requis: true,
+        valeurs: Object.freeze([ETAT_ATTESTATION.EN_VIGUEUR, ETAT_ATTESTATION.ANNULEE]),
+        note: 'L’expiration se calcule à la lecture, d’après `valableJusquau`.',
+      }),
+      genereeLe: f('datetime', { requis: true }),
+      genereeParUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
+      annuleeLe: f('datetime'),
+      annuleeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      motifAnnulation: f('text', { max: 300 }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'validiteApresDepart',
+        message: 'La fin de validité de l’attestation doit suivre le départ prévu.',
+        verifier: (a) => new Date(a.valableJusquau) > new Date(a.departPrevu),
+      },
+      {
+        nom: 'annulationMotivee',
+        message: 'Une attestation annulée porte un motif.',
+        verifier: (a) => a.etat !== ETAT_ATTESTATION.ANNULEE || Boolean(a.motifAnnulation),
+      },
+    ]),
+  }),
+
+  controle: Object.freeze({
+    collection: 'controles',
+    proprietaire: null,
+    libelle: 'Vérification sur route',
+    legacy: 'vue/check/document.php (journalisation des vérifications)',
+    appendOnly: true,
+    description:
+      'Une ligne par vérification d’attestation, quel qu’en soit le verdict — code ' +
+      'inconnu compris. **En ajout seul.** L’agent retrouve les siennes ; le journal ' +
+      'd’audit en garde une copie pour la supervision.',
+    champs: Object.freeze({
+      id: idPropre(),
+      horodatage: f('datetime', { requis: true }),
+      agentUtilisateurId: ref('utilisateur', {
+        requis: false,
+        onDelete: 'detach',
+        note: 'Absent pour une vérification faite depuis la page publique.',
+      }),
+      mode: enumOf(MODE_CONTROLE),
+      resultat: enumOf(RESULTAT_CONTROLE),
+      attestationId: ref('attestation', { requis: false, onDelete: 'detach' }),
+      attestationReference: f('string', { max: 24 }),
+      immatriculation: f('string', { max: 24, classification: CLASSIFICATION.IDENTITE }),
+      lieu: f('string', { max: 120 }),
+      observation: f('text', { max: 300 }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([]),
   }),
 });
 

@@ -293,6 +293,31 @@ export const DROITS = Object.freeze({
   'dut.lire': { categorie: 'DUT', libelle: 'Consulter les DUT générés' },
   'dut.generer': { categorie: 'DUT', libelle: 'Générer un DUT' , mutation: true },
   'notification.lire': { categorie: 'Annexes', libelle: 'Consulter ses notifications' },
+
+  /* --- Lot b3 : marché, attestation et contrôle sur route ----- */
+  'demande.modifier': {
+    categorie: 'Fret',
+    libelle: 'Modifier une demande de transport',
+    mutation: true,
+    note: 'Possible tant qu’aucune réservation n’est engagée sur la demande.',
+  },
+  'attestation.lire': { categorie: 'Transport', libelle: 'Consulter les attestations de bourse de fret' },
+  'attestation.generer': {
+    categorie: 'Transport',
+    libelle: 'Émettre ou annuler une attestation de bourse de fret',
+    mutation: true,
+    note: 'Pour une mise en relation validée et payée, par l’équipe du transporteur.',
+  },
+  'controle.verifier': {
+    categorie: 'Contrôle sur route',
+    libelle: 'Vérifier une attestation sur route',
+    mutation: true,
+    note: 'Chaque vérification est journalisée, quel qu’en soit le verdict.',
+  },
+  'controle.historique': {
+    categorie: 'Contrôle sur route',
+    libelle: 'Consulter l’historique de ses contrôles',
+  },
 });
 
 /* ================================================================== *
@@ -341,6 +366,8 @@ const AFFRETEUR = Object.freeze({
   'groupement.gerer': GROUPEMENT,
   'utilisateur.lire': GROUPEMENT,
   'utilisateur.gerer': GROUPEMENT,
+  /* Lot b3 : modification d'une demande sans réservation engagée */
+  'demande.modifier': GROUPEMENT,
 });
 
 /** Droits du transporteur de plein exercice. */
@@ -368,6 +395,9 @@ const TRANSPORTEUR = Object.freeze({
   'groupement.gerer': GROUPEMENT,
   'utilisateur.lire': GROUPEMENT,
   'utilisateur.gerer': GROUPEMENT,
+  /* Lot b3 : attestation de bourse de fret */
+  'attestation.lire': GROUPEMENT,
+  'attestation.generer': GROUPEMENT,
 });
 
 /**
@@ -508,6 +538,8 @@ export const MATRICE = Object.freeze({
     'coordonnees.lire': GROUPEMENT,
     'dut.lire': GROUPEMENT,
     'dut.generer': GROUPEMENT,
+    /* Lot b3 : il imprime les documents de transport, il lit donc l'attestation */
+    'attestation.lire': GROUPEMENT,
   }),
 
   /* ---- Niveau 3 — modélisés ----------------------------------- *
@@ -548,6 +580,18 @@ export const MATRICE = Object.freeze({
     'groupement.verifier': TOUT,
   }),
   activation_inscription_affreteur: Object.freeze({ 'groupement.lire': TOUT }),
+
+  /* ---- Lot b3 : contrôle sur route ----------------------------- */
+
+  /**
+   * Vérifie une attestation et retrouve ses propres contrôles. Ni marché, ni
+   * compte, ni coordonnées : le contrôle ne sert que l'authenticité, l'état et
+   * le strict nécessaire (immatriculation, trajet, dates).
+   */
+  agent_controle_route: Object.freeze({
+    'controle.verifier': TOUT,
+    'controle.historique': PROPRE,
+  }),
 });
 
 /* ================================================================== *
@@ -599,6 +643,8 @@ export const CLASSIFICATIONS_LISIBLES = Object.freeze({
   dut_transport: Object.freeze([PUBLIC, IDENTITE]),
   activation_inscription: Object.freeze([PUBLIC, IDENTITE]),
   activation_inscription_affreteur: Object.freeze([PUBLIC, IDENTITE]),
+  /* Lot b3 : l'agent lit l'immatriculation, jamais un contact ni un montant. */
+  agent_controle_route: Object.freeze([PUBLIC, IDENTITE]),
 });
 
 /* ================================================================== *

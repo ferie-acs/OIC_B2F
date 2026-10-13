@@ -12,7 +12,12 @@ import { camion, libelleTrajet } from '../core/camion.js';
 import { vueFlotte } from './flotte.js';
 import { carteFretsDashboard } from './carte-frets-dashboard.js?v=20261009-carte-2';
 import { retourPublic } from '../services/marche-public.service.js';
-import { ouvrirVehicule, ouvrirChauffeur } from './flotte-formulaires.js?v=20261009-carte-2';
+import { ouvrirVehicule } from './flotte-formulaires.js?v=20261009-carte-2';
+/* Lot b3 : chauffeurs (fiche complète, retrait), offres (modification, copie) */
+import { vueChauffeurs } from './chauffeurs-transporteur.js';
+import { modifiabilite, modifierOffre, offrePourFormulaire } from '../services/offre-gestion.service.js';
+import { motifInaptitude } from '../domain/chauffeur.regles.js';
+import { MOTIFS_REJET_PAR_PARTIE } from '../domain/enums.js';
 import { date, dateHeure, el, icone, montant } from '../core/dom.js';
 import {
   afficherErreur,
@@ -178,31 +183,8 @@ export function vehicules(ctx, params = {}) {
 
 /** @param {any} ctx */
 export function chauffeurs(ctx) {
-  const liste = flotte.mesChauffeurs(ctx);
-  return el('div.page', {}, [
-    bandeau({
-      ton: 'info',
-      message:
-        'Les chauffeurs appartiennent à votre équipe, sans être rattachés à un camion. ' +
-        'Choisissez le chauffeur adapté à chaque trajet lors de la publication d’une disponibilité. ' +
-        'Ses coordonnées sont partagées avec l’affréteur après validation de la mise en relation.',
-    }),
-    carte({
-      titre: 'Chauffeurs',
-      actions: [bouton({ libelle: 'Ajouter un chauffeur', icone: 'plus', variante: 'primary', motif: decider(ctx, 'chauffeur.gerer', { groupementId: ctx.groupementId }).explication || null, onClick: () => ouvrirChauffeur(ctx) })],
-      corps: [
-        el('div.carrier-card-grid', {}, liste.length ? liste.map(c => el('article.carrier-person-card', {}, [
-          el('div.carrier-card-top', {}, [el('span.carrier-avatar', {text:c.nom.split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('')}),el('div',{},[el('h3',{text:c.nom}),el('span',{class:c.permisEchu?'carrier-status warning':'carrier-status',text:c.permisEchu?'Permis échu':'Permis en cours de validité'}),el('span',{class:c.verifieLe?'carrier-status':'carrier-status warning',text:c.verifieLe?'Permis contrôlé par la plateforme':'Permis à faire contrôler'})])]),
-          el('dl.carrier-details',{},[
-            el('div',{},[el('dt',{},[icone('file',18),'Permis']),el('dd',{text:c.permisNumero})]),
-            el('div',{},[el('dt',{},[icone('calendar',18),'Validité']),el('dd',{text:date(c.permisEcheance)})]),
-            el('div',{},[el('dt',{},[icone('phone',18),'Téléphone']),el('dd',{text:c.telephone})]),
-          ]),
-          bouton({libelle:'Modifier le chauffeur',icone:'file',variante:'ghost',motif:decider(ctx,'chauffeur.gerer',{groupementId:c.groupementId}).explication||null,onClick:()=>ouvrirChauffeur(ctx,c)}),
-        ])) : [etatVide({titre:'Aucun chauffeur',message:'Déclarez vos chauffeurs.'})]),
-      ],
-    }),
-  ]);
+  // Lot b3 : fiche complète, alertes de contrôle, retrait et réactivation.
+  return vueChauffeurs(ctx);
 }
 
 /* ================================================================== *
@@ -237,9 +219,21 @@ export function offres(ctx) {
           el('div.carrier-route',{},[el('div',{},[el('small',{text:'DÉPART'}),el('strong',{text:refDe(o.localiteDepartId)})]),icone('arrow-right',22),el('div',{},[el('small',{text:'ARRIVÉE'}),el('strong',{text:refDe(o.localiteArriveeId)})])]),
           el('p.carrier-dates',{},[icone('calendar',18),`${date(o.disponibleDu)} → ${date(o.disponibleAu)}`]),
           el('div.carrier-card-footer',{},[el('span',{text:o.prixKmT ? `${o.prixKmT} F/km·t · indicatif` : 'Tarif à convenir'}),bouton({libelle:'Retirer',variante:'ghost',motif:!decider(ctx,'offre.retirer',{groupementId:o.groupementId}).autorise?decider(ctx,'offre.retirer',{groupementId:o.groupementId}).explication:!['disponible','reservee'].includes(o.etat)?'Cette offre n’est plus disponible.':o.retirable?null:o.motif,onClick:()=>dialogueRetrait(ctx,o)})]),
+          // Lot b3 : modifier une offre disponible ; la « partager », c'est en publier une copie ajustée.
+          actionsOffre(ctx, o),
         ])) : [etatVide({titre:'Aucune offre publiée',message:'Publiez des offres sur les corridors que vous desservez pour être trouvé par les affréteurs.'})]),
       ],
     }),
+  ]);
+}
+
+/** Lot b3 : boutons Modifier et Dupliquer d'une carte d'offre. */
+function actionsOffre(ctx, o) {
+  const droit = decider(ctx, 'offre.publier', { groupementId: o.groupementId });
+  const { modifiable, motif } = modifiabilite(o);
+  return el('div.offre-actions', {}, [
+    bouton({ libelle: 'Modifier', icone: 'pencil', variante: 'secondary', motif: !droit.autorise ? droit.explication : modifiable ? null : motif, onClick: () => aller(`#/transporteur/offres/nouvelle?modifier=${encodeURIComponent(o.id)}`) }),
+    bouton({ libelle: 'Dupliquer', icone: 'copy', variante: 'ghost', motif: droit.autorise ? null : droit.explication, onClick: () => aller(`#/transporteur/offres/nouvelle?dupliquer=${encodeURIComponent(o.id)}`) }),
   ]);
 }
 
@@ -263,11 +257,23 @@ function dialogueRetrait(ctx, offre) {
 
 /** @param {any} ctx */
 export function nouvelleOffre(ctx, params = {}) {
+  // Lot b3 : le même formulaire sert à modifier une offre et à en publier une copie.
+  const sourceId = params.modifier || params.dupliquer || null;
+  const source = sourceId ? offrePourFormulaire(ctx, sourceId) : null;
+  const enModification = Boolean(params.modifier);
+  if (enModification && !source.modifiable) {
+    return el('div.page', {}, [etatVide({
+      titre: 'Cette offre ne peut plus être modifiée',
+      message: source.motif,
+      action: { libelle: 'Revenir à mes disponibilités', onClick: () => aller('#/transporteur/offres') },
+    })]);
+  }
   const retour = params.retour ? flotte.preparerRetour(ctx, params.retour) : null;
   const demande = params.demande ? fret.marcheDesDemandes(ctx).find(d => d.id === params.demande) : null;
   const optionsDe = famille => depot('referentiel').brutOu(r => r.famille === famille && r.actif).map(r => ({ valeur: r.id, libelle: r.libelle }));
   const vehicules = flotte.mesVehicules(ctx);
   const publiables = vehicules.filter(v => v.publiable);
+  const essieuxDe = id => depot('referentiel').brutParId(id)?.code;
   const cible = { groupementId: ctx.groupementId };
   if (!publiables.length) {
     return el('div.page', {}, [etatVide({
@@ -282,24 +288,24 @@ export function nouvelleOffre(ctx, params = {}) {
   const decision = decider(ctx, 'offre.publier', cible);
   formulaire.append(
     el('section.carrier-form-section', {}, [el('h3', {}, [icone('truck',26), 'Véhicule et chauffeur']),el('div.field-row', {}, [
-champOffre('vehicule', 'Véhicule', { requis: true, valeur: retour?.vehiculeId ?? params.vehicule, options: publiables.map(v => ({ valeur: v.id, libelle: `${v.immatriculation} — ${v.capaciteT} t` })), aide: 'Véhicules disponibles avec une carte de transport valide.' }),
-champOffre('chauffeur', 'Chauffeur pressenti', { options: flotte.mesChauffeurs(ctx).map(c => ({ valeur: c.id, libelle: c.nom + (c.permisEchu ? ' · permis échu' : '') })), aide: 'Facultatif, choisi uniquement pour ce trajet parmi tous vos chauffeurs. Coordonnées partagées après validation.' }),
+champOffre('vehicule', 'Véhicule', { requis: true, valeur: retour?.vehiculeId ?? source?.vehiculeId ?? params.vehicule, options: publiables.map(v => ({ valeur: v.id, libelle: `${v.immatriculation} — ${v.capaciteT} t` })), aide: 'Véhicules disponibles avec une carte de transport valide.' }),
+champOffre('chauffeur', 'Chauffeur pressenti', { valeur: source?.chauffeurPressentiId, options: flotte.mesChauffeurs(ctx).filter(c => c.actif !== false && !motifInaptitude(c)).map(c => ({ valeur: c.id, libelle: c.nom + ((c.permisCategories ?? []).length ? ` · permis ${c.permisCategories.join(', ')}` : '') })), aide: 'Facultatif. Seuls les chauffeurs en activité, au permis et à la pièce valides, sont proposés ; la catégorie du permis est contrôlée selon le véhicule.' }),
     ])]),
     el('section.carrier-form-section', {}, [el('h3', {}, [icone('map-pin',26), 'Trajet proposé']),el('div.field-row', {}, [
-champOffre('depart', 'Localité de départ', { requis: true, valeur: retour?.localiteDepartId ?? demande?.provenanceId, options: optionsDe('localites') }),
-champOffre('arrivee', 'Localité d’arrivée', { requis: true, valeur: demande?.destinationId, options: optionsDe('localites') }),
-champOffre('sens', 'Sens du trajet', { valeur: retour ? 'retour' : 'depart', options: [{ valeur: 'depart', libelle: 'Départ' }, { valeur: 'retour', libelle: 'Retour' }] }),
-champOffre('vide', 'Trajet à vide', { valeur: 'non', options: [{ valeur: 'non', libelle: 'Non' }, { valeur: 'oui', libelle: 'Oui' }] }),
+champOffre('depart', 'Localité de départ', { requis: true, valeur: retour?.localiteDepartId ?? demande?.provenanceId ?? source?.localiteDepartId, options: optionsDe('localites') }),
+champOffre('arrivee', 'Localité d’arrivée', { requis: true, valeur: demande?.destinationId ?? source?.localiteArriveeId, options: optionsDe('localites') }),
+champOffre('sens', 'Sens du trajet', { valeur: retour || source?.trajetRetour ? 'retour' : 'depart', options: [{ valeur: 'depart', libelle: 'Départ' }, { valeur: 'retour', libelle: 'Retour' }] }),
+champOffre('vide', 'Trajet à vide', { valeur: source?.trajetVide ? 'oui' : 'non', options: [{ valeur: 'non', libelle: 'Non' }, { valeur: 'oui', libelle: 'Oui' }] }),
     ])]),
     el('section.carrier-form-section', {}, [el('h3', {}, [icone('calendar',26), 'Disponibilité et tarif']),el('div.field-row', {}, [
-champOffre('du', 'Disponible du', { requis: true, type: 'date', valeur: demande?.departPrevu?.slice(0, 10) }),
-champOffre('au', 'Disponible au', { requis: true, type: 'date', valeur: demande?.arriveePrevue?.slice(0, 10) ?? demande?.departPrevu?.slice(0, 10) }),
-champOffre('prix', 'Prix indicatif (F CFA / km·tonne)', { type: 'number', attrs: { min: 0, step: 'any' }, aide: 'Facultatif, sans effet sur les frais de mise en relation.' }),
+champOffre('du', 'Disponible du', { requis: true, type: 'date', valeur: demande?.departPrevu?.slice(0, 10) ?? (enModification ? source?.disponibleDu?.slice(0, 10) : undefined) }),
+champOffre('au', 'Disponible au', { requis: true, type: 'date', valeur: demande?.arriveePrevue?.slice(0, 10) ?? demande?.departPrevu?.slice(0, 10) ?? (enModification ? source?.disponibleAu?.slice(0, 10) : undefined) }),
+champOffre('prix', 'Prix indicatif (F CFA / km·tonne)', { type: 'number', valeur: source?.prixKmT, attrs: { min: 0, step: 'any' }, aide: 'Facultatif, sans effet sur les frais de mise en relation.' }),
     ])]),
     erreur,
     el('div.transport-form-actions', {}, [
       bouton({ libelle: 'Annuler', onClick: () => aller(demande ? `#/transporteur/marche?selection=${encodeURIComponent(demande.id)}` : '#/transporteur/offres') }),
-      bouton({ libelle: demande ? 'Publier et revenir au fret' : 'Publier la disponibilité', icone: 'check', type: 'submit', variante: 'primary', motif: decision.autorise ? null : decision.explication }),
+      bouton({ libelle: enModification ? 'Enregistrer les modifications' : demande ? 'Publier et revenir au fret' : source ? 'Publier la copie' : 'Publier la disponibilité', icone: 'check', type: 'submit', variante: 'primary', motif: decision.autorise ? null : decision.explication }),
     ]),
   );
   formulaire.addEventListener('submit', e => {
@@ -307,13 +313,21 @@ champOffre('prix', 'Prix indicatif (F CFA / km·tonne)', { type: 'number', attrs
     if (!decision.autorise || !formulaire.reportValidity()) return;
     const valeurs = Object.fromEntries(new FormData(formulaire));
     try {
-      const offre = flotte.publierOffre(ctx, {
+      const saisie = {
         trajetRetour: valeurs.sens === 'retour', trajetVide: valeurs.vide === 'oui',
         vehiculeId: valeurs.vehicule, chauffeurPressentiId: valeurs.chauffeur || undefined,
         localiteDepartId: valeurs.depart, localiteArriveeId: valeurs.arrivee,
         disponibleDu: valeurs.du, disponibleAu: valeurs.au,
         prixKmT: valeurs.prix ? Number(valeurs.prix) : undefined,
-      });
+      };
+      // Lot b3 : modification, ou copie rattachée à l'offre d'origine.
+      if (enModification) {
+        const maj = modifierOffre(ctx, source.id, saisie);
+        toast(`Offre ${maj.reference} modifiée.`);
+        aller('#/transporteur/offres');
+        return;
+      }
+      const offre = flotte.publierOffre(ctx, { ...saisie, dupliqueeDeOffreId: params.dupliquer || undefined });
       toast(`Offre ${offre.reference} publiée.${demande ? ' Vous pouvez maintenant proposer ce véhicule au fret sélectionné.' : ''}`);
       aller(demande ? `#/transporteur/marche?selection=${encodeURIComponent(demande.id)}` : '#/transporteur/offres');
     } catch (e) {
@@ -324,7 +338,9 @@ champOffre('prix', 'Prix indicatif (F CFA / km·tonne)', { type: 'number', attrs
   return el('div.page', {}, [
     retour ? bandeau({ ton: 'info', titre: 'Préparer le prochain départ', message: 'Le véhicule et la ville de livraison sont repris. Confirmez la destination et les dates avant publication.' }) : null,
     demande ? bandeau({ ton: 'info', titre: `Disponibilité pour ${demande.reference}`, message: 'Le corridor et les dates du fret sont repris. Après publication, vous reviendrez à ce fret pour envoyer votre proposition.' }) : null,
-    carte({ titre: 'Publier une disponibilité', sousTitre: 'Renseignez votre véhicule, son trajet et sa période de disponibilité.', corps: [formulaire] }),
+    enModification ? bandeau({ ton: 'info', titre: `Modifier ${source.reference}`, message: 'L’offre reste au marché sous la même référence. La modification est inscrite au journal.' }) : null,
+    params.dupliquer && source ? bandeau({ ton: 'info', titre: `Copie de ${source.reference}`, message: 'Le véhicule, le trajet et le tarif sont repris. Ajustez le trajet et les dates : la copie sera publiée comme une nouvelle disponibilité, l’offre d’origine reste inchangée.' }) : null,
+    carte({ titre: enModification ? 'Modifier la disponibilité' : params.dupliquer ? 'Dupliquer une disponibilité' : 'Publier une disponibilité', sousTitre: 'Renseignez votre véhicule, son trajet et sa période de disponibilité.', corps: [formulaire] }),
   ]);
 }
 
@@ -570,7 +586,7 @@ function dialogueRejet(ctx, a) {
         id: 'j-motif',
         label: 'Motif',
         requis: true,
-        options: Object.values(MOTIF_REJET).map((m) => ({ valeur: m, libelle: labelOf(m) })),
+        options: MOTIFS_REJET_PAR_PARTIE.transporteur.map((m) => ({ valeur: m, libelle: labelOf(m) })),
       }),
       champ({ id: 'j-precision', label: 'Précision', type: 'textarea' }),
     ],

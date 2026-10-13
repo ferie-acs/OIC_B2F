@@ -5,7 +5,8 @@ import { decider } from '../domain/access.js';
 import { ETAT_VEHICULE, labelOf } from '../domain/enums.js';
 import { champsRequisPour } from '../domain/permissions.js';
 import { depot } from '../repositories/index.js';
-import { enregistrerChauffeur, enregistrerVehicule } from '../services/flotte.service.js';
+import { enregistrerVehicule } from '../services/flotte.service.js';
+import { ouvrirFicheChauffeur } from './chauffeur-formulaire.js';
 
 function optionsDe(famille, selection) {
   return depot('referentiel').brutOu(r => r.famille === famille && (r.actif || r.id === selection))
@@ -91,23 +92,10 @@ export function ouvrirVehicule(ctx, vehicule = null) {
   });
 }
 
+/*
+ * Lot b3 : la fiche du chauffeur (identité, permis et catégories, photo, retrait)
+ * vit dans `chauffeur-formulaire.js`. Ce point d'entrée historique y renvoie.
+ */
 export function ouvrirChauffeur(ctx, chauffeur = null) {
-  const c = chauffeur ?? {};
-  const saisie = (nom, label, options = {}) => champ({
-    id: `flotte-chauffeur-${nom}`, label, valeur: c[nom], ...options,
-    attrs: { name: nom, ...options.attrs },
-  });
-  return ouvrirFormulaire({
-    ctx, droit: 'chauffeur.gerer',
-    titre: chauffeur ? 'Modifier le chauffeur' : 'Ajouter un chauffeur',
-    introduction: 'Ajoutez le chauffeur à votre équipe. Vous le choisirez pour chaque trajet, indépendamment du camion. Ses coordonnées sont partagées avec l’affréteur après validation de la mise en relation.',
-    champs: [
-      saisie('nom', 'Nom et prénom', { requis: true, attrs: { maxlength: 120, autocomplete: 'name' } }),
-      saisie('telephone', 'Téléphone', { type: 'tel', attrs: { maxlength: 32, placeholder: '+225 …', autocomplete: 'tel' } }),
-      saisie('permisNumero', 'N° de permis de conduire', { requis: true, attrs: { maxlength: 40 } }),
-      saisie('permisEcheance', 'Permis valable jusqu’au', { type: 'date', valeur: c.permisEcheance?.slice(0, 10), aide: 'Facultatif. Une échéance dépassée sera signalée.' }),
-    ],
-    sauvegarder: donnees => enregistrerChauffeur(ctx, donnees, chauffeur?.id),
-    confirmation: chauffeur ? 'Chauffeur mis à jour.' : 'Chauffeur ajouté à votre équipe.',
-  });
+  return ouvrirFicheChauffeur(ctx, chauffeur);
 }

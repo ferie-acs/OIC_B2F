@@ -90,6 +90,25 @@ export const GABARITS = Object.freeze({
     objet: 'Compte crédité',
     texte: (p) => `Votre compte a été crédité — encaissement ${p.reference}.`,
   },
+  /* --- Lot b3 : propositions des transporteurs (sens B) --- */
+  'proposition.recue': {
+    objet: 'Nouvelle proposition de véhicule',
+    texte: (p) =>
+      `Un transporteur propose un véhicule pour votre demande (mise en relation ${p.reference}). ` +
+      'Acceptez ou refusez sa proposition depuis « Mes réservations ».',
+  },
+  'proposition.acceptee': {
+    objet: 'Proposition acceptée',
+    texte: (p) =>
+      `L'affréteur a accepté votre proposition ${p.reference}. La mise en relation sera ` +
+      'effective à sa validation.',
+  },
+  'proposition.refusee': {
+    objet: 'Proposition refusée',
+    texte: (p) =>
+      `L'affréteur a refusé votre proposition ${p.reference}${p.motif ? ` — ${p.motif}` : ''}. ` +
+      'Votre véhicule redevient disponible.',
+  },
 });
 
 /**
