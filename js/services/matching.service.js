@@ -50,6 +50,8 @@ import { CONTEXTE_PLATEFORME, journaliser } from './audit.service.js';
 import { moyensVerifies, transporteurVerifie } from './verification.service.js';
 import { notifier } from './notification.service.js';
 import { transmettreMission } from './passerelle-dut.service.js';
+// Lot b5 : une entreprise suspendue n'engage plus aucune opération.
+import { MOTIF_SUSPENSION, groupementSuspendu } from './suspension.js';
 
 /**
  * Erreur métier destinée à l'écran. Porte les motifs tels que la machine à états
@@ -155,6 +157,10 @@ export function engager(ctx, { offreId, demandeId, sens = SENS_APPARIEMENT.OFFRE
   if (!offre || !demande) throw new RefusMetier(['Offre ou demande introuvable.']);
 
   exiger(ctx, droitPourEngager(sens), { groupementId: ctx.groupementId });
+  // Lot b5 : aucune nouvelle mise en relation avec une entreprise suspendue.
+  if (groupementSuspendu(offre.groupementId) || groupementSuspendu(demande.groupementId)) {
+    throw new RefusMetier([MOTIF_SUSPENSION]);
+  }
 
   // L'initiateur doit être partie prenante de l'objet qu'il engage.
   const attendu =
@@ -244,6 +250,10 @@ export function repondre(ctx, appariementId, { accepte, motif, precision }) {
 
   const decision = deciderSurAppariement(ctx, action, a);
   if (!decision.autorise) throw new RefusMetier([decision.explication]);
+  // Lot b5 : accepter engage un débit à venir — refusé si une partie est suspendue.
+  if (accepte && (groupementSuspendu(a.groupementAffreteurId) || groupementSuspendu(a.groupementTransporteurId))) {
+    throw new RefusMetier([MOTIF_SUSPENSION]);
+  }
   // La précision accompagne le rejet jusqu'à l'affréteur, avant toute validation :
   // elle ne doit pas devenir un canal pour des coordonnées (correctif n° 1).
   try {
@@ -523,6 +533,10 @@ export function valider(ctx, appariementId, options = {}) {
 
   const decision = deciderSurAppariement(ctx, ACTION.VALIDER, a);
   if (!decision.autorise) throw new RefusMetier([decision.explication]);
+  // Lot b5 : la validation débite les deux parties — refusée si l'une est suspendue.
+  if (groupementSuspendu(a.groupementAffreteurId) || groupementSuspendu(a.groupementTransporteurId)) {
+    throw new RefusMetier([MOTIF_SUSPENSION]);
+  }
 
   const stockage = stockageInterne();
   const maintenant = new Date().toISOString();

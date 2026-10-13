@@ -24,6 +24,8 @@ import {
   pieceModifiee,
   transporteurVerifie,
 } from './verification.service.js';
+// Lot b5 : suspension d'une entreprise.
+import { groupementSuspendu } from './suspension.js';
 
 /**
  * Un véhicule est-il publiable ?
@@ -442,6 +444,8 @@ export function chercherVehicules(ctx, filtres = {}) {
       // Correctif anti-fraude n° 3 : un transporteur dont la vérification a été
       // retirée disparaît du marché, avec ses offres déjà publiées.
       if (!transporteurVerifie(o.groupementId) || !moyensVerifies(o)) return false;
+      // Lot b5 : les annonces d'une entreprise suspendue quittent le marché.
+      if (groupementSuspendu(o.groupementId)) return false;
       if (filtres.departId && o.localiteDepartId !== filtres.departId) return false;
       if (filtres.arriveeId && o.localiteArriveeId !== filtres.arriveeId) return false;
       if (filtres.aPartirDu && new Date(o.disponibleAu) < new Date(filtres.aPartirDu)) return false;

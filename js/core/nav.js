@@ -52,6 +52,8 @@ const AFFRETEUR = [
     pages: [
       { route: 'dashboard', libelle: 'Tableau de bord', droit: 'dashboard.perimetre' },
       { route: 'notifications', libelle: 'Notifications', droit: 'notification.lire' },
+      // Lot b5 : incident applicatif.
+      { route: 'incidents', libelle: 'Signaler un incident', droit: 'incident.declarer' },
     ],
   },
   {
@@ -115,6 +117,8 @@ const TRANSPORTEUR = [
     pages: [
       { route: 'dashboard', libelle: 'Tableau de bord', droit: 'dashboard.perimetre' },
       { route: 'notifications', libelle: 'Notifications', droit: 'notification.lire' },
+      // Lot b5 : incident applicatif.
+      { route: 'incidents', libelle: 'Signaler un incident', droit: 'incident.declarer' },
     ],
   },
   {
@@ -183,7 +187,7 @@ const CONCESSIONNAIRE = [
     icone: 'building',
     pages: [
       { route: 'groupements', libelle: 'Groupements', droit: 'groupement.lire' },
-      { route: 'roles', libelle: 'Utilisateurs et rôles', droit: 'role.lire' },
+      { route: 'roles', libelle: 'Profils et habilitations', droit: 'role.lire' },
     ],
   },
   {
@@ -213,6 +217,18 @@ const CONCESSIONNAIRE = [
     libelle: 'Journal',
     icone: 'history',
     pages: [{ route: 'audit', libelle: "Journal d'audit", droit: 'audit.lire' }],
+  },
+  /* Lot b5 : administration OIC */
+  {
+    id: 'administration',
+    libelle: 'Administration',
+    icone: 'settings',
+    pages: [
+      { route: 'agents', libelle: 'Comptes des agents OIC', droit: 'agent.gerer' },
+      { route: 'referentiels', libelle: 'Référentiels nationaux', droit: 'referentiel.gerer' },
+      { route: 'incidents', libelle: 'Incidents applicatifs', droit: 'incident.traiter' },
+      { route: 'flux', libelle: 'Flux public des offres', droit: 'flux.offres' },
+    ],
   },
 ];
 
@@ -245,6 +261,9 @@ const DGTTC = [
     pages: [
       { route: 'acteurs', libelle: 'Transporteurs et affréteurs', droit: 'groupement.lire' },
       { route: 'parc', libelle: 'Parc de véhicules', droit: 'vehicule.lire' },
+      // Lot b5 : compléments de consultation.
+      { route: 'intermediaires', libelle: 'Intermédiaires', droit: 'groupement.lire' },
+      { route: 'repartitions', libelle: 'Répartitions', droit: 'groupement.lire' },
     ],
   },
   {
@@ -252,6 +271,17 @@ const DGTTC = [
     libelle: 'Journal',
     icone: 'history',
     pages: [{ route: 'audit', libelle: "Journal d'audit", droit: 'audit.lire' }],
+  },
+  /* Lot b5 : exports, comptes de l'institution, incidents */
+  {
+    id: 'administration',
+    libelle: 'Administration',
+    icone: 'settings',
+    pages: [
+      { route: 'exports', libelle: 'Exports par période', droit: 'export.donnees' },
+      { route: 'utilisateurs', libelle: 'Utilisateurs DGTTC', droit: 'institution.utilisateurs' },
+      { route: 'incidents', libelle: 'Signaler un incident', droit: 'incident.declarer' },
+    ],
   },
 ];
 

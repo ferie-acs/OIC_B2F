@@ -90,6 +90,21 @@ export const GABARITS = Object.freeze({
     objet: 'Compte crédité',
     texte: (p) => `Votre compte a été crédité — encaissement ${p.reference}.`,
   },
+  /* --- Lot b5 : administration OIC --- */
+  'groupement.suspendu': {
+    objet: 'Entreprise suspendue',
+    texte: () =>
+      'Votre entreprise a été suspendue par l’exploitant de la plateforme. Votre ' +
+      'historique reste consultable ; aucune nouvelle opération n’est possible.',
+  },
+  'groupement.reactive': {
+    objet: 'Entreprise réactivée',
+    texte: () => 'Votre entreprise a été réactivée : vos opérations sont de nouveau possibles.',
+  },
+  'incident.suivi': {
+    objet: 'Suivi de votre signalement',
+    texte: (p) => `Votre signalement ${p.reference} est passé à l’état « ${p.etat} ».`,
+  },
 });
 
 /**
