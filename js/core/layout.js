@@ -11,6 +11,7 @@
 import { el, icone, remplacer } from './dom.js';
 import { arborescenceDe, segmentEspace } from './nav.js';
 import { role } from '../domain/roles.js';
+import { decider } from '../domain/access.js';
 import { nonLues } from '../services/notification.service.js';
 import { profil } from '../services/auth.service.js';
 // Lot b2 : organisation interne — contexte délégué d'un intermédiaire.
@@ -28,7 +29,9 @@ function iconePage(route, fallback = 'dashboard') {
     groupements:'building',utilisateurs:'users',roles:'users',chauffeurs:'users',
     dut:'file',duts:'file',audit:'history',etats:'shield',parametres:'settings',
     /* Lot b1 */ dossier:'file',profil:'user',messages:'mail',messagerie:'mail',verifications:'shield',
-    /* Lot b4 */ paiements:'receipt',caisse:'receipt',encaissements:'banknote','etats-financiers':'file-spreadsheet',contentieux:'scale'})[page]
+    /* Lot b4 */ paiements:'receipt',caisse:'receipt',encaissements:'banknote','etats-financiers':'file-spreadsheet',contentieux:'scale',
+    /* Intégration : pages des lots b3 et b5 */ incidents:'alert',attestations:'qr-code',controle:'scan-line',controles:'history',
+    agents:'user-check',referentiels:'list',flux:'rss',repartitions:'chart-pie',exports:'download'})[page]
     ?? ICONES_PAGES_LOT_B2[page] ?? fallback; // Lot b2
 }
 
@@ -181,7 +184,7 @@ function barreLaterale({ ctx, zones, zone, pageActive, espace, r, moi, surDeconn
     el('div.sidebar-footer', {}, [
       el('span.avatar-round', { text: initiales(moi, r) }),
       el('div.sidebar-user', {}, [
-        el('strong', { text: moi ? `${moi.prenom ?? ''} ${moi.nom}`.trim() : 'Utilisateur' }),
+        el('strong', { text: nomAffiche(moi, 'Utilisateur') }),
         el('span', { text: r.libelle }),
       ]),
       // Lot b1 : profil, atteignable aussi sur petit écran.
@@ -197,6 +200,16 @@ function barreLaterale({ ctx, zones, zone, pageActive, espace, r, moi, surDeconn
 }
 
 /** Initiales pour la pastille d'identité. */
+/**
+ * Intégration : nom affiché de l'utilisateur. Un rôle qui ne lit pas l'identité
+ * (projection sans nom) voyait « undefined » : on retombe sur un libellé.
+ * @param {Record<string, any>|null} moi
+ * @param {string} repli
+ */
+function nomAffiche(moi, repli) {
+  return [moi?.prenom, moi?.nom].filter(Boolean).join(' ') || repli;
+}
+
 function initiales(moi, r) {
   if (!moi) return r.libelle.slice(0, 2).toUpperCase();
   return `${(moi.prenom ?? '').charAt(0)}${(moi.nom ?? '').charAt(0)}`.toUpperCase() || 'B2';
@@ -267,7 +280,14 @@ function aideContextuelle(roleId, ctx = null) {
     superviseur_comptabilite:
       'Vous lisez les montants, les reçus et les modes de paiement, jamais ' +
       'l’identité des entreprises. Chaque export est inscrit au journal.',
+    // Intégration : le partenaire a des droits ; le texte par défaut disait le contraire.
+    partenaire:
+      'Vous consultez la flotte, les disponibilités et les transports de votre groupement. ' +
+      'Publier, répondre et engager ses frais reviennent à son responsable.',
   };
+  // Intégration : les transporteurs déclinés ont les droits du transporteur.
+  textes.transporteur_prive = textes.transporteur;
+  textes.transporteur_etranger = textes.transporteur;
   const defaut =
     // Lot b4 : caisse, contentieux et comptabilité ont désormais leurs écrans.
     'Aucun droit métier n’est accordé à ce rôle dans ce POC. Le rôle existe et ' +
@@ -328,16 +348,20 @@ function barreSuperieure({ ctx, titre, zone, moi, r }) {
         'aria-label': 'Mes messages',
         title: 'Mes messages',
       }, [icone('mail', 18)]),
-      el('a', {
-        class: 'icon-btn-ghost',
-        href: `#/${segmentEspace(ctx)}/notifications`,
-        'aria-label': compte > 0 ? `${compte} notification(s) non lue(s)` : 'Notifications',
-        title: compte > 0 ? `${compte} non lue(s)` : 'Notifications',
-      }, [icone('bell', 18)]),
+      // Intégration : la cloche ne s'affiche que si l'écran des notifications
+      // existe pour ce rôle (elle menait sinon à un refus).
+      decider(ctx, 'notification.lire').autorise
+        ? el('a', {
+            class: 'icon-btn-ghost',
+            href: `#/${segmentEspace(ctx)}/notifications`,
+            'aria-label': compte > 0 ? `${compte} notification(s) non lue(s)` : 'Notifications',
+            title: compte > 0 ? `${compte} non lue(s)` : 'Notifications',
+          }, [icone('bell', 18)])
+        : null,
       // Lot b1 : le bloc d'identité ouvre « Mon profil ».
       el('a.topbar-profile', { href: `#/${segmentEspace(ctx)}/profil`, title: 'Mon profil' }, [
         el('span.avatar-round', { text: initiales(moi, r) }),
-        el('div', {}, [el('strong', { text: moi ? `${moi.prenom ?? ''} ${moi.nom}`.trim() : r.libelle }), el('small', { text: r.libelle })]),
+        el('div', {}, [el('strong', { text: nomAffiche(moi, r.libelle) }), el('small', { text: r.libelle })]),
       ]),
     ]),
   ]);

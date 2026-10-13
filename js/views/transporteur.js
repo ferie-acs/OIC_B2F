@@ -93,8 +93,10 @@ export function dashboard(ctx) {
       ['03', 'Trouver du fret', 'Proposez un véhicule sur une demande.', 'marche', 'package'],
       ['04', 'Réservations et propositions', 'Suivez les réponses des deux parties.', 'reservations', 'handshake'],
       ['05', 'Suivre les transports', `${suivis.length} transport(s) en cours`, 'suivi', 'map-pin'],
-    ].map(([n, titre, texte, route, icon]) => el('a.transport-workflow-step', { href: `#/transporteur/${route}` }, [
-      el('span.transport-workflow-number', { text: n }), icone(icon, 23), el('strong', { text: titre }), el('small', { text: texte }),
+    // Intégration : une étape n'apparaît que si son écran existe pour ce rôle
+    // (le partenaire n'a pas le marché : l'étape menait à un refus).
+    ].filter(([, , , route]) => localiser(ctx, route)).map(([, titre, texte, route, icon], i) => el('a.transport-workflow-step', { href: `#/transporteur/${route}` }, [
+      el('span.transport-workflow-number', { text: String(i + 1).padStart(2, '0') }), icone(icon, 23), el('strong', { text: titre }), el('small', { text: texte }),
     ]))),
     // Correctif anti-fraude n° 3 : un dossier non vérifié bloque tout engagement.
     etatVerification(ctx.groupementId) !== 'verifie'
@@ -155,7 +157,9 @@ export function dashboard(ctx) {
       }),
     ]),
 
-    carte({
+    // Intégration : sans accès au marché (partenaire), pas de carte des frets —
+    // l'écran levait une erreur et ne s'affichait pas.
+    !droit('marche.demandes').autorise ? null : carte({
       titre: 'Frets disponibles sur le marché',
       actions: [bouton({ libelle: 'Trouver du fret', icone: 'search', onClick: () => aller('#/transporteur/marche') })],
       corps: [

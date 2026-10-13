@@ -56,7 +56,7 @@ export const INTERMEDIAIRE = Object.freeze([
     libelle: 'Paramètres',
     icone: 'settings',
     pages: [
-      { route: 'groupement', libelle: 'Fiche de l’entreprise', droit: 'groupement.lire' },
+      { route: 'groupement', libelle: 'Fiche du groupement', droit: 'groupement.lire' }, // Intégration : libellé des autres espaces
       { route: 'utilisateurs', libelle: 'Utilisateurs', droit: 'utilisateur.lire' },
       { route: 'filiales', libelle: 'Filiales et entités', droit: 'filiale.lire' },
     ],

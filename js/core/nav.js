@@ -296,7 +296,11 @@ const DGTTC = [
     id: 'pilotage',
     libelle: 'Pilotage',
     icone: 'pilotage',
-    pages: [{ route: 'dashboard', libelle: 'Tableau de bord national', droit: 'dashboard.activite' }],
+    pages: [
+      { route: 'dashboard', libelle: 'Tableau de bord national', droit: 'dashboard.activite' },
+      // Intégration : comme dans les autres espaces, l'incident se signale depuis le pilotage.
+      { route: 'incidents', libelle: 'Signaler un incident', droit: 'incident.declarer' },
+    ],
   },
   {
     id: 'controle',
@@ -333,7 +337,6 @@ const DGTTC = [
     pages: [
       { route: 'exports', libelle: 'Exports par période', droit: 'export.donnees' },
       { route: 'utilisateurs', libelle: 'Utilisateurs DGTTC', droit: 'institution.utilisateurs' },
-      { route: 'incidents', libelle: 'Signaler un incident', droit: 'incident.declarer' },
     ],
   },
 ];
