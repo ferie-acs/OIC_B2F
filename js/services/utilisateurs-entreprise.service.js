@@ -36,6 +36,8 @@ import { PORTEE, porteeDe } from '../domain/permissions.js';
 import { role, rolesAttribuables } from '../domain/roles.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
+import { envoyerModele } from './messagerie.service.js';
+import { adresseMasquee } from './admin-commun.js';
 
 /** Erreur métier affichable telle quelle. */
 export class RefusOrganisation extends Error {
@@ -242,8 +244,33 @@ function normaliserCode(code) {
 }
 
 /**
+ * Intégration : le code d'activation part par la **messagerie unique** (lot b1),
+ * à l'adresse enregistrée du compte, dans la transaction qui l'émet. Il n'est
+ * plus remis à l'administrateur : celui-ci ne reçoit que l'accusé d'envoi.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {Record<string, any>} compte Enregistrement du destinataire (créé ou existant).
+ * @param {string} code
+ * @param {{reinitialisation?: boolean, entreprise?: string, tx: any}} options
+ */
+export function envoyerCodeActivation(ctx, compte, code, { reinitialisation = false, entreprise, tx }) {
+  envoyerModele({
+    modele: 'compte.code',
+    params: {
+      reinitialisation,
+      entreprise: entreprise ?? depot('groupement').brutParId(compte.groupementId)?.raisonSociale ?? 'votre entreprise',
+      heures: VALIDITE_CODE_HEURES,
+    },
+    utilisateurIds: [compte.id],
+    code,
+    tx,
+    expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+  });
+  return adresseMasquee(compte.email);
+}
+
+/**
  * Prépare un code et son enregistrement. Le code en clair ne sort que d'ici,
- * vers l'administrateur, une seule fois.
+ * vers la messagerie, à l'adresse enregistrée du compte.
  * @param {import('../domain/access.js').Contexte} ctx
  * @param {'creation'|'reinitialisation'} motif
  */
@@ -353,13 +380,14 @@ export async function preparerCompte(ctx, saisie, options = {}) {
 }
 
 /**
- * Crée un compte et rend son code d'activation, à afficher une seule fois.
+ * Crée un compte ; son code d'activation part à son adresse enregistrée.
  * @param {import('../domain/access.js').Contexte} ctx
  * @param {{nom: string, prenom?: string, email: string, telephone?: string, roleId: string, groupementId?: string}} saisie
- * @returns {Promise<{utilisateurId: string, code: string, expireLe: string}>}
+ * @returns {Promise<{utilisateurId: string, destinataire: string, expireLe: string}>}
  */
 export async function creerUtilisateur(ctx, saisie) {
   const { compte, code, expireLe } = await preparerCompte(ctx, saisie);
+  let destinataire = '';
   stockageInterne().transaction((tx) => {
     depot('utilisateur').creer(compte, { tx });
     journaliser(ctx, EVENEMENT_AUDIT.UTILISATEUR_CREE, {
@@ -370,8 +398,9 @@ export async function creerUtilisateur(ctx, saisie) {
         'Code d’activation à usage unique émis.',
       tx,
     });
+    destinataire = envoyerCodeActivation(ctx, compte, code, { tx });
   });
-  return { utilisateurId: compte.id, code, expireLe };
+  return { utilisateurId: compte.id, destinataire, expireLe };
 }
 
 /**
@@ -473,7 +502,7 @@ export function reactiverUtilisateur(ctx, utilisateurId) {
  *
  * @param {import('../domain/access.js').Contexte} ctx
  * @param {string} utilisateurId
- * @returns {Promise<{code: string, expireLe: string}>}
+ * @returns {Promise<{destinataire: string, expireLe: string}>}
  */
 export async function reinitialiserAcces(ctx, utilisateurId) {
   const u = compteGere(ctx, utilisateurId);
@@ -491,8 +520,9 @@ export async function reinitialiserAcces(ctx, utilisateurId) {
         `${VALIDITE_CODE_HEURES} heures. Le mot de passe en place reste valable jusqu’à son remplacement.`,
       tx,
     });
+    envoyerCodeActivation(ctx, u, code, { reinitialisation: true, tx });
   });
-  return { code, expireLe };
+  return { destinataire: adresseMasquee(u.email), expireLe };
 }
 
 /**

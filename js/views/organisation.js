@@ -61,24 +61,21 @@ function agir(action, message, fermer = null) {
  * ================================================================== */
 
 /**
- * @param {{titre: string, personne: string, code: string, expireLe: string, note?: string}} p
+ * Intégration : accusé d'envoi du code d'activation. Le code part par la
+ * messagerie unique à l'adresse enregistrée du compte ; il n'est pas affiché ici.
+ * @param {{titre: string, personne: string, destinataire: string, expireLe: string, note?: string}} p
  */
-function afficherCode({ titre, personne, code, expireLe, note }) {
+function afficherCode({ titre, personne, destinataire, expireLe, note }) {
   const fermer = modale({
     titre,
     corps: [
       bandeau({
-        ton: 'warn',
-        titre: 'Ce code ne sera plus affiché',
+        ton: 'info',
+        titre: 'Code d’activation envoyé',
         message:
-          `Remettez-le à ${personne} par un moyen sûr. Il ne sert qu’une fois ; un nouveau ` +
-          'code annule le précédent.',
+          `Un code à usage unique est parti à l’adresse enregistrée de ${personne} (${destinataire}), ` +
+          `valable jusqu’au ${dateHeure(expireLe)}. Il ne sert qu’une fois ; un nouveau code annule le précédent.`,
       }),
-      el('div.code-activation', { role: 'group', 'aria-label': 'Code d’activation' }, [
-        el('span', { text: 'Code d’activation à usage unique' }),
-        el('strong', { text: code }),
-        el('small', { text: `Valable jusqu’au ${dateHeure(expireLe)}` }),
-      ]),
       el('p', {
         text:
           'La personne choisit « Activer mon compte » sur l’écran de connexion, puis saisit ' +
@@ -88,11 +85,16 @@ function afficherCode({ titre, personne, code, expireLe, note }) {
       bandeau({
         ton: 'info',
         message:
-          'Message simulé : en service, ce code partirait aussi par courriel à l’adresse ' +
-          'enregistrée sur le compte. Aucun courriel n’est envoyé dans cette démonstration.',
+          'Envoi simulé : aucun courriel ne quitte la plateforme. Le message est déposé dans la boîte ' +
+          'de réception simulée de la démonstration.',
       }),
     ],
-    actions: [bouton({ libelle: 'J’ai noté le code', variante: 'primary', onClick: () => fermer() })],
+    actions: [
+      el('a.btn.btn-secondary', { href: '#/boite-simulee', target: '_blank', rel: 'noopener' }, [
+        icone('mail', 16), el('span', { text: 'Boîte de réception simulée' }),
+      ]),
+      bouton({ libelle: 'Fermer', variante: 'primary', onClick: () => fermer() }),
+    ],
     surFermeture: rafraichir,
   });
 }
@@ -240,7 +242,7 @@ export function utilisateurs(ctx) {
               afficherCode({
                 titre: 'Compte créé',
                 personne: `${saisie.prenom} ${saisie.nom}`.trim(),
-                code: r.code,
+                destinataire: r.destinataire,
                 expireLe: r.expireLe,
               });
             } catch (e) {
@@ -273,7 +275,7 @@ export function utilisateurs(ctx) {
             try {
               const r = await comptes.reinitialiserAcces(ctx, u.id);
               fermer();
-              afficherCode({ titre: 'Accès réinitialisé', personne: `${u.prenom} ${u.nom}`.trim(), code: r.code, expireLe: r.expireLe });
+              afficherCode({ titre: 'Accès réinitialisé', personne: `${u.prenom} ${u.nom}`.trim(), destinataire: r.destinataire, expireLe: r.expireLe });
             } catch (e) {
               afficherErreur(e);
             }
@@ -477,7 +479,7 @@ function dialogueFiliale(ctx) {
             afficherCode({
               titre: 'Entité créée',
               personne: `${valeurDe('fi-prenom')} ${valeurDe('fi-rnom')}`.trim() || 'son responsable',
-              code: r.code,
+              destinataire: r.destinataire,
               expireLe: r.expireLe,
               note: r.active
                 ? 'L’entité est active : elle hérite de votre vérification.'

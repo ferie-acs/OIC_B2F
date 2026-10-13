@@ -65,6 +65,11 @@ async function preparer() {
 }
 
 const audits = (evenement) => depot('audit').brutOu((e) => e.evenement === evenement);
+// Intégration : le code d'activation part par la messagerie unique, à l'adresse
+// enregistrée du compte ; le test le lit là où le destinataire le lirait.
+const codeRecu = (utilisateurId) => depot('message')
+  .brutOu((m) => m.modele === 'compte.code' && m.destinataireUtilisateurId === utilisateurId)
+  .sort((a, b) => String(a.envoyeLe).localeCompare(String(b.envoyeLe))).pop()?.code;
 
 const saisieFret = () => ({
   fret: { libelle: 'Cacao — lot préparé par l’intermédiaire DÉMO', provenanceId: 'loc-abidjan', destinationId: 'loc-bouake' },
@@ -196,7 +201,10 @@ describe('Lot b2 — l’administrateur gère les utilisateurs de son entreprise
     const r = await comptes.creerUtilisateur(admin, {
       prenom: 'Fanta', nom: 'KONÉ', email: 'Fanta.Kone@cacao-lagunes.invalid', roleId: 'auxiliaire_affreteur',
     });
+    assert.equal(r.code, undefined, 'le code n’est pas rendu à l’administrateur');
+    r.code = codeRecu(r.utilisateurId);
     assert.match(r.code, /^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+    assert.equal(depot('message').brutOu((m) => m.modele === 'compte.code' && m.destinataireUtilisateurId === r.utilisateurId)[0].adresse, 'fanta.kone@cacao-lagunes.invalid');
     const u = depot('utilisateur').brutParId(r.utilisateurId);
     assert.equal(u.email, 'fanta.kone@cacao-lagunes.invalid');
     assert.equal(u.groupementId, 'grp-aff-1');
@@ -275,7 +283,8 @@ describe('Lot b2 — l’administrateur gère les utilisateurs de son entreprise
 
   it('réinitialise un accès sans bloquer le compte, puis invalide le code après cinq erreurs', async () => {
     const admin = ctxDe('u-tra-1');
-    const { code } = await comptes.reinitialiserAcces(admin, 'u-auxt-1');
+    await comptes.reinitialiserAcces(admin, 'u-auxt-1');
+    const code = codeRecu('u-auxt-1');
     // L'ancien mot de passe reste valable tant que le nouveau n'est pas défini.
     await auth.connecter('auxtransport@demo.invalid', MOT_DE_PASSE_DEMO);
     assert.equal(audits(EVENEMENT_AUDIT.ACCES_REINITIALISE).length, 1);
@@ -291,7 +300,8 @@ describe('Lot b2 — l’administrateur gère les utilisateurs de son entreprise
 
   it('refuse un code expiré avec le même message', async () => {
     const admin = ctxDe('u-tra-1');
-    const { code } = await comptes.reinitialiserAcces(admin, 'u-auxt-1');
+    await comptes.reinitialiserAcces(admin, 'u-auxt-1');
+    const code = codeRecu('u-auxt-1');
     const u = depot('utilisateur').brutParId('u-auxt-1');
     depot('utilisateur').modifier(u.id, { motDePasse: { ...u.motDePasse, activation: { ...u.motDePasse.activation, expireLe: new Date(Date.now() - 1000).toISOString() } } });
     await assert.rejects(() => comptes.activerCompte({ email: 'auxtransport@demo.invalid', code, motDePasse: 'Valable2026', confirmation: 'Valable2026' }), /Activation impossible/);

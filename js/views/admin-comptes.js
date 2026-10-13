@@ -194,29 +194,33 @@ export function comptes(ctx) {
 }
 
 /**
- * Message simulé : ce qui partirait à l'adresse enregistrée du compte.
- * @param {{destinataire: string, objet: string, code: string, expireLe: string, texte: string}} m
+ * Accusé d'envoi du code d'accès. Intégration : le code part par la messagerie
+ * unique à l'adresse enregistrée du compte ; il n'est jamais affiché ici.
+ * @param {{destinataire: string, objet: string, expireLe: string, texte: string}} m
  */
 function afficherMessage(m) {
   const fermer = modale({
-    titre: 'Message simulé — code d’accès envoyé',
+    titre: 'Code d’accès envoyé',
     corps: [
       bandeau({
-        ton: 'warn',
-        titre: 'Simulation de démonstration',
+        ton: 'info',
+        titre: 'Envoi simulé',
         message:
-          'Aucun courriel n’est réellement envoyé. En service, ce message part à l’adresse enregistrée du compte ' +
-          'et le code n’est jamais affiché à l’administrateur. Il est reproduit ici pour permettre la démonstration.',
+          'Aucun courriel ne quitte la plateforme dans cette démonstration. Le message, avec son code, est déposé ' +
+          'dans la boîte de réception simulée, à l’adresse enregistrée du compte. Le code ne vous est pas communiqué.',
       }),
       el('div.recap-grid', {}, [
         el('div.recap-item', {}, [el('span', { text: 'Destinataire' }), el('strong', { text: m.destinataire })]),
-        el('div.recap-item', {}, [el('span', { text: 'Code à usage unique' }), el('strong', { text: m.code })]),
+        el('div.recap-item', {}, [el('span', { text: 'Objet' }), el('strong', { text: m.objet })]),
         el('div.recap-item', {}, [el('span', { text: 'Valable jusqu’à' }), el('strong', { text: dateHeure(m.expireLe) })]),
       ]),
       el('p', { text: m.texte }),
     ],
     actions: [
       bouton({ libelle: 'Fermer', onClick: () => fermer() }),
+      el('a.btn.btn-secondary', { href: '#/boite-simulee', target: '_blank', rel: 'noopener' }, [
+        icone('mail', 16), el('span', { text: 'Boîte de réception simulée' }),
+      ]),
       bouton({
         libelle: 'Se déconnecter et saisir le code',
         variante: 'primary',

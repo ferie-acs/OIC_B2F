@@ -109,6 +109,68 @@ export const MODELES = Object.freeze({
       'Bonjour,\n\nLe mot de passe de votre compte Bourse de Fret vient d’être modifié. ' +
       'Si vous n’êtes pas à l’origine de ce changement, prévenez immédiatement l’OIC.',
   },
+
+  /* --- Intégration : points d'envoi des lots b2, b4 et b5 ---------------- */
+
+  // Lot b2 : compte créé ou accès réinitialisé par l'administrateur de l'entreprise.
+  'compte.code': {
+    objet: () => 'Activez votre compte Bourse de Fret',
+    corps: (p) =>
+      `Bonjour,\n\nUn accès à la Bourse de Fret a été ${p.reinitialisation ? 'réinitialisé' : 'ouvert'} pour vous ` +
+      `au sein de ${p.entreprise}. Sur l’écran de connexion, choisissez « Activer mon compte », saisissez ` +
+      `votre adresse, le code ci-dessous et le mot de passe de votre choix. Le code est valable ${p.heures} heures ` +
+      'et ne sert qu’une fois.\n\nSi vous aviez déjà un mot de passe, il reste valable tant que le nouveau n’est pas défini.',
+  },
+  // Lot b5 : compte d'agent de l'OIC ou de la DGTTC créé, ou accès réinitialisé.
+  'acces.code': {
+    objet: () => 'Votre code d’accès à la Bourse de Fret',
+    corps: (p) =>
+      'Bonjour,\n\nUn code d’accès à usage unique a été émis pour votre compte. Saisissez-le, avec votre ' +
+      `adresse, sur la page « Code d’accès » dans les ${p.minutes} minutes, puis choisissez votre mot de passe.\n\n` +
+      'Votre mot de passe actuel, si vous en avez un, reste valable tant que le nouveau n’est pas défini.',
+  },
+  // Lot b4 : abonnement prolongé (paiement en ligne ou encaissement validé au guichet).
+  'abonnement.prolonge': {
+    objet: () => 'Votre abonnement est renouvelé',
+    corps: (p) =>
+      `Bonjour,\n\nL’abonnement de ${p.entreprise} est prolongé jusqu’au ${p.fin}` +
+      `${p.reference ? ` (reçu ${p.reference})` : ''}. Le reçu est disponible dans « Paiements et reçus ».`,
+  },
+  // Lot b4 : approche de l'échéance (30 jours).
+  'abonnement.echeance': {
+    objet: () => 'Votre abonnement arrive à échéance',
+    corps: (p) =>
+      `Bonjour,\n\nL’abonnement de ${p.entreprise} prend fin le ${p.fin}. Renouvelez-le dès maintenant ` +
+      'depuis l’écran « Abonnement » : la nouvelle période commencera le lendemain de l’échéance.',
+  },
+  // Lot b4 : rechargement du compte payé en ligne.
+  'paiement.enregistre': {
+    objet: () => 'Votre paiement est enregistré',
+    corps: (p) =>
+      `Bonjour,\n\nLe rechargement du compte de ${p.entreprise} est enregistré (reçu ${p.reference}). ` +
+      'Le compte est crédité. Le reçu est disponible dans « Paiements et reçus ».',
+  },
+  // Lot b4 : paiement en ligne non abouti.
+  'paiement.non_abouti': {
+    objet: () => 'Votre paiement n’a pas abouti',
+    corps: (p) =>
+      `Bonjour,\n\nUn paiement en ligne (${p.objet}) n’a pas abouti. Rien n’a été débité ni crédité. ` +
+      'Vous pouvez le renouveler depuis votre espace.',
+  },
+  // Lot b4 : encaissement au guichet validé par la seconde personne.
+  'encaissement.valide': {
+    objet: () => 'Votre paiement au guichet est validé',
+    corps: (p) =>
+      `Bonjour,\n\nLe paiement de ${p.entreprise} enregistré au guichet de l’OIC (reçu ${p.reference}, ` +
+      `${p.objet}) est validé. Le reçu est disponible dans « Paiements et reçus ».`,
+  },
+  // Lot b4 : encaissement au guichet rejeté au contrôle de caisse.
+  'encaissement.rejete': {
+    objet: () => 'Votre paiement au guichet n’est pas validé',
+    corps: (p) =>
+      `Bonjour,\n\nLe paiement enregistré au guichet de l’OIC sous le reçu ${p.reference} n’a pas été ` +
+      'validé au contrôle de caisse. Il ne produit aucun effet. Rapprochez-vous du guichet de l’OIC.',
+  },
 });
 
 /* ================================================================== *

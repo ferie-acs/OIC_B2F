@@ -54,6 +54,7 @@ import * as caisseB4 from './views/caisse.js';
 import { contentieux as contentieuxB4 } from './views/contentieux.js';
 import { tarifs as tarifsB4 } from './views/tarifs-admin.js';
 import { amorcerLotB4 } from './seed-lot-b4.js';
+import { rappelerEcheances } from './services/abonnement.service.js'; // Intégration
 // Lot b5 : administration OIC et espace DGTTC.
 import { amorcerLotB5 } from './seed-lot-b5.js';
 import { chargerParametrage } from './services/habilitations.service.js';
@@ -330,6 +331,7 @@ async function demarrerApplication() {
   enrichirSensDemo();
   initialiserStationnementDemo();
   await amorcerLotB4(); // Lot b4
+  rappelerEcheances(); // Intégration : rappel d'échéance par la messagerie unique
 
   // Messages non encore remis à la plateforme DUT : renvoyés dès que le relais répond.
   reprendreFileDut();
