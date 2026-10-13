@@ -155,3 +155,11 @@ du concessionnaire), `access.js`, `schema.js` (champs du groupement, entités
 - Le changement de l'adresse de connexion n'est pas proposé (il exigerait une
   confirmation par l'ancienne et la nouvelle adresse).
 - Côté DUT, rien n'est fait dans ce lot.
+
+## Intégration du 13 octobre 2026
+
+Cette fiche décrit le lot tel qu'il a été livré. À l'intégration :
+
+- Le responsable d'un **intermédiaire de fret** inscrit en ligne reçoit le rôle `intermediaire` du lot b2 (et non plus `auxiliaire_affreteur`), ses sous-comptes `collaborateur_intermediaire` ; son espace est l'espace Intermédiaire, qui reçoit Mon dossier, Mon profil, Mes messages. Le bandeau et l'aide propres à l'intermédiaire « auxiliaire » sont retirés.
+- L'état de vérification (`verificationEtat`) est écrit pour **tout type** d'entreprise : « à vérifier » à l'inscription, « vérifié » à l'activation, « refusé » au refus. Les filiales et l'annuaire des intermédiaires (lot b2) le lisent.
+- La messagerie reçoit les points d'envoi des lots b2, b4 et b5 (`MODELES`, bloc « Intégration »).

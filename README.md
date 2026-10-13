@@ -11,6 +11,53 @@ l'Office Ivoirien des Chargeurs**. Aucun serveur, aucune donnée réelle.
 > L'application s'exécute entièrement dans le navigateur ; les données vivent
 > dans le stockage local de l'onglet et ne sont transmises nulle part.
 
+## Démarches ajoutées et intégrées — 13 octobre 2026
+
+Six lots ont rendu utilisables, de bout en bout dans le navigateur, les démarches
+que l'audit acteur par acteur avait classées « absentes » ou « partielles ». Ils
+ont été fusionnés puis intégrés : un seul rôle d'intermédiaire, une seule
+messagerie, un seul état de vérification. Chaque lot garde sa fiche détaillée
+(écrans, règles, parcours pas à pas, limites) en annexe dans
+[`docs/lots/`](docs/lots/).
+
+| Domaine | Ce que le POC permet désormais | Annexe |
+|---|---|---|
+| **Listes de choix** | Toute liste de choix de l'application porte un champ de recherche intégré (accents et casse ignorés, clavier complet, ARIA combobox). Le `<select>` natif reste en place : aucune vue n'a changé. | [`lot-b0.md`](docs/lots/lot-b0.md) |
+| **Entrée dans la plateforme** | Inscription en ligne d'un affréteur, d'un transporteur ou d'un **intermédiaire de fret** (trois étapes, anti-doublon RCCM / compte contribuable / adresse) ; « Mon dossier » (pièces, échanges avec l'OIC) ; contrôle pièce par pièce et **activation en quatre yeux** par l'agent d'activation (code `BFCI-AAAA-NNNNN`, abonnement d'un an) ; refus, complément, requalification ; mot de passe oublié (code à l'adresse enregistrée, 15 min, usage unique, compte jamais bloqué) ; « Mon profil », « Mes messages ». | [`lot-b1.md`](docs/lots/lot-b1.md) |
+| **Messagerie unique** | Tous les courriels et SMS — simulés et annoncés comme tels — passent par `js/services/messagerie.service.js`, toujours à l'adresse **enregistrée** sur le compte : inscription, activation, mot de passe, codes d'activation des utilisateurs d'entreprise et codes d'accès des agents, abonnement prolongé, rappel d'échéance à 30 jours, paiement enregistré ou non abouti, encaissement au guichet validé ou rejeté. Boîte de réception simulée (`#/boite-simulee`) et journal des messages de l'exploitant (sans adresses ni codes). | [`lot-b1.md`](docs/lots/lot-b1.md), [`lot-b4.md`](docs/lots/lot-b4.md) |
+| **Organisation interne** | Utilisateurs de l'entreprise (création, désactivation, réinitialisation d'accès par code envoyé à l'adresse du compte), **filiales** qui héritent dynamiquement de la vérification de leur mère, **intermédiaire de fret** comme entreprise : désigné par un mandant (périmètre, période), il agit en son nom dans un contexte délégué tracé, sans jamais valider ni voir les coordonnées. | [`lot-b2.md`](docs/lots/lot-b2.md) |
+| **Marché et flotte** | Modification et republication d'une demande ; réponse de l'affréteur aux **propositions** des transporteurs (sens B) ; fiche complète, retrait et réactivation des chauffeurs ; modification et duplication d'une offre ; **attestation de bourse de fret** à QR code (PDF) ; vérification sur route par l'agent de contrôle, chaque contrôle journalisé. | [`lot-b3.md`](docs/lots/lot-b3.md) |
+| **Abonnements et finances** | Réabonnement et rechargement en ligne (paiements simulés), caisse au guichet en quatre yeux avec **reçu PDF numéroté** et duplicatas, états financiers et exports (CSV, PDF ; sans identité pour la comptabilité), contentieux, catalogue de tarifs modifiable avec date d'effet. | [`lot-b4.md`](docs/lots/lot-b4.md) |
+| **Administration OIC et DGTTC** | Comptes des agents OIC et utilisateurs DGTTC, habilitations paramétrables dans un cadre verrouillé, suspension d'une entreprise en quatre yeux, référentiels nationaux, incidents applicatifs, flux public des offres (JSON) ; pour la DGTTC : intermédiaires et leurs mandants, répartitions et carte des acteurs, exports par période sans montant. | [`lot-b5.md`](docs/lots/lot-b5.md) |
+
+**Ce que l'intégration a aligné.**
+
+- **L'intermédiaire de fret inscrit en ligne** reçoit le rôle `intermediaire`
+  (et non plus `auxiliaire_affreteur`) : activé par l'agent, il figure dans
+  l'annuaire des intermédiaires, peut être désigné par un mandant et agir pour
+  lui. Avant activation, seul « Mon compte » lui est ouvert.
+- **Un seul état de vérification.** L'agent d'activation écrit
+  `verificationEtat` pour tout type d'entreprise (« à vérifier » à
+  l'inscription, « vérifié » à l'activation, « refusé » au refus) ; les filiales
+  et l'annuaire des intermédiaires lisent la même règle
+  (`entrepriseVerifiee()`, `js/domain/organisation.js`). Un état absent ne vaut
+  « vérifié » que pour un affréteur ou un intermédiaire antérieur à
+  l'inscription en ligne — jamais pour un transporteur.
+- **Aucun code n'est remis à un administrateur.** Les codes d'activation (lot
+  b2) et d'accès des agents (lot b5) partent par la messagerie unique à
+  l'adresse enregistrée ; l'administrateur ne reçoit qu'un accusé d'envoi avec
+  l'adresse masquée.
+- **Le statut d'une offre proposée par son transporteur** (sens B) se lit
+  « Proposée — en attente de la réponse de l'affréteur » sur sa carte.
+- Menus : chaque nouvel écran est atteignable depuis le menu de son rôle, avec
+  une icône Lucide propre ; « Signaler un incident » se trouve dans la zone
+  Pilotage de chaque espace, DGTTC comprise.
+
+La matrice passe de 51 à **82 droits** et de 19 à **24 rôles** (§ *Les
+rôles*). Les comptes de démonstration ajoutés sont listés au § *Comptes de
+démonstration* ; un parcours par démarche figure au § 10 du
+[guide de démonstration](docs/guide-demo/guide-demonstration-oic.md).
+
 ## Lutte contre la fraude — 13 octobre 2026
 
 Cinq correctifs ferment des contournements du modèle économique et de la
@@ -160,6 +207,30 @@ Les trois derniers comptes sont aussi ajoutés à un navigateur déjà amorcé p
 une version antérieure, sans rien réécrire de ce qui existe
 (`completerJeuAntiFraude`, `js/seed.js`).
 
+**Comptes des démarches ajoutées le 13/10/2026** (mot de passe `demo2026`),
+créés par `js/seed-lot-b1.js` à `js/seed-lot-b5.js` :
+
+| Adresse | Rôle | Intérêt en démonstration |
+|---|---|---|
+| `inscrit.affreteur@demo.invalid` | `affreteur` (Négoce Atlantique DÉMO) | Inscrit en ligne, **en attente d'activation** : seul « Mon compte » est ouvert |
+| `inscrit.transporteur@demo.invalid` | `transporteur` (Savane Express Transport DÉMO) | **Complément demandé** (assurance non conforme) |
+| `inscrit.intermediaire@demo.invalid` | `intermediaire` (Lagune Transit Services DÉMO) | Intermédiaire inscrit, trois pièces à contrôler |
+| `activation.affreteur@demo.invalid` | `activation_inscription_affreteur` | Contrôle les dossiers d'affréteurs et d'intermédiaires |
+| `activation.affreteur2@demo.invalid` | `activation_inscription_affreteur` | **Seconde personne** : active un dossier contrôlé par le premier agent |
+| `activation2@demo.invalid` | `activation_inscription` | Second agent d'activation des transporteurs |
+| `intermediaire@demo.invalid` | `intermediaire` (Fret Conseil Intermédiation DÉMO) | Mandataire de Cacao Lagunes (MD-2026-0001) et de Trans Lagunes (MD-2026-0002) |
+| `collaborateur.intermediaire@demo.invalid` | `collaborateur_intermediaire` | Agit pour les mandants, sans administrer les comptes |
+| `agence.sanpedro@demo.invalid` | `transporteur` (filiale de Trans Lagunes) | Entité rattachée, vérification héritée |
+| `controle@demo.invalid` | `agent_controle_route` | Vérifie une attestation par son code ou son QR code |
+| `contentieux@demo.invalid` | `contentieux_paie` | Instruit les contentieux |
+| `comptabilite@demo.invalid` | `superviseur_comptabilite` | États financiers **sans identité** |
+| `comptes.oic@demo.invalid` | `superviseur_cpte` (compte **désactivé**) | À réactiver depuis « Comptes des agents OIC » |
+| `dgttc2@demo.invalid` | `dgttc` (non administrateur) | Consulte les utilisateurs DGTTC sans les gérer |
+
+Les comptes existants servent aussi ces démarches : `concessionnaire2` valide
+les encaissements au guichet et confirme les suspensions, `affreteur2` renouvelle
+son abonnement expiré, `dgttc` administre les utilisateurs de son institution.
+
 **Jeu de données** — cinq groupements commerciaux, crédités à l'amorçage de
 200 000 / 50 000 / 120 000 / 5 000 / 60 000 F CFA (le dernier pour Nouvelle
 Route Transport). Tarifs : abonnement annuel 150 000 F, frais de mise en
@@ -193,6 +264,14 @@ URL distante (`js/core/carte-corridors.js`), redéfinition de `:root` hors de
 `tokens.css`, modification d'un appariement hors de `matching.service.js` par
 `js/seed-activite.js`. Chacun de ces tests s'arrête à la première violation
 trouvée : leur stabilité ne prouve pas que les correctifs n'en ajoutent aucune.
+
+Au 13/10/2026, après intégration des lots b0 à b5 : **978 tests, 972 verts, 6
+en échec, code de sortie 1** (vérifié). Les six échecs sont ceux de
+`conformite.test.mjs` sur la version de référence ; rejouées sans s'arrêter à
+la première violation, ces six règles ne relèvent **aucune violation
+nouvelle**. Suites ajoutées : `lot-b0` à `lot-b5`, puis
+`integration-intermediaire`, `integration-messagerie` et
+`integration-offre-proposee`.
 
 | Suite | Objet | Tests |
 |---|---|---|
@@ -238,7 +317,7 @@ pour un développeur, se trouve dans
 Une page pédagogique pour public non initié au métier est disponible dans
 [`docs/ux/maquettes/b2f-comprendre.html`](docs/ux/maquettes/b2f-comprendre.html).
 
-## Les rôles — 19 attestés, traités sur trois niveaux
+## Les rôles — 24 déclarés, traités sur trois niveaux
 
 L'arbitrage N4 impose que **tous les rôles identifiés figurent au POC**. Aucun
 n'est écarté, aucun n'est inventé : chaque rôle porte dans `js/domain/roles.js`
@@ -247,9 +326,9 @@ test échoue si un identifiant non déclaré atteint la matrice.
 
 | Niveau | Traitement | Rôles |
 |---|---|---|
-| **1 — Démontrés** (6) | Espace propre, écrans métier, parcours de démonstration, tests de permission dédiés. | `affreteur` · `transporteur` · `auxiliaire_affreteur` · `auxiliaire_transporteur` · `concessionnaire` · `dgttc` |
-| **2 — Déclinés** (3) | Réutilisent l'espace Transporteur, variations déclaratives. Comptes accessibles et testés, sans parcours dédié. | `transporteur_prive` · `transporteur_etranger` · `partenaire` |
-| **3 — Modélisés** (10) | Déclarés, administrables, **menu généré depuis leurs seuls droits**. Consultation des DUT pour `dut_transport` ; contrôle des pièces des transporteurs pour `activation_inscription` (depuis le 13/10/2026) ; caisse, contentieux et comptabilité restent hors périmètre. | `super_admin` · `admin_compta` · `admin_superviseur_centre_tech` · `agent_caisse` · `superviseur_comptabilite` · `superviseur_cpte` · `contentieux_paie` · `dut_transport` · `activation_inscription` · `activation_inscription_affreteur` |
+| **1 — Démontrés** (8) | Espace propre, écrans métier, parcours de démonstration, tests de permission dédiés. | `affreteur` · `transporteur` · `auxiliaire_affreteur` · `auxiliaire_transporteur` · `concessionnaire` · `dgttc` · `intermediaire` · `collaborateur_intermediaire` *(13/10/2026)* |
+| **2 — Déclinés** (5) | Réutilisent un espace existant, variations déclaratives. Les deux rôles `mandataire_*` ne sont portés par **aucun compte** : ce sont les contextes délégués d'un intermédiaire qui agit au nom d'un mandant. | `transporteur_prive` · `transporteur_etranger` · `partenaire` · `mandataire_affreteur` · `mandataire_transporteur` *(13/10/2026)* |
+| **3 — Modélisés** (11) | Déclarés, administrables, **menu généré depuis leurs seuls droits**. Consultation des DUT pour `dut_transport` ; contrôle et activation des inscriptions pour les deux agents d'activation ; contentieux (`contentieux_paie`), états financiers sans identité (`superviseur_comptabilite`) et contrôle sur route (`agent_controle_route`) depuis le 13/10/2026. `agent_caisse` reste sans droit : la caisse est tenue par le concessionnaire, comme dans le système existant. | `super_admin` · `admin_compta` · `admin_superviseur_centre_tech` · `agent_caisse` · `superviseur_comptabilite` · `superviseur_cpte` · `contentieux_paie` · `dut_transport` · `activation_inscription` · `activation_inscription_affreteur` · `agent_controle_route` *(13/10/2026)* |
 
 **19 rôles, pas 22.** Le cadrage annonçait « 8 macro-rôles + ~14 profils ».
 L'inventaire réel en établit 19 : les huit menus `*_non_actif` et
@@ -263,7 +342,7 @@ Détail : `docs/architecture/03-matrice-des-roles.md` § 2.
 
 ### Extrait de la matrice des droits
 
-La matrice complète vit dans `js/domain/permissions.js` (**51 droits × 19 rôles**) ;
+La matrice complète vit dans `js/domain/permissions.js` (**82 droits × 24 rôles** depuis le 13/10/2026) ;
 elle est **la seule source** de ce qu'un rôle peut faire, menu compris. Un droit
 n'y est pas un booléen mais une **portée** : `—` aucune · `P` propre · `G`
 groupement · `M` marché · `T` tout.
@@ -438,12 +517,12 @@ développement, ou ouvrir la page en navigation privée.
 sont fonctionnels, audités et testés. Portes de sécurité et de qualité franchies.
 
 Les notifications (M7) et les tableaux de bord (M8) ont été livrés par
-anticipation. Restent à produire, en J4 et J5 : l'export CSV de l'historique
-(M8.4), l'administration effective de la matrice depuis l'écran « Utilisateurs
-et rôles » (M1.6) et la prolongation d'abonnement
-par le concessionnaire (M10.3). Les entrées de menu correspondantes existent et
-affichent « prévu au périmètre, non réalisé à ce jalon » plutôt qu'une page
-vide. Détail et historique daté : [`docs/CHANGELOG.md`](docs/CHANGELOG.md).
+anticipation. **Depuis le 13/10/2026** (lots b0 à b5, § *Démarches ajoutées*) :
+prolongation d'abonnement en ligne et au guichet (M10.3), paramétrage encadré
+des habilitations (M1.6), exports CSV des états financiers, de l'annuaire et
+des listes de la DGTTC. Reste à produire l'export CSV de l'historique des
+mouvements d'un compte (M8.4). Détail et historique daté :
+[`docs/CHANGELOG.md`](docs/CHANGELOG.md).
 
 L'architecture cible de production — Angular, NestJS, PostgreSQL, Keycloak et les
 autres briques documentées dans le README du POC DUT — **reste à définir pour la

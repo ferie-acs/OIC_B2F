@@ -5,7 +5,8 @@
 > **Durée** : environ 25 minutes de démonstration, 10 minutes de questions ;
 > compter 8 minutes de plus si l'on joue le § 5 (lutte contre la fraude).
 > **Auteur** : agent `redacteur-technique`, 24 septembre 2026 ; mis à jour le
-> 13 octobre 2026 pour les cinq correctifs anti-fraude.
+> 13 octobre 2026 pour les cinq correctifs anti-fraude, puis pour les démarches
+> ajoutées par les lots b0 à b5 (§ 10).
 >
 > Tout ce qui figure ici a été vérifié dans le code et dans les rapports de
 > qualité et de sécurité du projet. Les phrases en encadré sont des **propositions
@@ -653,6 +654,20 @@ Mot de passe unique : **`demo2026`**
 | `activation@demo.invalid` | Agent d'activation des inscriptions (niveau 3) | **Vérifie les transporteurs** (§ 5.3) |
 | `concessionnaire2@demo.invalid` | Concessionnaire | **Seconde personne** : valide les crédits saisis par le premier compte (§ 5.5) |
 | `transporteur3@demo.invalid` | Transporteur (Nouvelle Route Transport) | **Dossier non vérifié** : ne publie, ne propose ni n'accepte (§ 5.3) |
+| `inscrit.affreteur@demo.invalid` | Affréteur (Négoce Atlantique), inscrit en ligne | **En attente d'activation** : seul « Mon compte » est ouvert (§ 10.2) |
+| `inscrit.transporteur@demo.invalid` | Transporteur (Savane Express), inscrit en ligne | **Complément demandé** : assurance à redéposer (§ 10.2) |
+| `inscrit.intermediaire@demo.invalid` | Intermédiaire de fret (Lagune Transit Services), inscrit en ligne | Dossier de trois pièces à contrôler (§ 10.2) |
+| `activation.affreteur@demo.invalid` | Agent d'activation des affréteurs et intermédiaires | Contrôle les pièces (§ 10.2) |
+| `activation.affreteur2@demo.invalid` | Agent d'activation des affréteurs et intermédiaires | **Seconde personne** : active le compte (§ 10.2) |
+| `activation2@demo.invalid` | Agent d'activation des transporteurs | Second agent des transporteurs |
+| `intermediaire@demo.invalid` | Intermédiaire de fret (Fret Conseil Intermédiation) | Agit au nom de ses mandants (§ 10.7) |
+| `collaborateur.intermediaire@demo.invalid` | Collaborateur d'intermédiaire | Agit pour les mandants, n'administre pas les comptes |
+| `agence.sanpedro@demo.invalid` | Transporteur, filiale de Trans Lagunes | Vérification héritée de la mère (§ 10.6) |
+| `controle@demo.invalid` | Agent de contrôle sur route | Vérifie une attestation (§ 10.12) |
+| `contentieux@demo.invalid` | Contentieux | Instruit les dossiers (§ 10.16) |
+| `comptabilite@demo.invalid` | Supervision comptable | États financiers **sans identité** (§ 10.17) |
+| `comptes.oic@demo.invalid` | Agent OIC **désactivé** | À réactiver (§ 10.18) ; ne se connecte pas |
+| `dgttc2@demo.invalid` | DGTTC, non administrateur | Consulte les utilisateurs DGTTC sans les gérer (§ 10.24) |
 
 **Montants du jeu de démonstration :** frais de mise en relation **15 000 F CFA
 par partie**, abonnement annuel **150 000 F CFA**. Crédits initiaux : 200 000 F
@@ -696,3 +711,220 @@ et un test le vérifie.
 | [`../securite/audit-matrice-roles.md`](../securite/audit-matrice-roles.md) | L'audit de sécurité et ses 16 findings |
 | [`../qa/02-contre-verification-correctifs.md`](../qa/02-contre-verification-correctifs.md) | La contre-vérification qui a rendu le GO |
 | [`../CHANGELOG.md`](../CHANGELOG.md) | Ce qui est livré, ce qui reste |
+| [`../lots/`](../lots/) | Annexes des lots b0 à b5 : écrans, règles métier, limites de chaque démarche ajoutée |
+
+---
+
+## 10. Les démarches ajoutées le 13 octobre 2026 — un parcours par démarche
+
+Six lots ont ajouté les démarches que l'audit avait trouvées absentes ou
+partielles ; leur fiche complète est en annexe dans [`../lots/`](../lots/).
+Chaque parcours ci-dessous se joue seul, en quelques minutes, à partir d'un
+stockage vierge. Mot de passe de tous les comptes : **`demo2026`**.
+
+**Courriels et SMS sont simulés.** Rien ne quitte le navigateur. Chaque message
+part à l'adresse **enregistrée** sur le compte et se lit dans la **boîte de
+réception simulée** (`#/boite-simulee`, lien sous le formulaire de connexion).
+Gardez-la ouverte dans un second onglet : c'est là qu'on lit un code.
+
+> « Aucun code n'est jamais montré à la personne qui le déclenche — ni à
+> l'administrateur, ni à l'agent. Il part à l'adresse du compte. La boîte
+> simulée tient lieu de la messagerie du destinataire ; elle n'existerait pas
+> en production. »
+
+### 10.1 Chercher dans une liste de choix (lot b0)
+
+1. `affreteur@demo.invalid` › Mon fret › **Nouvelle déclaration** › Provenance :
+   taper « bouake » → « Bouaké » ; Entrée.
+2. Sans connexion, `#/explorer` › Départ : taper « SAN PEDRO » → « San-Pédro ».
+
+Toutes les listes de l'application ont ce champ de recherche, au clavier comme
+à la souris.
+
+### 10.2 S'inscrire en ligne, puis être activé (lot b1)
+
+1. Écran de connexion › **Inscrire mon entreprise** › « Intermédiaire de fret »
+   › remplir les trois étapes. La session s'ouvre sur **Mon dossier** : c'est
+   le seul espace ouvert tant que le compte n'est pas activé.
+2. Déposer les trois pièces (n'importe quel PDF : seules ses caractéristiques
+   sont enregistrées). Recommencer une inscription avec le même RCCM : refus.
+3. `activation.affreteur@demo.invalid` › Vérification et activation › ouvrir le
+   dossier › **Conforme** sur chaque pièce. Le bandeau dit que l'activation
+   revient à un autre agent.
+4. `activation.affreteur2@demo.invalid` › même dossier › **Activer le compte** :
+   code d'entreprise `BFCI-…`, abonnement d'un an, message parti.
+5. Se reconnecter avec le compte inscrit : l'espace **Intermédiaire** est
+   complet ; « Mes messages » montre le message d'activation.
+
+Variante : `inscrit.transporteur@demo.invalid` › Mon dossier › déposer une
+nouvelle attestation d'assurance › **Transmettre mon dossier complété** ;
+`activation@demo.invalid` reprend le dossier.
+
+### 10.3 Mot de passe oublié (lot b1)
+
+Connexion › **Mot de passe oublié ?** › `affreteur@demo.invalid` › lire le code
+dans la boîte simulée › définir le nouveau mot de passe › se connecter avec
+lui. L'ancien mot de passe restait valable jusque-là : le compte n'est jamais
+bloqué par une demande.
+
+### 10.4 La messagerie de l'exploitant (lot b1)
+
+`concessionnaire@demo.invalid` › Messagerie › **Messages envoyés** : filtrer par
+canal ou destinataire. Les adresses et les codes n'y figurent pas. « Envoyer un
+message » à la catégorie « Intermédiaires de fret ».
+
+### 10.5 Gérer les utilisateurs de son entreprise (lot b2)
+
+1. `affreteur@demo.invalid` › Paramètres › **Utilisateurs et auxiliaires** ›
+   « Ajouter un utilisateur », rôle « Auxiliaire d'affréteur ». L'écran confirme
+   l'envoi du code **à l'adresse du nouveau compte**, masquée ; il ne l'affiche
+   pas.
+2. Se déconnecter, lire le code dans la boîte simulée, puis **Activer mon
+   compte** sur l'écran de connexion (adresse, code, mot de passe choisi).
+3. Revenir en administrateur : désactiver, réactiver, réinitialiser l'accès. Le
+   rôle « Concessionnaire » n'est jamais proposé.
+
+### 10.6 Filiales et entités rattachées (lot b2)
+
+`transporteur@demo.invalid` › Paramètres › **Filiales et entités** : l'agence
+de San-Pédro est active, sa vérification est héritée. « Créer une entité
+rattachée » ouvre l'entité et le compte de son responsable (code envoyé à son
+adresse). Si la mère perd sa vérification, la filiale la perd aussitôt.
+
+### 10.7 Désigner un intermédiaire, et le laisser agir (lots b1 et b2)
+
+1. `affreteur@demo.invalid` › Paramètres › **Intermédiaires de fret** :
+   l'annuaire ne liste que les intermédiaires **activés et vérifiés** (un
+   intermédiaire inscrit mais pas encore activé n'y figure pas). « Désigner »,
+   cocher le périmètre, fixer la période.
+2. `intermediaire@demo.invalid` › Mandants › **Mes mandants** › « Agir en son
+   nom ». Le bandeau « Au nom de … » reste sur chaque écran. Déclarer un fret,
+   réserver un véhicule. Sur « À valider », le bouton est désactivé : la
+   validation, qui engage les frais, reste au mandant.
+3. « Revenir à mon espace ». En affréteur : Paramètres › Intermédiaires de fret
+   › **Actions faites en votre nom** montre chaque action, avec le mandat.
+
+### 10.8 Modifier ou republier une demande (lot b3)
+
+`affreteur@demo.invalid` › Mon fret › **Demandes de transport** : « Modifier »
+une demande publiée sans réservation (l'historique apparaît sous le formulaire) ;
+« Republier » `DT-B3-0002`, dont la date est passée, avec de nouvelles dates.
+
+### 10.9 Répondre à la proposition d'un transporteur (lot b3)
+
+1. `transporteur@demo.invalid` › Ma flotte › **Mes disponibilités** : la carte
+   de l'offre proposée sur `DT-B3-0001` se lit « Proposée — en attente de la
+   réponse de l'affréteur ».
+2. `affreteur@demo.invalid` › Marché › **Mes réservations** : le bandeau
+   signale la proposition. « Refuser » exige un motif (une précision contenant
+   un numéro de téléphone est refusée) ; « Accepter » mène à la validation.
+
+### 10.10 Chauffeurs (lot b3)
+
+`transporteur@demo.invalid` › Ma flotte › **Chauffeurs** › « Ajouter un
+chauffeur » : une fiche incomplète est refusée avec la liste des champs
+manquants. « Retirer » DIALLO Amadou (date et motif) : les disponibilités
+concernées sont annoncées avant confirmation ; le réactiver ensuite.
+
+### 10.11 Modifier et dupliquer une offre (lot b3)
+
+Ma flotte › Mes disponibilités › « Dupliquer » une offre, ajuster les dates,
+publier la copie ; « Modifier » une offre disponible. Sur une offre réservée, le
+bouton reste grisé avec son motif.
+
+### 10.12 Attestation de bourse de fret et contrôle sur route (lot b3)
+
+1. `transporteur@demo.invalid` › Mises en relation › **Attestations de bourse
+   de fret** › télécharger le PDF ; noter le code imprimé sous le QR code.
+2. `controle@demo.invalid` › **Vérifier une attestation** : saisir le code →
+   « authentique et en vigueur » ; un code inventé → « code inconnu ». **Mes
+   contrôles** liste les deux vérifications.
+3. Sans connexion, l'adresse du QR code (`#/verifier/<code sans tirets>`) rend
+   le même verdict, sans aucune coordonnée. Annuler l'attestation côté
+   transporteur : le verdict devient « annulée ».
+
+### 10.13 Renouveler son abonnement, recharger son compte (lot b4)
+
+1. `affreteur2@demo.invalid` › **Abonnement** (expiré) › Wave, `05 05 05 05 05`
+   › « Payer et renouveler » › « Simuler la confirmation » : l'accès est rouvert
+   ; « Imprimer le reçu ». Un courriel « abonnement renouvelé » est déposé.
+2. `affreteur@demo.invalid` › Compte › **Solde et mouvements** › 4 mises en
+   relation, Orange Money : le solde augmente aussitôt. « Paiements et reçus » :
+   rééditer un reçu produit « Duplicata n° 1 ».
+
+### 10.14 Encaisser au guichet, en quatre yeux (lot b4)
+
+1. `concessionnaire@demo.invalid` › Caisse › **Encaissement au guichet** :
+   client Trans Lagunes, « Rechargement du compte », 45 000 F, chèque
+   `CHQ-0001`. Le reçu sort « En attente de validation ». Dans « Encaissements
+   à valider », le bouton est refusé : c'est sa propre saisie.
+2. `concessionnaire2@demo.invalid` › **Encaissements à valider** : cocher le
+   rapprochement et valider ; le compte est crédité et l'entreprise reçoit un
+   courriel. Valider aussi le réabonnement de Routière du Centre.
+
+### 10.15 Modifier un tarif (lot b4)
+
+Concessionnaire › Finances › **Catalogue de tarifs** : modifier l'abonnement
+annuel avec une date d'effet future ; l'historique affiche « Programmée », les
+abonnements en cours ne changent pas.
+
+### 10.16 Contentieux (lot b4)
+
+`contentieux@demo.invalid` › **Contentieux** : ouvrir un dossier avec une pièce,
+le passer en instruction, puis le clore avec son issue.
+
+### 10.17 États financiers (lot b4)
+
+`comptabilite@demo.invalid` › **États financiers** : montants sans noms ;
+l'export CSV porte « Non communiqué » dans la colonne Client.
+
+### 10.18 Comptes des agents OIC (lot b5)
+
+1. `concessionnaire@demo.invalid` › Administration › **Comptes des agents OIC**
+   › « Créer un compte ». L'accusé d'envoi donne l'adresse masquée ; le code
+   n'est pas affiché à l'administrateur. Ouvrir la boîte simulée pour le lire,
+   puis « Se déconnecter et saisir le code » : définir le mot de passe et se
+   connecter avec le nouveau compte.
+2. Sur sa propre ligne, l'administrateur ne peut ni se désactiver ni
+   réinitialiser son accès. Réactiver Rose BROU (`comptes.oic@demo.invalid`)
+   avec un motif.
+
+### 10.19 Profils et habilitations (lot b5)
+
+Concessionnaire › Acteurs › **Profils et habilitations** : profil DGTTC,
+« Activer » « Consulter les DUT générés » avec un motif ; l'onglet Historique
+montre la décision. Profil Affréteur : aucun droit n'est paramétrable. Onglet
+Par droit, « Valider une mise en relation » : verrouillé.
+
+### 10.20 Suspendre une entreprise, en quatre yeux (lot b5)
+
+Concessionnaire › Acteurs › **Groupements** › « Demander la suspension » avec un
+motif. `concessionnaire2@demo.invalid` › Groupements › Décisions à confirmer ›
+« Confirmer » : ses annonces quittent le marché, ses utilisateurs consultent
+leur historique sans pouvoir opérer. Réactiver de la même manière.
+
+### 10.21 Référentiels nationaux (lot b5)
+
+Administration › **Référentiels nationaux** : ajouter une carrosserie, la
+renommer, la désactiver ; une valeur déjà utilisée n'offre pas la suppression.
+
+### 10.22 Incidents applicatifs (lot b5)
+
+1. `transporteur@demo.invalid` › Pilotage › **Signaler un incident** : nature,
+   gêne, titre, description ; envoyer. Il apparaît dans « Mes signalements ».
+2. `concessionnaire@demo.invalid` › Administration › **Incidents applicatifs** ›
+   ouvrir : qualifier, attribuer, noter, déclarer résolu, clore. Le déclarant
+   est notifié à chaque étape.
+
+### 10.23 Flux public des offres (lot b5)
+
+Administration › **Flux public des offres** : lire les champs publiés et ceux
+qui ne le sont jamais, puis « Générer et télécharger (JSON) ».
+
+### 10.24 L'espace DGTTC (lot b5)
+
+`dgttc@demo.invalid` › Acteurs › **Intermédiaires** (chaque intermédiaire et
+les entreprises qui l'ont mandaté) ; **Répartitions** (carte des acteurs,
+période) ; Administration › **Exports par période** ; **Utilisateurs DGTTC**
+(créer un compte, désactiver Ange KOUADIO). En `dgttc2@demo.invalid`, l'écran
+des utilisateurs reste en consultation.

@@ -44,6 +44,117 @@
 
 ---
 
+## Démarches ajoutées et intégration des lots b0 à b5 *(13/10/2026)*
+
+**Le jalon où le POC couvre les démarches de chaque acteur.** L'audit acteur
+par acteur avait classé un ensemble de démarches « absentes » ou
+« partielles ». Six lots, développés en parallèle, les ont rendues utilisables
+de bout en bout dans le navigateur ; ils ont été fusionnés sur la branche
+`travail/demarches`, puis intégrés. Chaque lot garde sa fiche en annexe dans
+[`docs/lots/`](lots/).
+
+### Livré, par lot
+
+| Lot | Domaine | Démarches rendues utilisables | Annexe |
+|---|---|---|---|
+| **b0** | Listes de choix | Champ de recherche intégré à **toutes** les listes de choix (accents et casse ignorés, clavier complet, motif ARIA combobox) ; le `<select>` natif reste en place. | [`lot-b0.md`](lots/lot-b0.md) |
+| **b1** | Entrée dans la plateforme | Inscription en ligne (affréteur, transporteur, intermédiaire de fret), « Mon dossier », contrôle pièce par pièce et activation en quatre yeux, complément, refus, requalification, modification d'identité contrôlée ; mot de passe oublié ; « Mon profil », « Mes messages » ; **messagerie unique** (courriels et SMS simulés), boîte de réception simulée, journal des messages de l'exploitant. | [`lot-b1.md`](lots/lot-b1.md) |
+| **b2** | Organisation interne | Utilisateurs de l'entreprise, filiales et entités rattachées (vérification héritée), intermédiaire de fret comme entreprise, mandats (périmètre, période, retrait) et contexte délégué tracé. | [`lot-b2.md`](lots/lot-b2.md) |
+| **b3** | Marché, flotte, attestation | Modification et republication d'une demande, réponse aux propositions des transporteurs (sens B), fiche, retrait et réactivation des chauffeurs, modification et duplication d'une offre, attestation de bourse de fret à QR code, contrôle sur route journalisé. | [`lot-b3.md`](lots/lot-b3.md) |
+| **b4** | Abonnements et finances | Réabonnement et rechargement en ligne (simulés), caisse au guichet en quatre yeux, reçu PDF numéroté et duplicatas, états financiers et exports, contentieux, catalogue de tarifs avec date d'effet. | [`lot-b4.md`](lots/lot-b4.md) |
+| **b5** | Administration OIC et DGTTC | Comptes des agents, habilitations paramétrables dans un cadre verrouillé, suspension en quatre yeux, référentiels nationaux, incidents applicatifs, flux public des offres ; pour la DGTTC : intermédiaires, répartitions et carte des acteurs, exports par période, utilisateurs de l'institution. | [`lot-b5.md`](lots/lot-b5.md) |
+
+### Intégration — ce qui a été corrigé ou raccordé
+
+- **Blocs mal placés à la fusion.** Les blocs « Lot bX » des fichiers centraux
+  (`enums.js`, `permissions.js`, `schema.js`, `roles.js`, `nav.js`,
+  `layout.js`, `app.js`, `access.js` et les services partagés) ont été
+  comparés, entrée par entrée, à l'objet où chaque lot les avait placés. Restait
+  un déplacement : les droits `abonnement.prolonger` et `compte.recharger` du
+  lot b4 copiés dans le gabarit `INTERMEDIAIRE` du lot b2 ; retirés. Trois
+  symboles d'icône déclarés deux fois dans le sprite ont été dédoublonnés.
+- **L'intermédiaire de fret inscrit en ligne** reçoit le rôle `intermediaire`
+  du lot b2 (et non plus `auxiliaire_affreteur`), ses sous-comptes
+  `collaborateur_intermediaire`. Activé, il entre dans l'annuaire, peut être
+  désigné par un mandant et agir pour lui ; avant activation, il n'a que
+  « Mon compte ». L'espace Intermédiaire reçoit Mon dossier, Mon profil, Mes
+  messages et Signaler un incident.
+- **Un seul état de vérification.** L'agent d'activation écrit
+  `verificationEtat` pour tout type d'entreprise ; filiales et annuaire lisent
+  la même règle `entrepriseVerifiee()`. Le lot b2 tenait un état absent pour
+  « vérifié » : il ne l'est plus que pour un affréteur ou un intermédiaire
+  antérieur à l'inscription en ligne, jamais pour une entreprise inscrite en
+  ligne ni pour un transporteur.
+- **Messagerie unique branchée sur les autres lots.** Lot b4 : abonnement
+  prolongé, rappel d'échéance à 30 jours (au démarrage, une fois par période,
+  courriel et SMS), rechargement enregistré, paiement non abouti, encaissement
+  validé ou rejeté (sans le motif interne). Lot b2 : code d'activation d'un
+  compte, de sa réinitialisation, du responsable d'une filiale. Lot b5 : le
+  code d'accès des agents, qui avait son propre message simulé, passe par la
+  messagerie unique. **Aucun code n'est plus affiché à l'administrateur** : il
+  part à l'adresse enregistrée du compte, l'administrateur ne reçoit qu'un
+  accusé d'envoi à l'adresse masquée.
+- **DGTTC** : les intermédiaires sont lus sur le modèle du lot b2 (entreprises
+  et leurs mandats), et non plus parmi les auxiliaires ; les répartitions les
+  comptent à part des affréteurs.
+- **Défaut connu du lot b3** : la carte d'une offre que le transporteur a
+  lui-même proposée (sens B) lit « Proposée — en attente de la réponse de
+  l'affréteur », et l'avertissement de retrait est adapté.
+- **Menus** : icônes Lucide propres aux nouvelles pages (`list`, `rss`,
+  `chart-pie` ajoutées au sprite) ; « Signaler un incident » dans la zone
+  Pilotage de chaque espace ; « Fiche du groupement » dans l'espace
+  Intermédiaire, comme ailleurs.
+- **Parcours visuel complet** (Playwright, 1440 et 390 px, chaque compte de
+  démonstration, chaque écran de son menu, chaque lien rencontré) : aucun
+  débordement horizontal, aucune icône manquante, aucun « undefined », « null »
+  ou « NaN » affiché, aucune erreur console absente de la version antérieure.
+  Corrigés au passage, bien qu'antérieurs aux lots : la cloche des
+  notifications menait à un refus pour les rôles sans notifications
+  (concessionnaire, DGTTC, profils de niveau 3, comptes non activés) ; le
+  tableau de bord du partenaire ne s'affichait pas, et sa fiche de véhicule
+  proposait « Trouver du fret », écran qui ne lui est pas ouvert ; l'agent de
+  caisse lisait « undefined » à la place de son nom.
+
+### Incidence sur la matrice
+
+**De 51 à 82 droits, de 19 à 24 rôles** : `intermediaire`,
+`collaborateur_intermediaire`, `mandataire_affreteur`,
+`mandataire_transporteur` (contextes délégués, jamais portés par un compte),
+`agent_controle_route`. Détail généré depuis le code :
+`docs/architecture/03-matrice-des-roles.md` § 10.
+
+### Jeu de démonstration
+
+Chaque lot amorce ses données par un module idempotent (`js/seed-lot-b1.js` à
+`js/seed-lot-b5.js`), appelé par une ligne de `js/app.js`. Quatorze comptes
+s'ajoutent, tous au mot de passe `demo2026` : README, § *Comptes de
+démonstration* ; guide de démonstration, § 7 et § 10 (un parcours par
+démarche).
+
+### Vérification
+
+Suite au 13/10/2026 après intégration : **978 tests, 972 verts, 6 en échec,
+code de sortie 1** (vérifié). Avant intégration : 957 tests, 951 verts, les
+mêmes 6 échecs. Les six échecs se trouvent dans `conformite.test.mjs` et
+existaient sur la version de référence ; ces tests s'arrêtant à la première
+violation, les six règles ont été rejouées sans arrêt sur la version de
+référence et sur la version intégrée : **aucune violation nouvelle**.
+Nouvelles suites : `tests/integration-intermediaire.test.mjs`,
+`tests/integration-messagerie.test.mjs`,
+`tests/integration-offre-proposee.test.mjs` ; `lot-b1`, `lot-b2` et `lot-b5`
+mises à jour (rôle de l'intermédiaire, code lu dans la messagerie).
+
+### Limites
+
+- Tous les paiements, courriels et SMS restent **simulés**. La boîte de
+  réception simulée, publique, n'existerait pas en production.
+- L'intermédiaire de fret renouvelle son abonnement au guichet : le
+  réabonnement en ligne du lot b4 n'est ouvert qu'aux affréteurs et
+  transporteurs titulaires.
+- Le rappel d'échéance s'exécute à l'ouverture de l'application, faute de
+  tâche planifiée dans un POC statique.
+- Les limites propres à chaque lot sont dans son annexe.
+
 ## Lutte contre la fraude — cinq correctifs *(13/10/2026)*
 
 **Le jalon où le POC cesse de servir d'annuaire gratuit.** Le modèle

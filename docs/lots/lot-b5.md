@@ -116,3 +116,11 @@ Deux incidents de démonstration (`IA-2026-0001` nouveau, `IA-2026-0002` en trai
 `index.html` (feuille `css/lot-b5.css`), `js/app.js` (routes, amorçage, page Code d'accès), `js/core/nav.js` (menus), `js/domain/access.js` (refus d'une entreprise suspendue), `js/domain/enums.js` (événements d'audit, énumérations), `js/domain/permissions.js` (droits, matrice, paramétrage encadré), `js/domain/schema.js` (entités `incident_applicatif`, `habilitation`, `decision_groupement`, `code_acces`, champ `administrateur`), `js/services/auth.service.js` (compte désactivé, entreprise suspendue), `flotte.service.js`, `fret.service.js`, `marche-public.service.js`, `matching.service.js` (effets de la suspension), `notification.service.js` (gabarits).
 
 Tests : `tests/lot-b5.test.mjs` (45 cas, refus compris).
+
+## Intégration du 13 octobre 2026
+
+Cette fiche décrit le lot tel qu'il a été livré. À l'intégration :
+
+- Le code d'accès des agents passe par la **messagerie unique** (modèle `acces.code`) au lieu d'un message propre ; il n'est plus affiché à l'administrateur, qui reçoit un accusé d'envoi (adresse masquée) et un lien vers la boîte de réception simulée.
+- DGTTC : les intermédiaires sont les entreprises du lot b2 et leurs mandats en vigueur ou à venir, et non plus les auxiliaires ; les répartitions les comptent à part. « Signaler un incident » passe dans la zone Pilotage.
+- Pages « Comptes des agents », « Référentiels », « Flux », « Répartitions », « Exports » et « Incidents » : icônes propres (`user-check`, `list`, `rss`, `chart-pie`, `download`, `alert`).
