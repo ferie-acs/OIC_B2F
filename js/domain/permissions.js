@@ -293,6 +293,40 @@ export const DROITS = Object.freeze({
   'dut.lire': { categorie: 'DUT', libelle: 'Consulter les DUT générés' },
   'dut.generer': { categorie: 'DUT', libelle: 'Générer un DUT' , mutation: true },
   'notification.lire': { categorie: 'Annexes', libelle: 'Consulter ses notifications' },
+
+  /* --- Lot b2 : organisation interne ---------------------------- */
+  'filiale.lire': {
+    categorie: 'Acteurs',
+    libelle: 'Consulter ses filiales et leur activité consolidée',
+    note:
+      'Agrégats seulement : la mère voit le volume d’activité de ses filiales, pas ' +
+      'l’identité de leurs contreparties.',
+  },
+  'filiale.creer': {
+    categorie: 'Acteurs',
+    libelle: 'Créer une filiale ou une entité rattachée',
+    mutation: true,
+    note:
+      'La filiale hérite des pièces de la mère (RCCM, carte de transporteur) et de sa ' +
+      'vérification : elle n’est active que si la mère est vérifiée.',
+  },
+  'mandat.lire': { categorie: 'Acteurs', libelle: 'Consulter ses mandats d’intermédiaire' },
+  'mandat.gerer': {
+    categorie: 'Acteurs',
+    libelle: 'Désigner ou retirer un intermédiaire de fret',
+    mutation: true,
+    refus:
+      'La désignation d’un intermédiaire engage l’entreprise : elle revient à son ' +
+      'responsable.',
+  },
+  'mandat.agir': {
+    categorie: 'Acteurs',
+    libelle: 'Agir au nom d’un mandant',
+    mutation: true,
+    note:
+      'Ouvre un contexte délégué borné par le mandat (périmètre et période). Chaque ' +
+      'action y est tracée au nom du mandant. La validation n’est jamais déléguée.',
+  },
 });
 
 /* ================================================================== *
@@ -341,6 +375,11 @@ const AFFRETEUR = Object.freeze({
   'groupement.gerer': GROUPEMENT,
   'utilisateur.lire': GROUPEMENT,
   'utilisateur.gerer': GROUPEMENT,
+  // Lot b2 : organisation interne
+  'filiale.lire': GROUPEMENT,
+  'filiale.creer': GROUPEMENT,
+  'mandat.lire': GROUPEMENT,
+  'mandat.gerer': GROUPEMENT,
 });
 
 /** Droits du transporteur de plein exercice. */
@@ -368,6 +407,29 @@ const TRANSPORTEUR = Object.freeze({
   'groupement.gerer': GROUPEMENT,
   'utilisateur.lire': GROUPEMENT,
   'utilisateur.gerer': GROUPEMENT,
+  // Lot b2 : organisation interne
+  'filiale.lire': GROUPEMENT,
+  'filiale.creer': GROUPEMENT,
+  'mandat.lire': GROUPEMENT,
+  'mandat.gerer': GROUPEMENT,
+});
+
+/**
+ * Lot b2 : droits de l'entreprise intermédiaire. Aucun droit de marché en
+ * propre : il agit au nom de ses mandants, par un contexte délégué.
+ */
+const INTERMEDIAIRE = Object.freeze({
+  'dashboard.perimetre': GROUPEMENT,
+  'notification.lire': PROPRE,
+  'tarif.lire': TOUT,
+  'abonnement.lire': GROUPEMENT,
+  'groupement.lire': GROUPEMENT,
+  'utilisateur.lire': GROUPEMENT,
+  'utilisateur.gerer': GROUPEMENT,
+  'filiale.lire': GROUPEMENT,
+  'filiale.creer': GROUPEMENT,
+  'mandat.lire': GROUPEMENT,
+  'mandat.agir': GROUPEMENT,
 });
 
 /**
@@ -412,6 +474,11 @@ export const MATRICE = Object.freeze({
     'utilisateur.gerer',
     'groupement.gerer',
     'declaration.supprimer',
+    // Lot b2 : l'organisation de l'entreprise revient à son responsable.
+    'filiale.lire',
+    'filiale.creer',
+    'mandat.lire',
+    'mandat.gerer',
   ]),
 
   /**
@@ -423,6 +490,11 @@ export const MATRICE = Object.freeze({
     'utilisateur.lire',
     'utilisateur.gerer',
     'groupement.gerer',
+    // Lot b2 : l'organisation de l'entreprise revient à son responsable.
+    'filiale.lire',
+    'filiale.creer',
+    'mandat.lire',
+    'mandat.gerer',
   ]),
 
   /**
@@ -548,6 +620,70 @@ export const MATRICE = Object.freeze({
     'groupement.verifier': TOUT,
   }),
   activation_inscription_affreteur: Object.freeze({ 'groupement.lire': TOUT }),
+
+  /* ---- Lot b2 : organisation interne — l'intermédiaire de fret ---- */
+
+  /**
+   * Le responsable d'une entreprise intermédiaire : ses mandants, ses
+   * utilisateurs, ses entités rattachées. Il n'a **aucun droit de marché en
+   * propre** : il n'agit sur le marché qu'au nom d'un mandant, par un contexte
+   * délégué (`mandat.agir`).
+   */
+  intermediaire: INTERMEDIAIRE,
+  collaborateur_intermediaire: sans(INTERMEDIAIRE, [
+    'utilisateur.lire',
+    'utilisateur.gerer',
+    'filiale.creer',
+  ]),
+
+  /**
+   * Contexte délégué au nom d'un affréteur. **Ni validation, ni réponse aux
+   * propositions, ni coordonnées** : l'acte qui engage les frais et ce qu'il
+   * achète restent au mandant. Les actes sont en outre bornés par le périmètre
+   * du mandat (`domain/mandat.js`, appliqué par `access.js`).
+   */
+  mandataire_affreteur: Object.freeze({
+    'dashboard.perimetre': GROUPEMENT,
+    'notification.lire': PROPRE,
+    'tarif.lire': TOUT,
+    'abonnement.lire': GROUPEMENT,
+    'declaration.lire': GROUPEMENT,
+    'demande.lire': GROUPEMENT,
+    'appariement.lire': GROUPEMENT,
+    'transport.lire': GROUPEMENT,
+    'declaration.creer': GROUPEMENT,
+    'declaration.modifier': GROUPEMENT,
+    'demande.creer': GROUPEMENT,
+    'demande.publier': GROUPEMENT,
+    'demande.annuler': GROUPEMENT,
+    'marche.offres': MARCHE,
+    'appariement.reserver': GROUPEMENT,
+    'appariement.annuler': GROUPEMENT,
+  }),
+
+  /**
+   * Contexte délégué au nom d'un transporteur. Propose et répond dans le
+   * périmètre confié — répondre engage un débit à venir, c'est pourquoi le
+   * mandant doit l'avoir confié **explicitement**. Ni coordonnées, ni gestion
+   * du parc, ni suivi d'étape.
+   */
+  mandataire_transporteur: Object.freeze({
+    'dashboard.perimetre': GROUPEMENT,
+    'notification.lire': PROPRE,
+    'tarif.lire': TOUT,
+    'abonnement.lire': GROUPEMENT,
+    'vehicule.lire': GROUPEMENT,
+    'chauffeur.lire': GROUPEMENT,
+    'offre.lire': GROUPEMENT,
+    'appariement.lire': GROUPEMENT,
+    'transport.lire': GROUPEMENT,
+    'marche.demandes': MARCHE,
+    'offre.publier': GROUPEMENT,
+    'offre.retirer': GROUPEMENT,
+    'appariement.proposer': GROUPEMENT,
+    'appariement.repondre': GROUPEMENT,
+    'appariement.annuler': GROUPEMENT,
+  }),
 });
 
 /* ================================================================== *
@@ -599,6 +735,13 @@ export const CLASSIFICATIONS_LISIBLES = Object.freeze({
   dut_transport: Object.freeze([PUBLIC, IDENTITE]),
   activation_inscription: Object.freeze([PUBLIC, IDENTITE]),
   activation_inscription_affreteur: Object.freeze([PUBLIC, IDENTITE]),
+  /* --- Lot b2 : organisation interne --- */
+  intermediaire: LECTURE_MARCHE,
+  collaborateur_intermediaire: LECTURE_MARCHE,
+  // Le contexte délégué ne lit ni les coordonnées (droit absent) ni rien
+  // d'autre que ce qu'un acteur du marché lit sur son propre périmètre.
+  mandataire_affreteur: LECTURE_MARCHE,
+  mandataire_transporteur: LECTURE_MARCHE,
 });
 
 /* ================================================================== *

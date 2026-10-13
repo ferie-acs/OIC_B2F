@@ -251,6 +251,9 @@ export const TYPE_GROUPEMENT = Object.freeze({
   AFFRETEUR: 'affreteur',
   TRANSPORTEUR: 'transporteur',
   INSTITUTION: 'institution',
+  /* --- Lot b2 : organisation interne --- */
+  /** Intermédiaire de fret (auxiliaire), entreprise agissant pour des mandants. */
+  INTERMEDIAIRE: 'intermediaire',
 });
 
 /**
@@ -394,6 +397,59 @@ export const EVENEMENT_AUDIT = Object.freeze({
   CREDIT_SAISI: 'credit_saisi',
   CREDIT_REJETE: 'credit_rejete',
   AVIS_DONNE: 'avis_donne',
+  /* --- Lot b2 : organisation interne --- */
+  UTILISATEUR_CREE: 'utilisateur_cree',
+  UTILISATEUR_MODIFIE: 'utilisateur_modifie',
+  UTILISATEUR_DESACTIVE: 'utilisateur_desactive',
+  UTILISATEUR_REACTIVE: 'utilisateur_reactive',
+  ACCES_REINITIALISE: 'acces_reinitialise',
+  COMPTE_ACTIVE: 'compte_active',
+  FILIALE_CREEE: 'filiale_creee',
+  MANDAT_DESIGNE: 'mandat_designe',
+  MANDAT_RETIRE: 'mandat_retire',
+  MANDAT_OUVERT: 'mandat_ouvert',
+});
+
+/* ------------------------------------------------------------------ *
+ * Lot b2 : organisation interne — mandats d'intermédiaire
+ * ------------------------------------------------------------------ */
+
+/**
+ * État enregistré d'un mandat. Le retrait est définitif : un nouveau mandat se
+ * désigne, un mandat retiré ne se réactive pas (la trace reste lisible).
+ * @readonly
+ * @enum {string}
+ */
+export const ETAT_MANDAT = Object.freeze({
+  ACTIF: 'actif',
+  RETIRE: 'retire',
+});
+
+/**
+ * Statut d'un mandat **à une date donnée**, dérivé de son état et de sa période.
+ * Jamais stocké : l'autorité est la date (comme pour l'abonnement).
+ * @readonly
+ * @enum {string}
+ */
+export const STATUT_MANDAT = Object.freeze({
+  EN_VIGUEUR: 'mandat_en_vigueur',
+  A_VENIR: 'mandat_a_venir',
+  ECHU: 'mandat_echu',
+  RETIRE: 'mandat_retire',
+});
+
+/**
+ * Périmètre d'un mandat : ce que le mandant confie à son intermédiaire.
+ * Les deux premiers valent pour un affréteur, les deux suivants pour un
+ * transporteur. Les droits correspondants sont dans `domain/mandat.js`.
+ * @readonly
+ * @enum {string}
+ */
+export const PERIMETRE_MANDAT = Object.freeze({
+  DECLARER_FRET: 'declarer_fret',
+  GERER_RESERVATIONS: 'gerer_reservations',
+  PROPOSER_VEHICULES: 'proposer_vehicules',
+  REPONDRE_RESERVATIONS: 'repondre_reservations',
 });
 
 /* ------------------------------------------------------------------ *
@@ -508,6 +564,16 @@ export const LIBELLES = Object.freeze({
   [ETAT_CREDIT.CREDITE]: Object.freeze({ [POV.NEUTRE]: 'Validé — compte crédité' }),
   [ETAT_CREDIT.REJETE]: Object.freeze({ [POV.NEUTRE]: 'Rejeté' }),
   [MOTIF_CLOTURE.EXPIRATION]: Object.freeze({ [POV.NEUTRE]: 'Expirée — délai dépassé' }),
+  /* --- Lot b2 : organisation interne --- */
+  [TYPE_GROUPEMENT.INTERMEDIAIRE]: Object.freeze({ [POV.NEUTRE]: 'Intermédiaire de fret' }),
+  [STATUT_MANDAT.EN_VIGUEUR]: Object.freeze({ [POV.NEUTRE]: 'En vigueur' }),
+  [STATUT_MANDAT.A_VENIR]: Object.freeze({ [POV.NEUTRE]: 'À venir' }),
+  [STATUT_MANDAT.ECHU]: Object.freeze({ [POV.NEUTRE]: 'Échu' }),
+  [STATUT_MANDAT.RETIRE]: Object.freeze({ [POV.NEUTRE]: 'Retiré' }),
+  [PERIMETRE_MANDAT.DECLARER_FRET]: Object.freeze({ [POV.NEUTRE]: 'Déclarer du fret et publier des demandes' }),
+  [PERIMETRE_MANDAT.GERER_RESERVATIONS]: Object.freeze({ [POV.NEUTRE]: 'Rechercher et réserver des véhicules' }),
+  [PERIMETRE_MANDAT.PROPOSER_VEHICULES]: Object.freeze({ [POV.NEUTRE]: 'Proposer des véhicules sur les demandes publiées' }),
+  [PERIMETRE_MANDAT.REPONDRE_RESERVATIONS]: Object.freeze({ [POV.NEUTRE]: 'Accepter ou rejeter les réservations reçues' }),
 });
 
 /**

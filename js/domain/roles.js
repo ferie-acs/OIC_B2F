@@ -63,6 +63,9 @@ export const ESPACE = Object.freeze({
   DGTTC: 'dgttc',
   /** Espace minimal : tableau de bord explicite + pages ouvertes par la matrice. */
   MINIMAL: 'minimal',
+  /* --- Lot b2 : organisation interne --- */
+  /** Entreprise intermédiaire de fret : ses mandants, ses utilisateurs. */
+  INTERMEDIAIRE: 'intermediaire',
 });
 
 /**
@@ -76,6 +79,10 @@ export const ESPACE = Object.freeze({
  * @property {boolean} soumisAbonnement   L'accès est bloqué si l'abonnement du groupement a expiré.
  * @property {string} preuve      Fichier du système existant attestant le rôle.
  * @property {string} description
+ * @property {boolean} [delegation]
+ *   Lot b2. Rôle **porté par un contexte délégué**, jamais par un compte : celui
+ *   d'un intermédiaire qui agit au nom d'un mandant. Il n'est attribuable à
+ *   aucun utilisateur (`rolesAttribuables`).
  */
 
 /**
@@ -376,6 +383,90 @@ export const ROLES = Object.freeze({
       "Variante affréteur du profil précédent. Le système existant les distingue " +
       'par deux menus ; le POC conserve la distinction.',
   }),
+
+  /* ================================================================ *
+   * Lot b2 : organisation interne — l'intermédiaire de fret
+   *
+   * Dans le système existant, l'auxiliaire (`id_user_grp = 3`) est une
+   * entreprise à part entière, désignée par plusieurs mandants. Le POC le
+   * modélisait comme un utilisateur du groupement parent (`auxiliaire_*`),
+   * rôles conservés tels quels. Il devient en outre une entreprise de type
+   * « intermédiaire », dont les utilisateurs agissent au nom de leurs mandants
+   * par un contexte délégué (rôles `mandataire_*`), borné par le mandat.
+   * ================================================================ */
+
+  intermediaire: Object.freeze({
+    id: 'intermediaire',
+    libelle: 'Intermédiaire de fret',
+    niveau: NIVEAU.DEMONTRE,
+    espace: ESPACE.INTERMEDIAIRE,
+    legacyGroupe: 3,
+    institutionnel: false,
+    soumisAbonnement: true,
+    preuve:
+      'aiguillage de connexion (id_user_grp = 3 → auxilaffret/, auxiltransp/) ; liste des ' +
+      'mandants (vue/auxilaffret/mesaffreteurs.php, vue/transporteur/listtransp.php) ; ' +
+      'sous-comptes et utilisateurs (vue/param/souscompte.php, vue/param/utilisateur.php)',
+    description:
+      "Responsable d'une entreprise intermédiaire de fret. Consulte ses mandants, agit " +
+      'pour eux dans le périmètre et la période de chaque mandat, et administre les ' +
+      'utilisateurs de son entreprise. **Ne valide jamais** une mise en relation : ' +
+      "l'acte qui engage les frais reste au mandant.",
+  }),
+
+  collaborateur_intermediaire: Object.freeze({
+    id: 'collaborateur_intermediaire',
+    libelle: "Collaborateur d'intermédiaire",
+    niveau: NIVEAU.DEMONTRE,
+    espace: ESPACE.INTERMEDIAIRE,
+    legacyGroupe: 3,
+    institutionnel: false,
+    soumisAbonnement: true,
+    preuve:
+      'profil « simple » d’un utilisateur d’entreprise (vue/param/utilisateur.php : ' +
+      'profil simple ou administrateur), appliqué à l’entreprise intermédiaire',
+    description:
+      'Utilisateur simple de l’entreprise intermédiaire : agit pour les mandants comme ' +
+      'le responsable, sans administrer les utilisateurs.',
+  }),
+
+  mandataire_affreteur: Object.freeze({
+    id: 'mandataire_affreteur',
+    libelle: "Intermédiaire au nom d'un affréteur",
+    niveau: NIVEAU.DECLINE,
+    espace: ESPACE.AFFRETEUR,
+    legacyGroupe: 3,
+    institutionnel: false,
+    soumisAbonnement: true,
+    delegation: true,
+    preuve:
+      'écrans de l’affréteur ouverts à l’auxiliaire de fret pour un affréteur mandant ' +
+      '(vue/affreteur/declaration.php, vue/affreteur/suivredemandetransport.php, ' +
+      'vue/Include/inc_menu_gauche_auxilchargeur.php)',
+    description:
+      "Contexte délégué d'un intermédiaire qui agit au nom d'un affréteur. Déclare, " +
+      'publie, réserve et annule dans le périmètre du mandat ; **ne valide pas** et ne ' +
+      'reçoit aucune coordonnée de contrepartie.',
+  }),
+
+  mandataire_transporteur: Object.freeze({
+    id: 'mandataire_transporteur',
+    libelle: "Intermédiaire au nom d'un transporteur",
+    niveau: NIVEAU.DECLINE,
+    espace: ESPACE.TRANSPORTEUR,
+    legacyGroupe: 3,
+    institutionnel: false,
+    soumisAbonnement: true,
+    delegation: true,
+    preuve:
+      'écrans du transporteur ouverts à l’auxiliaire de transport pour un transporteur ' +
+      'mandant (vue/transporteur/listeDemandeTransport.php, ' +
+      'vue/transporteur/suivreoffretransp.php, vue/Include/inc_menu_gauche_auxiltransporteur.php)',
+    description:
+      "Contexte délégué d'un intermédiaire qui agit au nom d'un transporteur. Propose " +
+      'des véhicules et répond aux réservations dans le périmètre du mandat ; ne reçoit ' +
+      'aucune coordonnée de contrepartie.',
+  }),
 });
 
 /** Nombre de rôles déclarés. Vérifié par test. @type {number} */
@@ -413,4 +504,43 @@ export function rolesDuNiveau(niveau) {
  */
 export function soumisAbonnement(id) {
   return role(id).soumisAbonnement;
+}
+
+/* ================================================================== *
+ * Lot b2 : organisation interne — rôles attribuables par l'entreprise
+ * ================================================================== */
+
+/**
+ * Rôles qu'un administrateur d'entreprise peut attribuer à ses utilisateurs,
+ * **selon le type de son entreprise**. Aucun rôle institutionnel, aucun rôle de
+ * délégation n'y figure : un administrateur d'entreprise ne s'attribue jamais un
+ * rôle OIC. Le premier rôle de chaque liste est celui de plein exercice.
+ * @type {Readonly<Record<string, ReadonlyArray<string>>>}
+ */
+export const ROLES_PAR_TYPE_ENTREPRISE = Object.freeze({
+  affreteur: Object.freeze(['affreteur', 'auxiliaire_affreteur']),
+  transporteur: Object.freeze(['transporteur', 'auxiliaire_transporteur', 'partenaire']),
+  intermediaire: Object.freeze(['intermediaire', 'collaborateur_intermediaire']),
+});
+
+/** Variantes de plein exercice du transporteur : un régime d'entreprise. */
+const VARIANTES_TRANSPORTEUR = Object.freeze(['transporteur_prive', 'transporteur_etranger']);
+
+/**
+ * Rôles attribuables par un administrateur, pour son type d'entreprise.
+ *
+ * Un transporteur privé ou étranger reste dans son régime : le rôle de plein
+ * exercice proposé est le sien, pas celui du transporteur national.
+ *
+ * @param {string} typeEntreprise Valeur de `TYPE_GROUPEMENT`.
+ * @param {string} [roleAdministrateur] Rôle de celui qui attribue.
+ * @returns {string[]} Vide pour une institution ou un type inconnu.
+ */
+export function rolesAttribuables(typeEntreprise, roleAdministrateur) {
+  const base = ROLES_PAR_TYPE_ENTREPRISE[typeEntreprise];
+  if (!base) return [];
+  if (typeEntreprise === 'transporteur' && VARIANTES_TRANSPORTEUR.includes(roleAdministrateur)) {
+    return base.map((r) => (r === 'transporteur' ? roleAdministrateur : r));
+  }
+  return [...base];
 }

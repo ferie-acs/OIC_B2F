@@ -244,6 +244,18 @@ export function repondre(ctx, appariementId, { accepte, motif, precision }) {
 
   const decision = deciderSurAppariement(ctx, action, a);
   if (!decision.autorise) throw new RefusMetier([decision.explication]);
+  // Lot b2 : un intermédiaire ne répond pas, au nom du transporteur, à une
+  // réservation que son entreprise a préparée au nom de l'affréteur — il
+  // serait juge et partie. La réponse revient alors au transporteur lui-même.
+  if (ctx.mandat) {
+    const auteur = depot('utilisateur').brutParId(a.reserveParUtilisateurId);
+    if (auteur?.groupementId === ctx.mandat.intermediaireGroupementId) {
+      throw new RefusMetier([
+        'Votre entreprise a préparé cette réservation au nom de l’affréteur : la réponse ' +
+          'revient au transporteur lui-même.',
+      ]);
+    }
+  }
   // La précision accompagne le rejet jusqu'à l'affréteur, avant toute validation :
   // elle ne doit pas devenir un canal pour des coordonnées (correctif n° 1).
   try {

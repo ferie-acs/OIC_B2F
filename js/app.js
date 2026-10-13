@@ -34,6 +34,10 @@ import { explorer } from './views/explorer.js';
 import { documentsDut } from './views/dut.js';
 import { retourPublic, routeActionPublique, routePublication } from './services/marche-public.service.js';
 import { reprendreFileDut } from './services/passerelle-dut.service.js';
+// Lot b2 : organisation interne
+import * as organisation from './views/organisation.js';
+import * as intermediaire from './views/intermediaire.js';
+import { completerJeuLotB2 } from './seed-lot-b2.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -100,6 +104,22 @@ function declarerRoutes() {
   declarer('minimal/groupements', supervision.groupements);
   declarer('minimal/verifications', verifications);
   declarer('minimal/duts', documentsDut);
+
+  // --- Lot b2 : organisation interne ---------------------------------
+  // Les écrans « Utilisateurs » deviennent administrables (même route).
+  declarer('affreteur/utilisateurs', organisation.utilisateurs);
+  declarer('transporteur/utilisateurs', organisation.utilisateurs);
+  declarer('affreteur/filiales', organisation.filialesEtEntites);
+  declarer('transporteur/filiales', organisation.filialesEtEntites);
+  declarer('affreteur/intermediaires', organisation.intermediaires);
+  declarer('transporteur/intermediaires', organisation.intermediaires);
+  declarer('intermediaire/dashboard', intermediaire.dashboard);
+  declarer('intermediaire/notifications', commun.notifications);
+  declarer('intermediaire/mandants', intermediaire.mandants);
+  declarer('intermediaire/abonnement', commun.abonnement);
+  declarer('intermediaire/groupement', intermediaire.ficheEntreprise);
+  declarer('intermediaire/filiales', organisation.filialesEtEntites);
+  declarer('intermediaire/utilisateurs', organisation.utilisateurs);
 }
 
 /* ------------------------------------------------------------------ *
@@ -213,6 +233,7 @@ async function demarrerApplication() {
 
   if (!dejaAmorce()) await amorcer();
   await completerJeuAntiFraude();
+  await completerJeuLotB2(); // Lot b2 : intermédiaire, mandats, filiale de démonstration
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();
