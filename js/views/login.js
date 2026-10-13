@@ -73,7 +73,14 @@ export function login(surConnexion, { retour = '#/explorer', intention } = {}) {
       attrs: { autocomplete: 'username', placeholder: 'vous@entreprise.ci' },
     }),
     motDePasse,
+    // Lot b1 : récupération du mot de passe.
+    el('p.b1-lien-oubli', {}, [el('a', { href: '#/mot-de-passe-oublie', text: 'Mot de passe oublié ?' })]),
     el('button.btn.btn-primary.btn-block.btn-lg', { type: 'submit', text: 'Se connecter' }),
+    // Lot b1 : inscription en ligne.
+    el('p.auth-public-link', {}, [
+      el('span', { text: 'Votre entreprise n’a pas encore de compte ? ' }),
+      el('a', { href: '#/inscription', text: 'Inscrire mon entreprise' }),
+    ]),
 
     el('p.auth-public-link', {}, [
       el('span', { text: 'Envie de découvrir les offres ? ' }),
@@ -106,6 +113,12 @@ export function login(surConnexion, { retour = '#/explorer', intention } = {}) {
         'Les comptes de démonstration partagent le mot de passe « ' +
         `${MOT_DE_PASSE_DEMO} ». Toutes les données sont fictives.`,
     }),
+    // Lot b1 : les courriels et SMS simulés se lisent ici.
+    el('p.auth-note', {}, [
+      el('span', { text: 'Courriels et SMS sont simulés : ' }),
+      el('a', { href: '#/boite-simulee', text: 'ouvrir la boîte de réception simulée' }),
+      el('span', { text: '.' }),
+    ]),
     ]),
     ]),
   ]);

@@ -15,6 +15,8 @@ import { liberationsDe } from '../domain/access.js';
 import { role, soumisAbonnement } from '../domain/roles.js';
 import { depot } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
+import { ETAT_INSCRIPTION } from '../domain/enums.js';
+import { etatInscription } from '../domain/inscription.js';
 
 /** Clé de session. Le préfixe vient de `core/storage.js` : une seule fabrique
  *  de clés dans tout le POC, pour que la parade du risque R5 reste vérifiable
@@ -64,6 +66,10 @@ export function contexteDe(utilisateur) {
     groupementId: g,
     compteActif: utilisateur.etat === ETAT_COMPTE.ACTIF,
     abonnementActif: soumisAbonnement(utilisateur.roleId) ? abo.actif : true,
+    // Lot b1 : une entreprise inscrite non activée n'ouvre que son dossier.
+    inscriptionActivee: inscriptionActiveeDe(g),
+    // Lot b1 : type de l'entreprise, pour adapter les textes d'aide (intermédiaire de fret).
+    groupementType: g ? depot('groupement').brutParId(g)?.type ?? null : null,
     objetsLiberes: liberationsDe({
       groupementId: g,
       appariements: depot('appariement').brutTous(),
@@ -159,6 +165,9 @@ export function deconnecter() {
  */
 export function blocageAbonnement(ctx) {
   if (!soumisAbonnement(ctx.roleId)) return { bloque: false, finitLe: null };
+  // Lot b1 : avant activation, il n'y a pas encore d'abonnement à renouveler ;
+  // la restriction à « Mon dossier » est portée par `decider()`.
+  if (ctx.inscriptionActivee === false) return { bloque: false, finitLe: null };
   const abo = abonnementDe(ctx.groupementId);
   return { bloque: !abo.actif, finitLe: abo.finitLe };
 }
@@ -172,6 +181,18 @@ export function profil(ctx) {
   return depot('utilisateur').lire(ctx, ctx.utilisateurId, {
     proprietaireId: ctx.groupementId,
   });
+}
+
+/**
+ * Lot b1 — l'inscription du groupement est-elle activée ? Absent vaut activée :
+ * groupements institutionnels et groupements antérieurs à l'inscription en ligne.
+ * @param {string|null} groupementId
+ * @returns {boolean}
+ */
+function inscriptionActiveeDe(groupementId) {
+  if (!groupementId) return true;
+  const g = depot('groupement').brutParId(groupementId);
+  return etatInscription(g) === ETAT_INSCRIPTION.ACTIVEE;
 }
 
 /** Les états d'abonnement du POC, pour l'écran dédié. */

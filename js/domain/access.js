@@ -62,6 +62,8 @@ export const MOTIF_REFUS = Object.freeze({
   COMPTE_SUSPENDU: 'compte_suspendu',
   COORDONNEES_NON_LIBEREES: 'coordonnees_non_liberees',
   PARTIE_NON_HABILITEE: 'partie_non_habilitee',
+  /* Lot b1 */
+  INSCRIPTION_EN_ATTENTE: 'inscription_en_attente',
 });
 
 /**
@@ -114,8 +116,15 @@ const accord = (portee) => Object.freeze({ ...AUTORISE, portee });
  * POC reproduit ce comportement, en laissant de quoi comprendre et agir.
  */
 const DROITS_HORS_ABONNEMENT = Object.freeze(
-  new Set(['abonnement.lire', 'notification.lire', 'groupement.lire']),
+  new Set(['abonnement.lire', 'notification.lire', 'groupement.lire',
+    /* Lot b1 : le dossier reste consultable */ 'inscription.lire', 'inscription.deposer']),
 );
+
+/**
+ * Lot b1 — droits d'une entreprise inscrite dont le compte n'est pas encore
+ * activé : son dossier, et rien d'autre. Ni marché, ni compte, ni abonnement.
+ */
+const DROITS_AVANT_ACTIVATION = Object.freeze(new Set(['inscription.lire', 'inscription.deposer']));
 
 /**
  * Décide si un utilisateur peut exercer un droit, éventuellement sur un objet.
@@ -143,6 +152,18 @@ export function decider(ctx, droit, cible = undefined) {
     );
   }
 
+  // Lot b1 : une entreprise inscrite non encore activée n'accède qu'à son dossier.
+  // `undefined` vaut « activée » : un contexte antérieur à l'inscription en ligne.
+  if (ctx.inscriptionActivee === false) {
+    return DROITS_AVANT_ACTIVATION.has(droit)
+      ? deciderPortee(ctx, r, droit, cible)
+      : refus(
+          MOTIF_REFUS.INSCRIPTION_EN_ATTENTE,
+          'Votre compte n’est pas encore activé. Tant que l’agent d’activation n’a pas ' +
+            'contrôlé votre dossier, seul l’espace « Mon dossier » vous est ouvert.',
+        );
+  }
+
   if (r.soumisAbonnement && !ctx.abonnementActif && !DROITS_HORS_ABONNEMENT.has(droit)) {
     return refus(
       MOTIF_REFUS.ABONNEMENT_EXPIRE,
@@ -151,6 +172,20 @@ export function decider(ctx, droit, cible = undefined) {
     );
   }
 
+  return deciderPortee(ctx, r, droit, cible);
+}
+
+/**
+ * Seconde moitié de {@link decider} : la portée du droit et le cloisonnement par
+ * objet. Isolée par le lot b1 pour être partagée avec le cas « compte en attente
+ * d'activation », sans dupliquer la règle.
+ * @param {Contexte} ctx
+ * @param {Readonly<any>} r Rôle.
+ * @param {string} droit
+ * @param {any} cible
+ * @returns {Decision}
+ */
+function deciderPortee(ctx, r, droit, cible) {
   const portee = porteeDe(ctx.roleId, droit);
   if (portee === PORTEE.AUCUNE) {
     // Correctif QA-05. Le message nommait le droit manquant — exact, mais

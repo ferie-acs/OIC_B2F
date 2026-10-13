@@ -22,7 +22,8 @@ function iconePage(route, fallback = 'dashboard') {
     suivi:'truck',vehicules:'truck',offres:'truck',compte:'wallet',comptes:'wallet',
     tarifs:'wallet',abonnement:'wallet',abonnements:'wallet',groupement:'building',
     groupements:'building',utilisateurs:'users',roles:'users',chauffeurs:'users',
-    dut:'file',duts:'file',audit:'history',etats:'shield',parametres:'settings'})[page] ?? fallback;
+    dut:'file',duts:'file',audit:'history',etats:'shield',parametres:'settings',
+    /* Lot b1 */ dossier:'file',profil:'user',messages:'mail',messagerie:'mail',verifications:'shield'})[page] ?? fallback;
 }
 
 /** Clé du thème. **Jamais `dut_theme`** : une collision effacerait celui du DUT. */
@@ -169,7 +170,7 @@ function barreLaterale({ ctx, zones, zone, pageActive, espace, r, moi, surDeconn
           }, [icone(iconePage(p.route, z.icone),18), el('span', { text: p.libelle })]),
         )),
       ])),
-      aideContextuelle(r.id),
+      aideContextuelle(r.id, ctx),
     ]),
     el('div.sidebar-footer', {}, [
       el('span.avatar-round', { text: initiales(moi, r) }),
@@ -177,6 +178,8 @@ function barreLaterale({ ctx, zones, zone, pageActive, espace, r, moi, surDeconn
         el('strong', { text: moi ? `${moi.prenom ?? ''} ${moi.nom}`.trim() : 'Utilisateur' }),
         el('span', { text: r.libelle }),
       ]),
+      // Lot b1 : profil, atteignable aussi sur petit écran.
+      el('a.icon-btn-ghost', { href: `#/${espace}/profil`, title: 'Mon profil', 'aria-label': 'Mon profil' }, [icone('user', 17)]),
       el('button.icon-btn-ghost', {
         type: 'button',
         title: 'Déconnexion',
@@ -199,7 +202,18 @@ function initiales(moi, r) {
  * énoncé et non masqué : masqué, le refus par défaut passerait pour un bug.
  * @param {string} roleId
  */
-function aideContextuelle(roleId) {
+function aideContextuelle(roleId, ctx = null) {
+  // Lot b1 : compte en attente d'activation, puis intermédiaire de fret inscrit.
+  const propre = ctx?.inscriptionActivee === false
+    ? 'Votre compte est activé par l’OIC après le contrôle de chaque pièce obligatoire de votre ' +
+      'dossier. Suivez ici l’avancement du contrôle et répondez aux demandes de complément.'
+    : ctx?.groupementType === 'intermediaire'
+      ? 'Intermédiaire de fret : vous organisez le transport pour le compte de chargeurs. ' +
+        'La validation d’une mise en relation, qui engage leurs finances, revient au chargeur.'
+      : null;
+  if (propre) {
+    return el('aside.sidebar-note', {}, [icone('info', 15), el('strong', { text: 'À retenir' }), el('p', { text: propre })]);
+  }
   const textes = {
     affreteur:
       'Publier une demande ne coûte rien. Les frais de mise en relation ne sont ' +
@@ -221,6 +235,10 @@ function aideContextuelle(roleId) {
     activation_inscription:
       'Aucun transporteur ne s’engage sur le marché sans votre contrôle : dossier, ' +
       'cartes grises, permis. Vous ne voyez ni soldes ni coordonnées de contact.',
+    // Lot b1 : agent d'activation des affréteurs et intermédiaires de fret.
+    activation_inscription_affreteur:
+      'Vous contrôlez les dossiers des affréteurs et des intermédiaires de fret. ' +
+      'L’activation revient à un autre agent que celui qui a déclaré les pièces conformes.',
   };
   const defaut =
     'Aucun droit métier n’est accordé à ce rôle dans ce POC : caisse, contentieux ' +
@@ -274,13 +292,21 @@ function barreSuperieure({ ctx, titre, zone, moi, r }) {
         title: 'Thème clair / sombre',
         on: { click: basculerTheme },
       }, [icone('sun', 18)]),
+      // Lot b1 : messages (courriels et SMS simulés) adressés à l'utilisateur.
+      el('a', {
+        class: 'icon-btn-ghost',
+        href: `#/${segmentEspace(ctx)}/messages`,
+        'aria-label': 'Mes messages',
+        title: 'Mes messages',
+      }, [icone('mail', 18)]),
       el('a', {
         class: 'icon-btn-ghost',
         href: `#/${segmentEspace(ctx)}/notifications`,
         'aria-label': compte > 0 ? `${compte} notification(s) non lue(s)` : 'Notifications',
         title: compte > 0 ? `${compte} non lue(s)` : 'Notifications',
       }, [icone('bell', 18)]),
-      el('div.topbar-profile', {}, [
+      // Lot b1 : le bloc d'identité ouvre « Mon profil ».
+      el('a.topbar-profile', { href: `#/${segmentEspace(ctx)}/profil`, title: 'Mon profil' }, [
         el('span.avatar-round', { text: initiales(moi, r) }),
         el('div', {}, [el('strong', { text: moi ? `${moi.prenom ?? ''} ${moi.nom}`.trim() : r.libelle }), el('small', { text: r.libelle })]),
       ]),
@@ -295,6 +321,14 @@ function barreSuperieure({ ctx, titre, zone, moi, r }) {
  */
 function bandeauDelegation(ctx) {
   if (!ctx.roleId.startsWith('auxiliaire_')) return null;
+  // Lot b1 : un intermédiaire de fret inscrit n'est pas le sous-compte d'un groupement.
+  if (ctx.groupementType === 'intermediaire') {
+    return el('div.delegation-bar', {}, [
+      icone('users', 16),
+      el('strong', { text: 'Intermédiaire de fret' }),
+      el('span', { text: 'Vous agissez pour le compte de chargeurs. Les actions qui engagent leurs finances ne vous sont pas accessibles.' }),
+    ]);
+  }
   return el('div.delegation-bar', {}, [
     icone('users', 16),
     el('strong', { text: 'Délégation' }),
