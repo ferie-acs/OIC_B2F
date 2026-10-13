@@ -215,7 +215,7 @@ export function offres(ctx) {
       ],
       corps: [
         el('div.carrier-card-grid',{},liste.length ? liste.map(o=>el('article.carrier-offer-card',{},[
-          el('div.carrier-card-top',{},[el('strong',{text:o.reference}),badge(o.etat,POV.TRANSPORTEUR)]),
+          el('div.carrier-card-top',{},[el('strong',{text:o.reference}),badge(o.statutAffiche ?? o.etat,POV.TRANSPORTEUR)]), // Intégration : sens B
           el('div.carrier-vehicle',{},[camion(o,100),el('div',{},[el('h3',{text:immatriculationDe(ctx, o.vehiculeId)}),el('span',{text:libelleTrajet(o)})])]),
           el('div.carrier-route',{},[el('div',{},[el('small',{text:'DÉPART'}),el('strong',{text:refDe(o.localiteDepartId)})]),icone('arrow-right',22),el('div',{},[el('small',{text:'ARRIVÉE'}),el('strong',{text:refDe(o.localiteArriveeId)})])]),
           el('p.carrier-dates',{},[icone('calendar',18),`${date(o.disponibleDu)} → ${date(o.disponibleAu)}`]),

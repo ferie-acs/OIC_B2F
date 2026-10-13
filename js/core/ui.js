@@ -66,6 +66,8 @@ export function badge(valeur, pov = POV.NEUTRE) {
     piece_remplacee: 'neutral',
     message_simule: 'success',
     message_non_remis: 'error',
+    // Intégration : offre proposée par le transporteur (sens B)
+    offre_proposee: 'warning',
   };
   const icones = {
     valider: 'check-circle',
@@ -96,6 +98,7 @@ export function badge(valeur, pov = POV.NEUTRE) {
     piece_non_conforme: 'x',
     message_simule: 'check',
     message_non_remis: 'alert',
+    offre_proposee: 'clock', // Intégration
   };
   const ton = tons[valeur] ?? 'neutral';
   // `labelOf` lève si la valeur n'a pas de libellé : un statut brut à l'écran
