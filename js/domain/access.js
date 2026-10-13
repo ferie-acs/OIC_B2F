@@ -62,6 +62,8 @@ export const MOTIF_REFUS = Object.freeze({
   COMPTE_SUSPENDU: 'compte_suspendu',
   COORDONNEES_NON_LIBEREES: 'coordonnees_non_liberees',
   PARTIE_NON_HABILITEE: 'partie_non_habilitee',
+  // Lot b5 : entreprise suspendue par l'exploitant.
+  GROUPEMENT_SUSPENDU: 'groupement_suspendu',
 });
 
 /**
@@ -140,6 +142,16 @@ export function decider(ctx, droit, cible = undefined) {
     return refus(
       MOTIF_REFUS.COMPTE_SUSPENDU,
       'Votre compte est suspendu. Contactez le concessionnaire pour le rétablir.',
+    );
+  }
+
+  // Lot b5 : une entreprise suspendue garde la consultation de son historique,
+  // mais n'engage plus aucune opération. Signaler un incident reste possible.
+  if (ctx.groupementSuspendu === true && DROITS[droit].mutation === true && droit !== 'incident.declarer') {
+    return refus(
+      MOTIF_REFUS.GROUPEMENT_SUSPENDU,
+      'Votre entreprise est suspendue par l’exploitant de la plateforme : vous consultez ' +
+        'votre historique, mais aucune nouvelle opération n’est possible.',
     );
   }
 

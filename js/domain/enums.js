@@ -394,6 +394,79 @@ export const EVENEMENT_AUDIT = Object.freeze({
   CREDIT_SAISI: 'credit_saisi',
   CREDIT_REJETE: 'credit_rejete',
   AVIS_DONNE: 'avis_donne',
+  /* --- Lot b5 : administration OIC et espace DGTTC --- */
+  AGENT_CREE: 'agent_cree',
+  AGENT_MODIFIE: 'agent_modifie',
+  AGENT_DESACTIVE: 'agent_desactive',
+  AGENT_REACTIVE: 'agent_reactive',
+  ACCES_REINITIALISE: 'acces_reinitialise',
+  ACCES_RETABLI: 'acces_retabli',
+  HABILITATION_MODIFIEE: 'habilitation_modifiee',
+  GROUPEMENT_MODIFIE: 'groupement_modifie',
+  DECISION_GROUPEMENT_DEMANDEE: 'decision_groupement_demandee',
+  GROUPEMENT_SUSPENDU: 'groupement_suspendu',
+  GROUPEMENT_REACTIVE: 'groupement_reactive',
+  DECISION_GROUPEMENT_REJETEE: 'decision_groupement_rejetee',
+  REFERENTIEL_AJOUTE: 'referentiel_ajoute',
+  REFERENTIEL_MODIFIE: 'referentiel_modifie',
+  REFERENTIEL_DESACTIVE: 'referentiel_desactive',
+  REFERENTIEL_REACTIVE: 'referentiel_reactive',
+  REFERENTIEL_SUPPRIME: 'referentiel_supprime',
+  INCIDENT_DECLARE: 'incident_declare',
+  INCIDENT_QUALIFIE: 'incident_qualifie',
+  INCIDENT_ATTRIBUE: 'incident_attribue',
+  INCIDENT_SUIVI: 'incident_suivi',
+  INCIDENT_CLOS: 'incident_clos',
+  FLUX_OFFRES_GENERE: 'flux_offres_genere',
+  EXPORT_CSV: 'export_csv',
+});
+
+/* ------------------------------------------------------------------ *
+ * Lot b5 : administration OIC et espace DGTTC
+ * ------------------------------------------------------------------ */
+
+/**
+ * Catégorie d'un incident applicatif — un défaut de la plateforme, à ne pas
+ * confondre avec un incident de transport (`NATURE_INCIDENT`).
+ * @readonly
+ * @enum {string}
+ */
+export const CATEGORIE_INCIDENT_APP = Object.freeze({
+  CONNEXION: 'acces_connexion',
+  AFFICHAGE: 'affichage',
+  DONNEES: 'donnees_erronees',
+  PAIEMENT: 'paiement_compte',
+  LENTEUR: 'lenteur',
+  AUTRE: 'autre_incident',
+});
+
+/** Gravité d'un incident applicatif. @readonly @enum {string} */
+export const GRAVITE_INCIDENT_APP = Object.freeze({
+  MINEURE: 'mineure',
+  MAJEURE: 'majeure',
+  BLOQUANTE: 'bloquante',
+});
+
+/** Cycle de traitement d'un incident applicatif. @readonly @enum {string} */
+export const ETAT_INCIDENT_APP = Object.freeze({
+  NOUVEAU: 'nouveau',
+  QUALIFIE: 'qualifie',
+  EN_COURS: 'en_traitement',
+  RESOLU: 'resolu',
+  CLOS: 'clos',
+});
+
+/** Décision de suspension ou de réactivation d'une entreprise (quatre yeux). @readonly @enum {string} */
+export const ACTION_GROUPEMENT = Object.freeze({
+  SUSPENDRE: 'suspendre',
+  REACTIVER: 'reactiver',
+});
+
+/** État d'une décision soumise à confirmation. @readonly @enum {string} */
+export const ETAT_DECISION = Object.freeze({
+  EN_ATTENTE: 'en_attente',
+  CONFIRMEE: 'confirmee',
+  REJETEE: 'rejete',
 });
 
 /* ------------------------------------------------------------------ *
@@ -508,6 +581,24 @@ export const LIBELLES = Object.freeze({
   [ETAT_CREDIT.CREDITE]: Object.freeze({ [POV.NEUTRE]: 'Validé — compte crédité' }),
   [ETAT_CREDIT.REJETE]: Object.freeze({ [POV.NEUTRE]: 'Rejeté' }),
   [MOTIF_CLOTURE.EXPIRATION]: Object.freeze({ [POV.NEUTRE]: 'Expirée — délai dépassé' }),
+  /* --- Lot b5 : administration OIC et espace DGTTC --- */
+  [CATEGORIE_INCIDENT_APP.CONNEXION]: Object.freeze({ [POV.NEUTRE]: 'Accès ou connexion' }),
+  [CATEGORIE_INCIDENT_APP.AFFICHAGE]: Object.freeze({ [POV.NEUTRE]: 'Écran ou affichage' }),
+  [CATEGORIE_INCIDENT_APP.DONNEES]: Object.freeze({ [POV.NEUTRE]: 'Données erronées' }),
+  [CATEGORIE_INCIDENT_APP.PAIEMENT]: Object.freeze({ [POV.NEUTRE]: 'Compte ou paiement' }),
+  [CATEGORIE_INCIDENT_APP.LENTEUR]: Object.freeze({ [POV.NEUTRE]: 'Lenteur ou indisponibilité' }),
+  [CATEGORIE_INCIDENT_APP.AUTRE]: Object.freeze({ [POV.NEUTRE]: 'Autre' }),
+  [GRAVITE_INCIDENT_APP.MINEURE]: Object.freeze({ [POV.NEUTRE]: 'Mineure' }),
+  [GRAVITE_INCIDENT_APP.MAJEURE]: Object.freeze({ [POV.NEUTRE]: 'Majeure' }),
+  [GRAVITE_INCIDENT_APP.BLOQUANTE]: Object.freeze({ [POV.NEUTRE]: 'Bloquante' }),
+  [ETAT_INCIDENT_APP.NOUVEAU]: Object.freeze({ [POV.NEUTRE]: 'Nouveau' }),
+  [ETAT_INCIDENT_APP.QUALIFIE]: Object.freeze({ [POV.NEUTRE]: 'Qualifié' }),
+  [ETAT_INCIDENT_APP.EN_COURS]: Object.freeze({ [POV.NEUTRE]: 'En traitement' }),
+  [ETAT_INCIDENT_APP.RESOLU]: Object.freeze({ [POV.NEUTRE]: 'Résolu' }),
+  [ETAT_INCIDENT_APP.CLOS]: Object.freeze({ [POV.NEUTRE]: 'Clos' }),
+  [ACTION_GROUPEMENT.SUSPENDRE]: Object.freeze({ [POV.NEUTRE]: 'Suspension' }),
+  [ACTION_GROUPEMENT.REACTIVER]: Object.freeze({ [POV.NEUTRE]: 'Réactivation' }),
+  [ETAT_DECISION.CONFIRMEE]: Object.freeze({ [POV.NEUTRE]: 'Confirmée' }),
 });
 
 /**

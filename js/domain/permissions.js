@@ -293,6 +293,72 @@ export const DROITS = Object.freeze({
   'dut.lire': { categorie: 'DUT', libelle: 'Consulter les DUT générés' },
   'dut.generer': { categorie: 'DUT', libelle: 'Générer un DUT' , mutation: true },
   'notification.lire': { categorie: 'Annexes', libelle: 'Consulter ses notifications' },
+
+  /* --- Lot b5 : administration OIC et espace DGTTC -------------- */
+  'agent.gerer': {
+    mutation: true,
+    categorie: 'Administration',
+    libelle: 'Gérer les comptes des agents OIC',
+    refus: 'La gestion des comptes du back-office relève de l’administrateur de la plateforme.',
+    note:
+      'Créer, modifier, désactiver, réactiver un compte d’agent OIC et réinitialiser son accès. ' +
+      'Le service refuse en outre qu’un administrateur change son propre rôle ou se désactive, ' +
+      'et qu’il ne reste plus aucun administrateur actif.',
+  },
+  'habilitation.parametrer': {
+    mutation: true,
+    categorie: 'Administration',
+    libelle: 'Paramétrer les habilitations des profils',
+    note:
+      'Activer ou retirer, avec motif, un droit déclaré paramétrable (DROITS_PARAMETRABLES) ' +
+      'pour un profil institutionnel. Aucun droit de validation, de crédit, de vérification ' +
+      'ou d’activation n’est paramétrable.',
+  },
+  'groupement.suspendre': {
+    mutation: true,
+    categorie: 'Acteurs',
+    libelle: 'Suspendre ou réactiver une entreprise',
+    refus: 'La suspension d’une entreprise relève de l’exploitant de la plateforme.',
+    note:
+      'Quatre yeux : la décision demandée par un agent est confirmée par une autre personne. ' +
+      'Une entreprise suspendue conserve son historique mais n’engage plus aucune opération.',
+  },
+  'referentiel.gerer': {
+    mutation: true,
+    categorie: 'Administration',
+    libelle: 'Gérer les référentiels nationaux',
+    note: 'Ajouter, modifier, désactiver une valeur. Aucune suppression d’une valeur déjà utilisée.',
+  },
+  'incident.declarer': {
+    mutation: true,
+    categorie: 'Assistance',
+    libelle: 'Signaler un incident sur la plateforme',
+    note: 'Incident applicatif, distinct des incidents de transport. Chacun suit ses propres signalements.',
+  },
+  'incident.traiter': {
+    mutation: true,
+    categorie: 'Assistance',
+    libelle: 'Qualifier, attribuer et traiter les incidents',
+  },
+  'flux.offres': {
+    categorie: 'Administration',
+    libelle: 'Générer le flux public des offres',
+    note: 'Le flux ne porte aucune donnée d’identité ni de contact.',
+  },
+  'export.donnees': {
+    categorie: 'Pilotage',
+    libelle: 'Exporter des listes au format CSV',
+    note: 'Les colonnes exportées suivent la projection du rôle : aucun montant pour la DGTTC.',
+  },
+  'institution.utilisateurs': {
+    mutation: true,
+    categorie: 'Administration',
+    libelle: 'Gérer les comptes de son institution',
+    refus: 'La gestion des comptes de l’institution relève de son administrateur.',
+    note:
+      'Ouvert à la DGTTC dans son seul périmètre. Le service exige en outre que la personne ' +
+      'soit désignée administrateur de son institution.',
+  },
 });
 
 /* ================================================================== *
@@ -309,6 +375,8 @@ const SOCLE_MARCHE = Object.freeze({
   'tarif.lire': TOUT,
   'abonnement.lire': GROUPEMENT,
   'groupement.lire': GROUPEMENT,
+  // Lot b5 : signaler un incident applicatif.
+  'incident.declarer': PROPRE,
 });
 
 /** Droits de l'affréteur de plein exercice. */
@@ -457,6 +525,15 @@ export const MATRICE = Object.freeze({
     'audit.lire': TOUT,
     'dut.lire': TOUT,
     'notification.lire': PROPRE,
+    // Lot b5 : administration OIC.
+    'agent.gerer': TOUT,
+    'habilitation.parametrer': TOUT,
+    'groupement.suspendre': TOUT,
+    'referentiel.gerer': TOUT,
+    'incident.declarer': PROPRE,
+    'incident.traiter': TOUT,
+    'flux.offres': TOUT,
+    'export.donnees': TOUT,
   }),
 
   /**
@@ -477,6 +554,10 @@ export const MATRICE = Object.freeze({
     'dashboard.activite': TOUT,
     'audit.lire': TOUT,
     'notification.lire': PROPRE,
+    // Lot b5 : exports sans montant, signalement d'incident, comptes de l'institution.
+    'export.donnees': TOUT,
+    'incident.declarer': PROPRE,
+    'institution.utilisateurs': GROUPEMENT,
   }),
 
   /* ---- Niveau 2 — déclinés de l'espace Transporteur ----------- */
@@ -508,6 +589,8 @@ export const MATRICE = Object.freeze({
     'coordonnees.lire': GROUPEMENT,
     'dut.lire': GROUPEMENT,
     'dut.generer': GROUPEMENT,
+    // Lot b5 : signaler un incident applicatif.
+    'incident.declarer': PROPRE,
   }),
 
   /* ---- Niveau 3 — modélisés ----------------------------------- *
@@ -672,6 +755,9 @@ export function porteeDe(roleId, droit) {
   if (!DROITS[droit]) {
     throw new Error(`Droit inconnu : « ${droit} ». Voir le catalogue DROITS.`);
   }
+  // Lot b5 : un paramétrage encadré peut ajuster un droit déclaré paramétrable.
+  const parametre = PARAMETRAGE.get(cleParametrage(roleId, droit));
+  if (parametre !== undefined) return parametre;
   return MATRICE[roleId]?.[droit] ?? PORTEE.AUCUNE;
 }
 
@@ -708,7 +794,8 @@ export function droitsDuRole(roleId) {
   if (!ROLES[roleId]) {
     throw new Error(`Rôle inconnu : « ${roleId} ». Voir js/domain/roles.js.`);
   }
-  const table = MATRICE[roleId] ?? {};
+  // Lot b5 : la table effective intègre le paramétrage encadré.
+  const table = tableEffective(roleId);
   /** @type {Record<string, Array<object>>} */
   const parCategorie = {};
   for (const [droit, portee] of Object.entries(table)) {
@@ -725,4 +812,149 @@ export function droitsDuRole(roleId) {
  */
 export function droitsSensibles() {
   return Object.keys(DROITS).filter((d) => DROITS[d].teste === true);
+}
+
+/* ================================================================== *
+ * Lot b5 : paramétrage encadré des habilitations
+ * ================================================================== */
+
+/**
+ * Droits que l'administrateur peut activer ou retirer pour un profil.
+ *
+ * **Uniquement des droits de consultation**, sans incidence financière ni
+ * coordonnée : le second verrou (`CLASSIFICATIONS_LISIBLES`) n'est jamais
+ * paramétrable, si bien qu'un profil qui reçoit `appariement.lire` ne voit que
+ * les classifications que sa conception lui ouvre.
+ * @type {ReadonlyArray<string>}
+ */
+export const DROITS_PARAMETRABLES = Object.freeze([
+  'declaration.lire',
+  'demande.lire',
+  'vehicule.lire',
+  'offre.lire',
+  'appariement.lire',
+  'transport.lire',
+  'groupement.lire',
+  'dashboard.activite',
+  'controle.etats',
+  'audit.lire',
+  'dut.lire',
+]);
+
+/**
+ * Droits qui portent les règles anti-fraude : jamais paramétrables, ni pour les
+ * donner ni pour les retirer. La valeur est la règle protégée, servie au refus.
+ * @type {Readonly<Record<string, string>>}
+ */
+export const DROITS_VERROUILLES = Object.freeze({
+  'appariement.valider': 'la validation d’une mise en relation',
+  'compte.crediter': 'la saisie des crédits',
+  'compte.valider_credit': 'la validation des crédits par une seconde personne',
+  'groupement.verifier': 'la vérification des transporteurs',
+  'groupement.suspendre': 'la suspension des entreprises',
+  'coordonnees.lire': 'la transmission des coordonnées',
+  'coordonnees.exception': 'l’accès exceptionnel aux coordonnées',
+  'appariement.expirer': 'l’expiration automatique des mises en relation',
+  'agent.gerer': 'la gestion des comptes du back-office',
+  'habilitation.parametrer': 'le paramétrage des habilitations',
+});
+
+// Garde-fou de chargement : une entrée paramétrable qui toucherait une règle
+// de conception fait échouer le module, donc la première exécution des tests.
+for (const d of DROITS_PARAMETRABLES) {
+  const def = DROITS[d];
+  if (!def || def.mutation || def.teste || DROITS_VERROUILLES[d] || /^(compte|tarif|abonnement|coordonnees)\./.test(d)) {
+    throw new Error(`Le droit « ${d} » ne peut pas être déclaré paramétrable.`);
+  }
+}
+
+/** Portées issues du paramétrage, par `roleId|droit`. @type {Map<string, string>} */
+const PARAMETRAGE = new Map();
+
+/** @param {string} roleId @param {string} droit */
+function cleParametrage(roleId, droit) {
+  return `${roleId}|${droit}`;
+}
+
+/** Table effective d'un rôle : conception, puis paramétrage. */
+function tableEffective(roleId) {
+  const table = { ...(MATRICE[roleId] ?? {}) };
+  for (const [cle, portee] of PARAMETRAGE) {
+    const [r, d] = cle.split('|');
+    if (r === roleId) table[d] = portee;
+  }
+  return table;
+}
+
+/**
+ * Portée prévue par la conception, hors paramétrage.
+ * @param {string} roleId
+ * @param {string} droit
+ * @returns {string}
+ */
+export function porteeDeConception(roleId, droit) {
+  if (!ROLES[roleId]) throw new Error(`Rôle inconnu : « ${roleId} ». Voir js/domain/roles.js.`);
+  if (!DROITS[droit]) throw new Error(`Droit inconnu : « ${droit} ». Voir le catalogue DROITS.`);
+  return MATRICE[roleId]?.[droit] ?? PORTEE.AUCUNE;
+}
+
+/**
+ * Le droit peut-il être activé (`accorder = true`) ou retiré pour ce profil ?
+ * Fonction pure : la décision ne dépend que de la conception.
+ *
+ * @param {string} roleId
+ * @param {string} droit
+ * @returns {{autorise: boolean, explication: string}}
+ */
+export function controlerParametrage(roleId, droit) {
+  porteeDeConception(roleId, droit); // lève sur un rôle ou un droit inconnu
+  const refus = (explication) => ({ autorise: false, explication });
+  if (DROITS_VERROUILLES[droit]) {
+    return refus(`Ce droit porte ${DROITS_VERROUILLES[droit]} : il est fixé par la conception et n’est pas paramétrable.`);
+  }
+  if (!DROITS_PARAMETRABLES.includes(droit)) {
+    return refus('Ce droit n’est pas déclaré paramétrable au catalogue : il reste tel que la conception le fixe.');
+  }
+  if (!ROLES[roleId].institutionnel) {
+    return refus('Les droits des acteurs du marché suivent le modèle commercial de la plateforme : ils ne sont pas paramétrables.');
+  }
+  if (roleId === 'super_admin') {
+    return refus('Le super administrateur ne reçoit aucun droit métier, délibérément : un compte qui peut tout est ce que la matrice sert à éviter.');
+  }
+  return { autorise: true, explication: '' };
+}
+
+/**
+ * Installe le paramétrage en vigueur à partir de l'historique des décisions,
+ * dans l'ordre chronologique. Une entrée non conforme (stockage altéré) est
+ * ignorée et rendue à l'appelant : elle ne peut rien ouvrir.
+ *
+ * @param {Array<{roleId: string, droit: string, accorde: boolean}>} decisions
+ * @returns {Array<object>} Les décisions écartées.
+ */
+export function appliquerParametrage(decisions = []) {
+  PARAMETRAGE.clear();
+  const ecartees = [];
+  for (const dec of decisions) {
+    let ok = false;
+    try { ok = controlerParametrage(dec.roleId, dec.droit).autorise; } catch { ok = false; }
+    if (!ok) { ecartees.push(dec); continue; }
+    const conception = MATRICE[dec.roleId]?.[dec.droit] ?? PORTEE.AUCUNE;
+    const cle = cleParametrage(dec.roleId, dec.droit);
+    const conforme = dec.accorde === (conception !== PORTEE.AUCUNE);
+    if (conforme) PARAMETRAGE.delete(cle);
+    else PARAMETRAGE.set(cle, dec.accorde ? PORTEE.TOUT : PORTEE.AUCUNE);
+  }
+  return ecartees;
+}
+
+/**
+ * Écarts en vigueur par rapport à la conception.
+ * @returns {Array<{roleId: string, droit: string, portee: string}>}
+ */
+export function ecartsDeParametrage() {
+  return [...PARAMETRAGE].map(([cle, portee]) => {
+    const [roleId, droit] = cle.split('|');
+    return { roleId, droit, portee };
+  });
 }

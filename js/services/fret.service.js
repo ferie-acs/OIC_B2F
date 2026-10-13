@@ -20,6 +20,8 @@ import { refuserCoordonnees } from '../domain/texte.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { reference } from './matching.service.js';
+// Lot b5 : suspension d'une entreprise.
+import { groupementSuspendu } from './suspension.js';
 
 /**
  * Publie un fret : déclaration + demande + lignes, d'un bloc.
@@ -210,6 +212,8 @@ export function marcheDesDemandes(ctx, filtres = {}) {
     .filter((d) => {
       const dec = declarations.get(d.declarationId);
       if (!dec) return false;
+      // Lot b5 : les demandes d'une entreprise suspendue quittent le marché.
+      if (groupementSuspendu(d.groupementId)) return false;
       if (filtres.departId && dec.provenanceId !== filtres.departId) return false;
       if (filtres.arriveeId && dec.destinationId !== filtres.arriveeId) return false;
       if (filtres.carrosserieId && d.carrosserieId !== filtres.carrosserieId) return false;

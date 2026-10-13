@@ -34,6 +34,16 @@ import { explorer } from './views/explorer.js';
 import { documentsDut } from './views/dut.js';
 import { retourPublic, routeActionPublique, routePublication } from './services/marche-public.service.js';
 import { reprendreFileDut } from './services/passerelle-dut.service.js';
+// Lot b5 : administration OIC et espace DGTTC.
+import { amorcerLotB5 } from './seed-lot-b5.js';
+import { chargerParametrage } from './services/habilitations.service.js';
+import { comptes as comptesAdmin, saisieCodeAcces } from './views/admin-comptes.js';
+import { habilitationsVue } from './views/habilitations.js';
+import { entreprisesVue } from './views/entreprises-admin.js';
+import { referentielsVue } from './views/referentiels-admin.js';
+import { incidentsVue } from './views/incidents-app.js';
+import { fluxOffresVue } from './views/flux-offres.js';
+import { exportsVue, intermediairesVue, repartitionsVue } from './views/dgttc-consultation.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -100,6 +110,23 @@ function declarerRoutes() {
   declarer('minimal/groupements', supervision.groupements);
   declarer('minimal/verifications', verifications);
   declarer('minimal/duts', documentsDut);
+
+  // --- Lot b5 : administration OIC et espace DGTTC --------------------
+  // Les écrans « Groupements » et « Profils et habilitations » du
+  // concessionnaire deviennent administrables : leur route est redéclarée.
+  declarer('concessionnaire/groupements', entreprisesVue);
+  declarer('concessionnaire/roles', habilitationsVue);
+  declarer('concessionnaire/agents', comptesAdmin);
+  declarer('concessionnaire/referentiels', referentielsVue);
+  declarer('concessionnaire/incidents', incidentsVue);
+  declarer('concessionnaire/flux', fluxOffresVue);
+  declarer('affreteur/incidents', incidentsVue);
+  declarer('transporteur/incidents', incidentsVue);
+  declarer('dgttc/intermediaires', intermediairesVue);
+  declarer('dgttc/repartitions', repartitionsVue);
+  declarer('dgttc/exports', exportsVue);
+  declarer('dgttc/utilisateurs', comptesAdmin);
+  declarer('dgttc/incidents', incidentsVue);
 }
 
 /* ------------------------------------------------------------------ *
@@ -161,6 +188,11 @@ function rendre(ctx, vue, contenu) {
 
 /** Affiche l'écran de connexion. */
 function afficherLogin(traiter) {
+  // Lot b5 : page publique de saisie d'un code d'accès à usage unique.
+  if (routeCourante().espace === 'connexion' && routeCourante().page === 'code') {
+    monter(el('div', {}, [saisieCodeAcces(() => aller('#/connexion'))]));
+    return;
+  }
   const intention = routeCourante().params;
   monter(
     el('div', {}, [
@@ -213,6 +245,8 @@ async function demarrerApplication() {
 
   if (!dejaAmorce()) await amorcer();
   await completerJeuAntiFraude();
+  await amorcerLotB5(); // Lot b5
+  chargerParametrage(); // Lot b5 : habilitations paramétrées
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();
