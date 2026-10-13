@@ -2,8 +2,10 @@
 
 > **Pour qui** : la personne qui présente le POC — pas un développeur. Aucune
 > connaissance du code n'est nécessaire.
-> **Durée** : environ 25 minutes de démonstration, 10 minutes de questions.
-> **Auteur** : agent `redacteur-technique`, 24 septembre 2026.
+> **Durée** : environ 25 minutes de démonstration, 10 minutes de questions ;
+> compter 8 minutes de plus si l'on joue le § 5 (lutte contre la fraude).
+> **Auteur** : agent `redacteur-technique`, 24 septembre 2026 ; mis à jour le
+> 13 octobre 2026 pour les cinq correctifs anti-fraude.
 >
 > Tout ce qui figure ici a été vérifié dans le code et dans les rapports de
 > qualité et de sécurité du projet. Les phrases en encadré sont des **propositions
@@ -35,6 +37,9 @@ Puis ouvrir **<http://localhost:8081/>**.
       démarrer, et c'est normal.
 - [ ] Prévoir un second onglet déjà ouvert : les changements de rôle sont
       fréquents.
+- [ ] Jouer le cas du solde insuffisant (§ 3.2) **avant** la validation du
+      crédit en attente (§ 5.5) : une fois ce crédit validé, Routière du Centre
+      est provisionnée et le cas d'échec disparaît.
 
 **Aucune connexion Internet n'est nécessaire.** L'application n'a aucune
 dépendance externe : pas de CDN, pas de bibliothèque tierce. C'est un argument à
@@ -51,8 +56,8 @@ passe sont hachés en PBKDF2-SHA256, 120 000 itérations, avec un sel par compte
 ## 1. Ouvrir — ce qu'on démontre, et ce qu'on ne démontre pas (2 min)
 
 > « Ce que vous allez voir n'est pas une maquette : c'est une application qui
-> fonctionne, avec des règles métier réelles et 480 tests automatisés qui les
-> vérifient. Ce n'est pas non plus un produit : il n'y a pas de serveur, les
+> fonctionne, avec des règles métier réelles et plus de 500 tests automatisés
+> qui les vérifient. Ce n'est pas non plus un produit : il n'y a pas de serveur, les
 > données vivent dans le navigateur, et il n'y a aucune donnée réelle de la
 > Bourse de Fret — tout est inventé et marqué DÉMO. »
 
@@ -96,18 +101,25 @@ souhaité, lignes de marchandise.
 
 > **C'est le point le plus important à faire remarquer.**
 > « Regardez ce que l'écran ne montre pas : aucun numéro de téléphone, aucun nom
-> de chauffeur, aucune coordonnée. On voit le trajet, la capacité, la
-> disponibilité, le prix déclaré — mais pas comment joindre le transporteur.
-> **C'est précisément ce que la plateforme vend** : la mise en relation. Si les
-> coordonnées étaient visibles ici, la plateforme n'aurait aucun modèle
-> économique. »
+> de chauffeur, aucune coordonnée — et, depuis le 13 octobre, **ni le nom du
+> transporteur, ni l'immatriculation du camion**. On voit le trajet, la
+> carrosserie, la capacité, la disponibilité, le prix déclaré — mais pas qui est
+> le transporteur ni comment le joindre. **C'est précisément ce que la
+> plateforme vend** : la mise en relation. Si l'identité ou les coordonnées
+> étaient visibles ici, la plateforme n'aurait aucun modèle économique. »
+
+À la place du nom, l'écran affiche un **profil de confiance** : « Transporteur
+vérifié par la plateforme », le nombre de transports réalisés, la note moyenne,
+la date d'inscription. Le détail est au § 5.1.
 
 ### Acte 3 — La réservation (1 min)
 
 `Réserver` sur l'offre, rattachée à une de ses demandes.
 
 > « La réservation est **gratuite**. Rien n'est débité à cette étape, et rien
-> n'est encore transmis. »
+> n'est encore transmis. Mais elle n'est pas éternelle : le transporteur a
+> 48 heures pour répondre, faute de quoi elle expire et le camion revient sur le
+> marché. »
 
 ### Acte 4 — Le transporteur répond (1 min)
 
@@ -124,6 +136,10 @@ Se déconnecter → connexion **Transporteur** → `Réservations reçues` → `
 > transporteur". La valeur stockée est la même — nous sommes fidèles au système
 > existant — mais un statut doit dire au lecteur **ce qu'il a à faire**. »
 
+Et, dans la même ligne, l'affréteur n'est pas nommé : le transporteur lit un
+alias du type « Affréteur A-XXXX » et l'échéance de sa réponse. La retenue de
+l'identité vaut dans les deux sens.
+
 ### Acte 5 — L'écran pivot : la validation (3 min)
 
 Reconnexion **Affréteur** → `Mises en relation` → `À valider`.
@@ -135,6 +151,11 @@ Reconnexion **Affréteur** → `Mises en relation` → `À valider`.
 > transporteur — le solde de **son** compte, et ce qu'il deviendra après
 > l'opération. Il n'y a pas de boîte "Êtes-vous sûr ?" qui masquerait les
 > montants : dans ce métier, valider *est* une transaction. »
+
+Faire remarquer au passage le bandeau « Validez avant le … » : l'acceptation du
+transporteur n'immobilise pas son camion indéfiniment. Et, sur la fiche du
+véhicule retenu, le transporteur apparaît encore sous son alias, avec la mention
+« Communiquée à la validation » à la place de l'immatriculation.
 
 **Puis le point de cloisonnement, à souligner :**
 
@@ -154,10 +175,11 @@ Reconnexion **Affréteur** → `Mises en relation` → `À valider`.
 `Valider`.
 
 > « Trois choses viennent de se passer en une seule opération indivisible : les
-> deux comptes sont débités, le transport est créé, et **les coordonnées sont
-> transmises**. »
+> deux comptes sont débités, le transport est créé, et **l'identité et les
+> coordonnées sont transmises**. »
 
-Montrer la fiche : véhicule, chauffeur, contacts, désormais visibles.
+Montrer la fiche : nom du transporteur, immatriculation, chauffeur, contacts,
+désormais visibles.
 
 > « La mise en relation est effective. C'est le moment précis où la plateforme
 > rend son service et où elle se rémunère. »
@@ -182,6 +204,10 @@ Puis reconnexion **Affréteur** → `Clôturer` après livraison.
 > **À signaler honnêtement** : « Ces six étapes sont un **apport de ce POC**. Le
 > système existant ne les formalise pas — son champ d'état est flou. C'est une
 > proposition, pas une reproduction. »
+
+Une fois le transport clôturé, sa fiche propose à chaque partie de noter
+l'autre. Si vous jouez le § 5, c'est le moment d'en faire la démonstration
+(§ 5.2).
 
 ---
 
@@ -213,7 +239,14 @@ Connexion **`auxiliaire@demo.invalid`** → aller sur `À valider` → le bouton
 ### 3.2 Le solde insuffisant (1 min)
 
 Avec l'**Affréteur**, réserver un véhicule de **Routière du Centre** (`grp-tra-2`),
-puis aller jusqu'à l'écran de validation.
+puis aller jusqu'à l'écran de validation. Son nom n'apparaissant plus sur le
+marché, repérez l'offre par ses caractéristiques : **Abidjan → Bouaké, plateau
+25 t, 88 F/km·t**. Pour la suite, faites accepter la réservation par
+`transporteur2@demo.invalid`.
+
+> **À jouer avant le § 5.5.** Un crédit de 50 000 F pour Routière du Centre
+> attend sa validation ; une fois validé, ce transporteur est provisionné et le
+> cas d'échec ne se reproduit plus.
 
 > « Ce transporteur a 5 000 F sur son compte, et la mise en relation lui coûte
 > 15 000 F. La validation est refusée — et elle est refusée **avant** le clic :
@@ -253,13 +286,14 @@ Connexion **`concessionnaire@demo.invalid`** → `Groupements`, `Comptes`,
 `Tarifs`, `Utilisateurs et rôles`, `Journal d'audit`.
 
 > « L'exploitant de la plateforme voit les groupements inscrits, les soldes de
-> tous les comptes, et peut créditer manuellement — ce qui remplace ici
-> l'intégration de paiement mobile, hors périmètre du POC. Il fixe aussi les
-> tarifs du service. »
+> tous les comptes, et saisit les crédits — ce qui remplace ici l'intégration de
+> paiement mobile, hors périmètre du POC. Une saisie ne crédite pas encore le
+> compte : une autre personne doit la valider, après rapprochement avec
+> l'encaissement réel (§ 5.5). Il fixe aussi les tarifs du service. »
 
 **L'écran `Utilisateurs et rôles` mérite un arrêt :**
 
-> « C'est la matrice des droits rendue visible. 19 rôles, 47 droits. Et surtout :
+> « C'est la matrice des droits rendue visible. 19 rôles, 51 droits. Et surtout :
 > **c'est la seule source** de ce que chacun peut faire. Dans l'application
 > existante, le contrôle d'accès est dispersé dans le routage et dans les écrans,
 > sans table centrale — c'est l'un des quatre écarts que nous proposons. »
@@ -297,11 +331,200 @@ Connexion **`caisse@demo.invalid`** (rôle `agent_caisse`, niveau 3).
 > de back-office : caisse, comptabilité, contentieux, supervision — sont
 > déclarés dans la matrice et administrables, **avec leur menu généré depuis
 > leurs seuls droits**, mais sans écran métier : la caisse et le contentieux sont
-> hors du périmètre de cette démonstration. »
+> hors du périmètre de cette démonstration. Une exception : l'agent d'activation
+> des inscriptions, qui contrôle désormais les pièces des transporteurs. »
+
+L'agent d'activation est présenté au § 5.3.
 
 ---
 
-## 5. Les questions qui viendront — et les réponses honnêtes
+## 5. La lutte contre la fraude — cinq correctifs (8 min)
+
+Cette section se joue après le parcours principal et les cas d'échec. Elle
+montre cinq contournements que le POC ferme depuis le 13 octobre 2026, et dit
+où chacun s'arrête.
+
+> « Une bourse de fret se fraude de quatre manières : on la contourne pour ne
+> pas payer les frais, on s'y fait passer pour un autre, on y immobilise des
+> camions sans s'engager, on crédite un compte sans encaissement. Le POC ferme
+> ces portes autant qu'un POC peut le faire — et je vous dirai à chaque fois où
+> il s'arrête. »
+
+### 5.1 L'identité ne se donne qu'à la validation (2 min)
+
+Connexion **Affréteur** → `Marché` → `Rechercher un véhicule` → ouvrir une offre.
+
+> « Avant le 13 octobre, l'écran affichait ici la raison sociale du transporteur
+> et la plaque du camion. Cela suffisait : on notait le nom, on trouvait le
+> numéro ailleurs, et l'affaire se traitait en direct. Les deux parties
+> économisaient les frais, et la plateforme avait servi d'annuaire gratuit. »
+
+Montrer ce qui remplace le nom : le bloc « Transporteur vérifié par la
+plateforme », le nombre de transports réalisés, la note moyenne, la date
+d'inscription, et la phrase « Le nom et les coordonnées vous sont transmis à la
+validation, après règlement des frais par les deux parties. »
+
+> « L'affréteur choisit sur des faits — vérifié, expérience, réputation — sans
+> pouvoir identifier l'entreprise. Dans ses réservations, le transporteur porte
+> un alias stable, du type "Transporteur T-XXXX" : on le reconnaît d'un écran à
+> l'autre, on ne peut pas le retrouver ailleurs. »
+
+**Puis le complément, plus parlant encore :** `Mon fret` → `Nouvelle
+déclaration` → dans le champ « Observation », saisir
+`Appelez le 07 07 07 07 07` → enregistrer.
+
+> « Refusé, avec son motif : ce texte est lu par les transporteurs avant la
+> validation. Il en va de même pour le libellé du fret, les contraintes de la
+> demande, et la précision qu'un transporteur joint à un rejet. Un numéro, une
+> adresse électronique, un lien de messagerie : rien ne passe. »
+
+> **Honnêteté** : « Écrit en toutes lettres — "zéro sept, zéro sept…" — le
+> numéro passe. Le filtre arrête le réflexe, pas la personne déterminée. »
+
+**Deux défauts connus du filtre, à ne pas découvrir en séance** : un numéro
+séparé par des points (« 07.07.07.07.07 ») passe, parce qu'il est pris pour une
+date ; et une référence de la plateforme (« DT-2026-0001 ») est refusée à tort,
+prise pour un numéro. N'utilisez pas ces formes en démonstration ; si la
+question vient, dites-les : ils sont consignés dans les tests et au README.
+
+### 5.2 La réputation, raison de revenir (1 min)
+
+À la fin du parcours principal, une fois le transport clôturé : `Suivi des
+transports` → fiche du transport → « Notez la contrepartie de ce transport » →
+choisir une note de 1/5 à 5/5. Puis la même chose côté transporteur.
+
+> « Chaque partie note l'autre, une fois, sans commentaire libre — un
+> commentaire deviendrait un canal pour des coordonnées. Et ces notes ne
+> s'accumulent que sur les transports conclus **par la plateforme**. Un
+> transporteur qui traite en direct ne fait pas progresser sa réputation : c'est
+> une raison de revenir, là où aucune règle ne peut interdire de partir. »
+
+Revenir au marché : la ligne de confiance du transporteur tient compte du
+transport et de la note.
+
+> **La question de fond, à poser à l'OIC plutôt qu'à résoudre** : « La
+> réputation atténue l'intérêt de traiter en direct ; elle ne le supprime pas.
+> Tant que chaque partie paie 15 000 F par mise en relation, deux partenaires
+> qui se connaissent ont intérêt à se passer de la plateforme dès la seconde
+> affaire. Un abonnement seul, sans frais par mise en relation, supprimerait
+> cette incitation, mais changerait le modèle économique du système existant.
+> C'est une décision de l'Office, pas du logiciel. »
+
+### 5.3 Un transporteur n'opère qu'après contrôle de ses pièces (2 min)
+
+Connexion **`transporteur3@demo.invalid`** (Nouvelle Route Transport DÉMO).
+
+Montrer le bandeau du tableau de bord : « Dossier transporteur en attente de
+vérification ». Puis `Ma flotte` → `Véhicules` → le camion `2468 KL 03` :
+l'indicateur « Contrôle des pièces » est « À contrôler », et le bouton `Publier
+une disponibilité` est désactivé, avec son motif.
+
+> « Rien ne prouvait qu'un transporteur était celui qu'il prétendait être. Un
+> faux transporteur pouvait s'inscrire, accepter un chargement et disparaître
+> avec la marchandise — présenté au client par une plateforme publique. C'est le
+> risque le plus grave pour l'Office. »
+
+Connexion **`activation@demo.invalid`** (agent d'activation des inscriptions) →
+`Vérification des transporteurs` → fiche de Nouvelle Route Transport DÉMO →
+`Vérifier le dossier`.
+
+- Cocher deux pièces seulement → `Prononcer la vérification` : **refusé**, « un
+  contrôle partiel n'est pas un contrôle ».
+- Cocher les trois — RCCM, carte de transporteur, attestation d'assurance —
+  → `Prononcer la vérification`.
+- Sur la même fiche, `Attester le contrôle` du véhicule (carte grise et carte de
+  transport) et du chauffeur (permis).
+
+Reconnexion **`transporteur3@demo.invalid`** : le bandeau a disparu, et le
+véhicule peut être publié.
+
+> « Trois règles accompagnent ce contrôle. Un transporteur non vérifié ne
+> publie pas, ne propose pas, n'accepte pas, et aucune validation n'aboutit sur
+> des moyens non contrôlés. Une pièce modifiée après contrôle — une plaque, une
+> carte grise, un permis — perd sa vérification : on ne fait pas contrôler un
+> camion pour lui substituer une plaque. Et si l'agent retire la vérification,
+> les offres du transporteur quittent le marché. »
+
+> **Ne retirez pas la vérification de Trans Lagunes ou de Routière du Centre
+> pendant la séance** : leurs offres disparaîtraient du marché et le parcours
+> principal ne serait plus jouable. Pour montrer le retrait, utilisez Nouvelle
+> Route Transport, après l'avoir vérifiée.
+
+> **Honnêteté** : « L'agent **atteste** un contrôle. Le POC ne confronte aucune
+> pièce à un registre, et aucun justificatif n'est téléversé. »
+
+### 5.4 Une attente a toujours une fin (1 min)
+
+Connexion **Affréteur** → `Mes réservations` : sur chaque dossier en attente,
+l'échéance — « Réponse attendue avant le … » ou « À valider avant le … ».
+Côté **Transporteur**, la liste des réservations porte la même échéance.
+
+> « Réserver est gratuit. Sans délai, un abonné pouvait immobiliser les camions
+> d'un transporteur — ou d'un concurrent — sans jamais valider. Désormais, une
+> réservation sans réponse sous 48 heures, ou une acceptation sans validation
+> sous 48 heures, expire. Le camion revient sur le marché, la demande redevient
+> publiée, les deux parties sont prévenues, et rien n'est débité. »
+
+> « Le journal d'audit impute l'expiration à "Plateforme (automatique)" — jamais
+> à l'utilisateur dont l'écran l'a constatée. »
+
+**L'expiration elle-même ne se provoque pas en séance** : il faudrait attendre
+48 heures. Sur un navigateur dont le stockage a été amorcé plus de 48 heures
+avant la démonstration, les dossiers en attente du jeu de démonstration auront
+expiré à l'ouverture : la réservation indique alors « Cette réservation a
+expiré », et le journal d'audit du concessionnaire porte l'entrée
+correspondante.
+
+> **Honnêteté** : « Il n'y a pas de tâche planifiée : sans serveur,
+> l'expiration est constatée à chaque affichage. En production, la même règle
+> serait appliquée par une tâche du serveur. Les deux durées de 48 heures sont
+> une proposition du POC : elles sont à fixer par l'OIC. »
+
+### 5.5 Un crédit, deux personnes (2 min)
+
+Connexion **`concessionnaire@demo.invalid`** → `Comptes et soldes` → `Saisir un
+crédit` sur un groupement : montrer la phrase « La saisie ne crédite pas encore
+le compte ». Annuler.
+
+Puis `Crédits à valider` : le crédit `CR-2026-0001` — Routière du Centre,
+50 000 F, encaissement `ENC-DEMO-2001` — a été saisi par ce même compte. Les
+boutons `Valider` et `Rejeter` sont **désactivés**, avec leur motif : « Vous
+avez saisi ce crédit : sa validation revient à une autre personne. »
+
+> « Avant le 13 octobre, une seule personne créditait un compte, sur une
+> référence d'encaissement que personne ne rapprochait d'un paiement réel. La
+> porte était ouverte à une fraude interne : créditer le compte d'un proche sans
+> encaissement. »
+
+Connexion **`concessionnaire2@demo.invalid`** → `Crédits à valider` → `Valider`
+sur `CR-2026-0001` → cocher « J'ai rapproché cette saisie de l'encaissement
+réel » → `Valider et créditer`. Le solde de Routière du Centre passe de 5 000 F
+à 55 000 F.
+
+Puis `Comptes et soldes` → `Saisir un crédit` avec la référence
+`ENC-DEMO-2001` : **refusé**, « un encaissement ne crédite qu'une fois ».
+
+> « Saisie par l'un, validation par un autre, après rapprochement ; une
+> référence d'encaissement ne sert qu'une fois ; et seule la validation touche
+> au solde. Le cas d'échec du § 3.2 — le solde insuffisant de ce transporteur —
+> est d'ailleurs levé : la validation du dossier redevient possible. »
+
+> **Honnêteté** : « Le rapprochement est une case que le validateur coche, pas
+> une confrontation automatique avec un relevé bancaire. Deux personnes
+> complices restent possibles — mais le journal d'audit les nomme toutes les
+> deux. »
+
+### 5.6 Ce que ces correctifs ne prouvent pas — à dire avant les questions
+
+> « Tous ces contrôles s'exécutent dans votre navigateur, sur des données
+> stockées localement. Quelqu'un qui ouvre les outils de développement peut
+> lire les raisons sociales, se déclarer vérifié ou se créditer un compte. Ce
+> que nous démontrons, c'est **où et comment** chaque règle s'écrit ; un serveur
+> devra l'appliquer, à chaque requête. »
+
+---
+
+## 6. Les questions qui viendront — et les réponses honnêtes
 
 **Ne minimisez rien.** Un POC qui laisse croire davantage qu'il ne démontre est
 un passif, pas un actif. Chacune de ces réponses est vérifiée.
@@ -325,6 +548,26 @@ un passif, pas un actif. Chacune de ces réponses est vérifiée.
 > « Le POC utilise PBKDF2 avec sel, là où un condensat rapide sans sel se casse
 > par table précalculée. Mais les empreintes restent dans le navigateur : c'est
 > une démonstration de la bonne pratique, pas une protection. »
+
+### « Qu'est-ce qui empêche les parties de traiter en direct ? »
+
+> « Rien ne l'empêche complètement, et nous ne le prétendrons pas. Le POC rend
+> le contournement plus difficile — l'identité n'est transmise qu'après
+> paiement, les champs libres refusent les numéros — et moins intéressant — la
+> réputation ne se construit que sur la plateforme. Mais deux partenaires qui se
+> connaissent peuvent traiter en direct dès la seconde affaire. Garder des frais
+> par mise en relation, qui créent cette incitation, ou passer à un abonnement
+> seul, qui la supprime, est une décision de modèle économique : elle revient à
+> l'OIC. »
+
+### « Comment savez-vous qu'un transporteur est bien celui qu'il prétend être ? »
+
+> « Un agent d'activation de l'Office contrôle son RCCM, sa carte de
+> transporteur et son assurance, puis la carte grise de chaque camion et le
+> permis de chaque chauffeur. Sans ce contrôle, le transporteur ne peut rien
+> proposer. Dans le POC, ce contrôle est une attestation de l'agent : aucune
+> pièce n'est confrontée à un registre. Le raccordement aux registres officiels
+> serait une question de la cible, pas du POC. »
 
 
 ### « Est-ce que ça marchera vraiment ? Est-ce que les transporteurs l'utiliseront ? »
@@ -365,7 +608,12 @@ un passif, pas un actif. Chacune de ces réponses est vérifiée.
 
 ### « Est-ce que ça a été testé ? »
 
-> « 480 tests automatisés, tous verts. Mais surtout : le code a été attaqué par
+> « 680 tests automatisés. À la date de cette version, 670 sont verts, 8
+> échouent et 2 sont marqués "à faire". Les 8 échecs portent sur des règles de
+> conformité d'architecture et de style — par exemple une adresse distante dans
+> le module de carte — et existaient avant les correctifs anti-fraude ; les 2
+> "à faire" sont les défauts connus du filtre des textes libres. Tous sont
+> énumérés au README. Mais surtout : le code a été attaqué par
 > une campagne de qualité **adversariale**, dont l'objet était de le casser, pas
 > de confirmer qu'il marche. Elle a trouvé 21 défauts, dont 3 bloquants — et elle
 > a rendu un NO-GO. Les défauts ont été corrigés, puis **réattaqués** par des
@@ -386,7 +634,7 @@ Deux sont connus, documentés, et vous pouvez les montrer sans gêne :
 
 ---
 
-## 6. Aide-mémoire — tous les comptes
+## 7. Aide-mémoire — tous les comptes
 
 Mot de passe unique : **`demo2026`**
 
@@ -402,12 +650,18 @@ Mot de passe unique : **`demo2026`**
 | `transporteur2@demo.invalid` | Transporteur (Routière du Centre) | Solde insuffisant : 5 000 F pour 15 000 F |
 | `partenaire@demo.invalid` | Partenaire (niveau 2) | Décliné de l'espace Transporteur |
 | `caisse@demo.invalid` | Agent de caisse (niveau 3) | Espace minimal, menu généré |
+| `activation@demo.invalid` | Agent d'activation des inscriptions (niveau 3) | **Vérifie les transporteurs** (§ 5.3) |
+| `concessionnaire2@demo.invalid` | Concessionnaire | **Seconde personne** : valide les crédits saisis par le premier compte (§ 5.5) |
+| `transporteur3@demo.invalid` | Transporteur (Nouvelle Route Transport) | **Dossier non vérifié** : ne publie, ne propose ni n'accepte (§ 5.3) |
 
 **Montants du jeu de démonstration :** frais de mise en relation **15 000 F CFA
 par partie**, abonnement annuel **150 000 F CFA**. Crédits initiaux : 200 000 F
 (Cacao Lagunes), 50 000 F (Coton Nord), 120 000 F (Trans Lagunes), 5 000 F
-(Routière du Centre). Deux dossiers complets sont préinstallés : les soldes
-affichés en tiennent déjà compte.
+(Routière du Centre), 60 000 F (Nouvelle Route Transport). Deux dossiers
+complets sont préinstallés : les soldes affichés en tiennent déjà compte. **Un
+crédit de 50 000 F pour Routière du Centre attend sa validation**
+(`CR-2026-0001`, encaissement `ENC-DEMO-2001`) : il n'est pas compté dans le
+solde tant qu'il n'est pas validé.
 
 **Toutes ces données sont inventées et marquées DÉMO.** Aucune n'est extraite du
 système existant, qui contient des données d'exploitation réelles. Les adresses
@@ -416,7 +670,7 @@ et un test le vérifie.
 
 ---
 
-## 7. En cas de problème pendant la démonstration
+## 8. En cas de problème pendant la démonstration
 
 | Symptôme | Cause probable | Geste |
 |---|---|---|
@@ -425,14 +679,18 @@ et un test le vérifie.
 | Les données sont déjà consommées | Démonstration déjà jouée sur ce navigateur | Vider le stockage du site, ou passer en navigation privée |
 | Un écran semble vide | Le rôle connecté n'y a pas droit | C'est probablement le comportement attendu — profitez-en pour montrer le refus explicite |
 | Une action reste sans effet | Étape du workflow non atteinte | Vérifier l'état du dossier : on ne valide pas avant acceptation, on ne clôture pas avant livraison |
+| Un camion attendu n'apparaît plus sur le marché | Vérification de son transporteur refusée ou retirée, ou pièce du véhicule ou du chauffeur modifiée depuis le contrôle | Se connecter en `activation@demo.invalid` et vérifier à nouveau le dossier et les moyens concernés |
+| Une réservation en attente apparaît « expirée » | Stockage amorcé plus de 48 heures avant la séance : le délai est dépassé | Comportement attendu (§ 5.4). Pour un jeu neuf, vider le stockage du site |
+| Le solde insuffisant de Routière du Centre ne se reproduit plus | Le crédit `CR-2026-0001` a été validé | Vider le stockage du site, ou ne plus jouer le § 3.2 dans cette séance |
+| `Valider` est grisé sur un crédit en attente | Vous êtes connecté avec le compte qui l'a saisi | Comportement attendu : se connecter en `concessionnaire2@demo.invalid` |
 
 ---
 
-## 8. Pour aller plus loin
+## 9. Pour aller plus loin
 
 | Document | Contenu |
 |---|---|
-| [`../../README.md`](../../README.md) | Vue d'ensemble, lancement, limites assumées |
+| [`../../README.md`](../../README.md) | Vue d'ensemble, lancement, limites assumées, lutte contre la fraude |
 | [`../ux/maquettes/b2f-comprendre.html`](../ux/maquettes/b2f-comprendre.html) | Page pédagogique pour public non initié au métier |
 | [`../architecture/03-matrice-des-roles.md`](../architecture/03-matrice-des-roles.md) | Les 19 rôles et la matrice complète des droits |
 | [`../securite/audit-matrice-roles.md`](../securite/audit-matrice-roles.md) | L'audit de sécurité et ses 16 findings |

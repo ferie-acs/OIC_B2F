@@ -116,6 +116,8 @@ export function vueFlotte(ctx, params = {}) {
       indicateur('Disponibilités actives', String(d.offresActives || 0), 'Offres publiées ou réservées', 'calendar', 'warn'),
       indicateur('Carte de transport', carteValide ? 'À jour' : 'À renouveler', `Échéance · ${date(v.carteTransportEcheance)}`, 'check-circle', carteValide ? 'success' : 'warn'),
       indicateur('PTAC', `${v.ptacT} t`, `Configuration · ${refDe(v.essieuxId)}`, 'truck', 'info'),
+      // Correctif anti-fraude n° 3 : la carte grise contrôlée conditionne la publication.
+      indicateur('Contrôle des pièces', v.verifieLe ? 'Contrôlé' : 'À contrôler', v.verifieLe ? `Le ${date(v.verifieLe)}` : 'Par l’agent d’activation', 'shield', v.verifieLe ? 'success' : 'warn'),
     ]);
     const actions = el('section.fleet-panel.fleet-quick-actions', {}, [
       el('h2', { text: 'Actions rapides' }),

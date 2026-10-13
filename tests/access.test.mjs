@@ -163,8 +163,11 @@ describe('Projection — les coordonnées ne sortent pas avant « valider »', (
   it('retire les coordonnées d’un transporteur tant qu’aucune validation ne lie les parties', () => {
     const vu = projeter(ctxAffreteur(), 'groupement', groupementTransporteur);
 
-    assert.equal(vu.raisonSociale, 'Transports Démo SARL', 'l’identité reste visible');
-    assert.equal(vu.rccm, 'CI-DEMO-0001');
+    // Correctif anti-fraude n° 1 (13/10/2026) : l'identité commerciale suit
+    // désormais la même règle que les coordonnées. La connaître avant de payer
+    // suffisait à joindre le transporteur hors plateforme.
+    assert.equal('raisonSociale' in vu, false, 'la raison sociale a fuité avant validation');
+    assert.equal('rccm' in vu, false, 'le RCCM a fuité avant validation');
 
     for (const champ of ['contactNom', 'contactTelephone', 'contactEmail', 'adresse']) {
       assert.equal(
@@ -182,6 +185,7 @@ describe('Projection — les coordonnées ne sortent pas avant « valider »', (
     assert.equal(vu.contactTelephone, '+225 00 00 00 00');
     assert.equal(vu.contactEmail, 'contact@demo.invalid');
     assert.equal(vu.contactNom, 'Awa Démo');
+    assert.equal(vu.raisonSociale, 'Transports Démo SARL', 'l’identité est libérée avec la relation');
   });
 
   it('ne libère que le groupement concerné, pas les autres', () => {
@@ -216,7 +220,7 @@ describe('Projection — les coordonnées ne sortent pas avant « valider »', (
     assert.equal(vu.groupementId, G_TRANSPORTEUR, 'le rattachement reste lisible');
   });
 
-  it('retire la carte grise du véhicule mais laisse l’immatriculation', () => {
+  it('retire la carte grise ET l’immatriculation du véhicule avant validation', () => {
     const vehicule = {
       id: 'v-1',
       groupementId: G_TRANSPORTEUR,
@@ -232,8 +236,10 @@ describe('Projection — les coordonnées ne sortent pas avant « valider »', (
     };
     const vu = projeter(ctxAffreteur(), 'vehicule', vehicule);
 
-    assert.equal(vu.immatriculation, '1234 AB 01', 'critère de choix sur le marché');
+    // Correctif anti-fraude n° 1 : une plaque suffit à retrouver son propriétaire.
+    assert.equal('immatriculation' in vu, false, 'l’immatriculation a fuité avant validation');
     assert.equal('carteGrise' in vu, false, 'pièce du dossier, transmise après validation');
+    assert.equal(vu.capaciteT, 25, 'les caractéristiques restent des critères de choix');
   });
 });
 

@@ -45,6 +45,9 @@ import { soldeDe } from '../services/compte.service.js';
 import * as transportSvc from '../services/transport.service.js';
 import { demanderStatutsDut, statutDut, EVENEMENT_STATUT_DUT } from '../services/passerelle-dut.service.js';
 import { composer, marquerLue, mesNotifications } from '../services/notification.service.js';
+import { avisPossible, donnerAvis } from '../services/avis.service.js';
+import { ETAT_VERIFICATION } from '../domain/enums.js';
+import { blocConfiance } from './confiance.js';
 
 /* ================================================================== *
  * Suivi du transport — six étapes (U2, décision D36)
@@ -99,7 +102,7 @@ function ficheTransport(ctx, t) {
 
   return carte({
     titre: `Transport ${a.reference ?? ''}`,
-    sousTitre: `Avec ${nomDe(contrepartie)}`,
+    sousTitre: `Avec ${nomDe(ctx, contrepartie)}`,
     actions: [
       documentDut ? el('a.btn', { href: documentDut, text: preparationDut ? 'Préparer le DUT' : 'Consulter le DUT' }) : null,
       ['livre', 'cloture'].includes(t.etape) && a.groupementTransporteurId === ctx.groupementId
@@ -128,6 +131,7 @@ function ficheTransport(ctx, t) {
     corps: [
       ligneStatutDut(t.appariementId),
       chronologieEtapes(t.etape),
+      t.etape === 'cloture' ? blocAvis(ctx, t.appariementId) : null,
       el('h3', { text: 'Journal des événements' }),
       tableau({
         colonnes: ['Horodatage', 'Type', 'Étape ou nature', 'Auteur', 'Observation'],
@@ -139,7 +143,7 @@ function ficheTransport(ctx, t) {
           // l'écran de suivi. Ici, la valeur brute est préférable à la page
           // blanche ; elle se voit et se diagnostique.
           libelleTolerant(e.valeur),
-          nomDe(e.auteurGroupementId),
+          nomDe(ctx, e.auteurGroupementId),
           // Trois cas distincts, à ne pas confondre : l'auteur est le lecteur
           // (rien à cacher), le champ a été retiré par la projection (tiers non
           // apparié), ou il n'y avait simplement pas d'observation.
@@ -148,6 +152,45 @@ function ficheTransport(ctx, t) {
       }),
     ],
   });
+}
+
+/**
+ * Note de la contrepartie, après clôture — correctif anti-fraude n° 2.
+ *
+ * La réputation ne s'acquiert que sur des transports conclus par la
+ * plateforme : c'est la raison de revenir plutôt que de traiter en direct.
+ * @param {any} ctx
+ * @param {string} appariementId
+ */
+function blocAvis(ctx, appariementId) {
+  const etat = avisPossible(ctx, appariementId);
+  if (etat.dejaDonne != null) {
+    return el('p.avis-donne', {}, [icone('check-circle', 16), ` Vous avez noté ce transport ${etat.dejaDonne}/5. Merci.`]);
+  }
+  if (!etat.possible) return null;
+  const droit = decider(ctx, 'avis.donner', { groupementId: ctx.groupementId });
+  return el('div.avis', { role: 'group', 'aria-label': 'Noter la contrepartie' }, [
+    el('strong', { text: 'Notez la contrepartie de ce transport' }),
+    el('p.subtitle', {
+      text:
+        'Les notes ne s’accumulent que sur les transports conclus par la plateforme : ' +
+        'elles font la réputation de chacun sur le marché. Aucun commentaire libre.',
+    }),
+    el('div.avis-notes', {}, [1, 2, 3, 4, 5].map((n) => bouton({
+      libelle: `${n}/5`,
+      variante: 'secondary',
+      motif: droit.autorise ? null : droit.explication,
+      onClick: () => {
+        try {
+          donnerAvis(ctx, appariementId, n);
+          toast('Merci, votre note est enregistrée.');
+          globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+        } catch (e) {
+          afficherErreur(e);
+        }
+      },
+    }))),
+  ]);
 }
 
 /**
@@ -362,7 +405,7 @@ export function abonnement(ctx) {
       titre: 'Abonnement',
       corps: [
         el('div.recap-grid', {}, [
-          el('div.recap-item', {}, [el('span', { text: 'Groupement' }), el('strong', { text: nomDe(ctx.groupementId) })]),
+          el('div.recap-item', {}, [el('span', { text: 'Groupement' }), el('strong', { text: nomDe(ctx, ctx.groupementId) })]),
           el('div.recap-item', {}, [el('span', { text: 'Montant' }), el('strong', { text: enregistrement ? montant(enregistrement.montant) : '—' })]),
           el('div.recap-item', {}, [el('span', { text: 'Période' }), el('strong', {
             text: enregistrement
@@ -385,7 +428,24 @@ export function groupement(ctx) {
   const g = depot('groupement').lire(ctx, ctx.groupementId, { proprietaireId: ctx.groupementId });
   if (!g) return etatVide({ message: 'Aucun groupement rattaché à votre compte.' });
 
+  const verification = g.type === 'transporteur'
+    ? (g.verificationEtat ?? ETAT_VERIFICATION.A_VERIFIER)
+    : null;
+
   return el('div.page', {}, [
+    // Correctif anti-fraude n° 3 : le transporteur sait où en est son dossier.
+    verification === ETAT_VERIFICATION.VERIFIE
+      ? bandeau({ ton: 'ok', titre: 'Dossier vérifié', message: `Vos pièces ont été contrôlées le ${date(g.verifieLe)}. Le badge « transporteur vérifié » est affiché aux affréteurs.` })
+      : verification === ETAT_VERIFICATION.REFUSE
+        ? bandeau({ ton: 'err', titre: 'Vérification refusée', message: `Motif : ${g.verificationMotif ?? 'non précisé'}. Transmettez les pièces demandées à l’agent d’activation.` })
+        : verification
+          ? bandeau({ ton: 'warn', titre: 'Dossier en attente de vérification', message: 'L’agent d’activation doit contrôler votre RCCM, votre carte de transporteur et votre assurance, puis la carte grise de vos véhicules et le permis de vos chauffeurs. D’ici là, vous ne pouvez ni publier ni accepter.' })
+          : null,
+    carte({
+      titre: 'Votre profil sur le marché',
+      sousTitre: 'Ce que voient vos contreparties avant la validation, à la place de votre nom.',
+      corps: [blocConfiance(ctx.groupementId, { soi: true })],
+    }),
     carte({
       titre: 'Fiche du groupement',
       corps: [
@@ -451,9 +511,19 @@ export function accueilMinimal(ctx) {
   const droits = droitsDuRole(ctx.roleId);
   const nb = Object.values(droits).reduce((n, l) => n + l.length, 0);
   const documents = routeDut(ctx);
+  // Correctif anti-fraude n° 3 : l'agent d'activation a désormais un écran métier.
+  const verification = decider(ctx, 'groupement.verifier').autorise;
 
   return el('div.page', {}, [
-    bandeau({
+    verification ? bandeau({
+      ton: 'info',
+      titre: 'Votre espace de vérification des transporteurs',
+      message:
+        'Contrôlez le dossier de chaque transporteur, la carte grise de ses véhicules et ' +
+        'le permis de ses chauffeurs. Tant que ce n’est pas fait, il ne peut ni publier, ' +
+        'ni proposer, ni accepter un transport.',
+      actions: [el('a.btn.btn-primary', { href: `#/${segmentEspace(ctx)}/verifications`, text: 'Ouvrir les dossiers' })],
+    }) : bandeau({
       ton: 'info',
       titre: documents ? 'Votre espace de consultation des DUT' : `Rôle « ${r.libelle} » — modélisé, sans écran métier`,
       message: documents

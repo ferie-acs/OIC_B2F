@@ -1,8 +1,10 @@
 import { camion, libelleTrajet } from '../core/camion.js';
-import { el, icone, date, dateHeure, heuresDepuis } from '../core/dom.js';
+import { el, icone, date, dateHeure } from '../core/dom.js';
 import { badge, etatVide } from '../core/ui.js';
 import { mesAppariements } from '../services/matching.service.js';
-import { lire, nomDe, refDe } from './_donnees.js';
+import { immatriculationDe, lire, nomDe, refDe } from './_donnees.js';
+import { echeanceDe } from '../domain/matching.state.js';
+import { blocConfiance } from './confiance.js';
 import { POV, labelOf } from '../domain/enums.js';
 import { aller } from '../core/router.js';
 
@@ -31,13 +33,12 @@ export function reservationsVue(ctx, action) {
     const declaration = demande.declarationId ? lire(ctx,'declaration',demande.declarationId) ?? {} : {};
     const offre = lire(ctx,'offre',a.offreId) ?? {};
     const vehicule = offre.vehiculeId ? lire(ctx,'vehicule',offre.vehiculeId) ?? {} : {};
-    const age = heuresDepuis(a.reserveLe);
     const stop = (label, id) => el('div.reservation-stop',{},[el('span',{text:label}),el('strong',{text:refDe(id)})]);
     const progression = a.etat === 'valider' ? 3 : a.etat === 'accepter' ? 2 : 1;
     const terminal = ['rejeter','annuler'].includes(a.etat);
     return el('article.reservation-card', {class:`state-${a.etat}`},[
       el('header.reservation-card-head',{},[
-        el('div',{},[el('span.reservation-ref',{text:a.reference}),el('p',{text:nomDe(a.groupementTransporteurId)})]),
+        el('div',{},[el('span.reservation-ref',{text:a.reference}),el('p',{text:nomDe(ctx, a.groupementTransporteurId)}),a.etat!=='valider'?blocConfiance(a.groupementTransporteurId,{compact:true}):null]),
         badge(a.etat,POV.AFFRETEUR),
       ]),
       el('div.reservation-card-body',{},[
@@ -48,15 +49,16 @@ export function reservationsVue(ctx, action) {
         ]),
         el('div.reservation-facts',{},[
           el('div',{},[icone('calendar',16),el('span',{},[el('small',{text:'Départ prévu'}),el('strong',{text:date(demande.departPrevu)})])]),
-          el('div',{},[camion(offre, 29),el('span',{},[el('small',{text:'Véhicule réservé'}),el('strong',{text:vehicule.immatriculation ?? 'Non renseigné'})])]),
+          el('div',{},[camion(offre, 29),el('span',{},[el('small',{text:'Véhicule réservé'}),el('strong',{text:offre.vehiculeId ? immatriculationDe(ctx, offre.vehiculeId) : 'Non renseigné'})])]),
           el('div',{},[icone('package',16),el('span',{},[el('small',{text:'Capacité'}),el('strong',{text:vehicule.capaciteT ? `${vehicule.capaciteT} t · ${refDe(vehicule.carrosserieId)}` : 'Non renseignée'})])]),
         ]),
         el('div.reservation-progress',{'aria-label':terminal?'Réservation clôturée':`Étape ${progression} sur 3`},['Réservée','Acceptée','Validée'].map((label,i)=>el('span',{class:!terminal&&i<progression?'done':'',text:label}))),
       ]),
       el('div.reservation-message',{},[
-        el('p',{text:messages[a.etat] ?? labelOf(a.etat)}),
+        el('p',{text:a.motifCloture==='expiration' ? 'Cette réservation a expiré : le délai est dépassé. Le véhicule est revenu sur le marché et rien n’a été débité.' : messages[a.etat] ?? labelOf(a.etat)}),
         a.motifRejet ? el('small',{text:`Motif : ${labelOf(a.motifRejet)}`}) : null,
-        a.etat==='reserver'&&age>=48 ? el('span.badge.badge-warning',{text:`Sans réponse depuis ${Math.floor(age/24)} j`}) : null,
+        // Correctif anti-fraude n° 4 : toute attente a une fin, affichée.
+        echeanceDe(a) ? el('span.badge.badge-warning',{text:`${a.etat==='reserver'?'Réponse attendue':'À valider'} avant le ${dateHeure(echeanceDe(a))}`}) : null,
       ]),
       el('footer.reservation-card-foot',{},[el('span',{text:`Réservée le ${dateHeure(a.reserveLe)}`}),
         a.etat==='annuler' ? el('a.btn.btn-sm',{href:'#/affreteur/marche',text:'Explorer le marché'}) : action(ctx,a),

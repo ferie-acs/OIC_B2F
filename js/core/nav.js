@@ -192,6 +192,8 @@ const CONCESSIONNAIRE = [
     icone: 'wallet',
     pages: [
       { route: 'comptes', libelle: 'Comptes et soldes', droit: 'compte.lire' },
+      // Correctif anti-fraude n° 5 : la validation des crédits par une seconde personne.
+      { route: 'credits', libelle: 'Crédits à valider', droit: 'compte.valider_credit' },
       { route: 'tarifs', libelle: 'Catalogue de tarifs', droit: 'tarif.lire' },
       { route: 'abonnements', libelle: 'Abonnements', droit: 'abonnement.lire' },
     ],
@@ -266,6 +268,8 @@ const MINIMAL = [
     pages: [
       { route: 'dashboard', libelle: 'Accueil' },
       { route: 'groupements', libelle: 'Groupements', droit: 'groupement.lire' },
+      // Correctif anti-fraude n° 3 : ouverte au seul agent d'activation par la matrice.
+      { route: 'verifications', libelle: 'Vérification des transporteurs', droit: 'groupement.verifier' },
       { route: 'duts', libelle: 'Documents de transport', droit: 'dut.lire' },
     ],
   },

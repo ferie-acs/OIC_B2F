@@ -28,7 +28,7 @@
  * @module domain/matching.state
  */
 
-import { ETAT_APPARIEMENT, SENS_APPARIEMENT } from './enums.js';
+import { DELAIS_APPARIEMENT, ETAT_APPARIEMENT, SENS_APPARIEMENT } from './enums.js';
 
 /**
  * Les actions possibles sur un appariement.
@@ -46,6 +46,12 @@ export const ACTION = Object.freeze({
   ANNULER: 'annuler',
   /** L'affréteur valide. **Déclenche le double débit.** Terminal et irréversible. */
   VALIDER: 'valider',
+  /**
+   * La plateforme clôt un appariement dont le délai est dépassé. Correctif
+   * anti-fraude n° 4 : réserver étant gratuit, un abonné pouvait immobiliser des
+   * camions sans jamais valider. Aucune partie ne peut exercer cette action.
+   */
+  EXPIRER: 'expirer',
 });
 
 /**
@@ -62,6 +68,8 @@ export const PARTIE = Object.freeze({
   INITIATEUR: 'initiateur',
   /** Celle qui doit répondre — dépend du sens. */
   REPONDEUR: 'repondeur',
+  /** La plateforme elle-même, sans intervention d'une partie (expiration). */
+  SYSTEME: 'systeme',
 });
 
 /**
@@ -93,6 +101,48 @@ export const GARDES = Object.freeze({
   demandeTenable: {
     message: () => "La demande de transport a été annulée ou a déjà donné lieu à une validation.",
     verifier: (c) => c.demandeOuverte === true,
+  },
+
+  /* --- Correctifs anti-fraude n° 3 et n° 4 (13/10/2026) ------------ *
+   * Gardes à évaluation stricte : une donnée absente du contexte fait
+   * échouer la garde. Ne pas savoir si un transporteur est vérifié n'est
+   * pas le savoir vérifié. */
+
+  transporteurVerifie: {
+    message: (c) =>
+      c.destinataire === POV_TRANSPORTEUR
+        ? 'Votre dossier de transporteur n’a pas été vérifié par la plateforme. Tant ' +
+          'que l’agent d’activation n’a pas contrôlé votre RCCM, votre carte de ' +
+          'transporteur et votre assurance, vous ne pouvez ni publier, ni proposer, ' +
+          'ni accepter un transport.'
+        : 'Ce transporteur n’est pas, ou plus, vérifié par la plateforme : la mise ' +
+          'en relation ne peut pas aboutir. Aucun montant n’a été débité. Choisissez ' +
+          'un autre véhicule.',
+    verifier: (c) => c.transporteurVerifie === true,
+  },
+
+  moyensVerifies: {
+    message: (c) =>
+      c.destinataire === POV_TRANSPORTEUR
+        ? 'Le véhicule ou le chauffeur de cette offre n’a pas été contrôlé par ' +
+          'l’agent d’activation (carte grise, carte de transport, permis). Faites-le ' +
+          'contrôler avant de vous engager : l’affréteur doit recevoir exactement ce ' +
+          'qui a été vérifié.'
+        : 'Le véhicule ou le chauffeur proposé n’a pas été contrôlé par la ' +
+          'plateforme : la mise en relation ne peut pas aboutir en l’état.',
+    verifier: (c) => c.moyensVerifies === true,
+  },
+
+  delaiTenu: {
+    message: () =>
+      'Le délai de cette mise en relation est dépassé : elle a expiré et le ' +
+      'véhicule est revenu sur le marché. Aucun montant n’a été débité.',
+    verifier: (c) => c.delaiDepasse === false,
+  },
+
+  delaiDepasse: {
+    message: () => 'Le délai de cette mise en relation n’est pas encore écoulé.',
+    verifier: (c) => c.delaiDepasse === true,
   },
 
   fenetreRecouvrante: {
@@ -201,7 +251,13 @@ export const TRANSITIONS = Object.freeze([
     vers: ETAT_APPARIEMENT.RESERVER,
     partie: PARTIE.INITIATEUR,
     droit: 'appariement.reserver',
-    gardes: ['offreTenable', 'demandeTenable', 'fenetreRecouvrante'],
+    gardes: [
+      'offreTenable',
+      'demandeTenable',
+      'fenetreRecouvrante',
+      'transporteurVerifie',
+      'moyensVerifies',
+    ],
   }),
   Object.freeze({
     depuis: ETAT_APPARIEMENT.RESERVER,
@@ -209,7 +265,13 @@ export const TRANSITIONS = Object.freeze([
     vers: ETAT_APPARIEMENT.ACCEPTER,
     partie: PARTIE.REPONDEUR,
     droit: 'appariement.repondre',
-    gardes: ['offreTenable', 'demandeTenable'],
+    gardes: [
+      'offreTenable',
+      'demandeTenable',
+      'transporteurVerifie',
+      'moyensVerifies',
+      'delaiTenu',
+    ],
   }),
   Object.freeze({
     depuis: ETAT_APPARIEMENT.RESERVER,
@@ -248,8 +310,29 @@ export const TRANSITIONS = Object.freeze([
       'demandeTenable',
       'soldeAffreteurSuffisant',
       'soldeTransporteurSuffisant',
+      'transporteurVerifie',
+      'moyensVerifies',
+      'delaiTenu',
     ],
     financiere: true,
+  }),
+  // Correctif anti-fraude n° 4. La valeur stockée reste `annuler` (D34) ;
+  // `motifCloture = expiration` dit que la plateforme, et non une partie, a clos.
+  Object.freeze({
+    depuis: ETAT_APPARIEMENT.RESERVER,
+    action: ACTION.EXPIRER,
+    vers: ETAT_APPARIEMENT.ANNULER,
+    partie: PARTIE.SYSTEME,
+    droit: 'appariement.expirer',
+    gardes: ['delaiDepasse'],
+  }),
+  Object.freeze({
+    depuis: ETAT_APPARIEMENT.ACCEPTER,
+    action: ACTION.EXPIRER,
+    vers: ETAT_APPARIEMENT.ANNULER,
+    partie: PARTIE.SYSTEME,
+    droit: 'appariement.expirer',
+    gardes: ['delaiDepasse'],
   }),
 ]);
 
@@ -347,6 +430,48 @@ export function droitPourEngager(sens) {
   return sens === SENS_APPARIEMENT.OFFRE_VERS_DEMANDE
     ? 'appariement.reserver'
     : 'appariement.proposer';
+}
+
+/**
+ * Échéance d'un appariement en attente — correctif anti-fraude n° 4.
+ *
+ * Fonction pure : l'autorité est la date, comme pour l'abonnement (D38). Aucune
+ * tâche planifiée : l'expiration est constatée à la lecture et appliquée par le
+ * service d'appariement.
+ *
+ * @param {{etat: string, reserveLe?: string, reponduLe?: string}} appariement
+ * @returns {string|null} Horodatage ISO de l'échéance, `null` hors attente.
+ */
+export function echeanceDe(appariement) {
+  const heures = (iso, h) => {
+    const t = new Date(iso ?? '').getTime();
+    return Number.isFinite(t) ? new Date(t + h * 3600000).toISOString() : null;
+  };
+  if (appariement?.etat === ETAT_APPARIEMENT.RESERVER) {
+    return heures(appariement.reserveLe, DELAIS_APPARIEMENT.REPONSE_HEURES);
+  }
+  if (appariement?.etat === ETAT_APPARIEMENT.ACCEPTER) {
+    return heures(appariement.reponduLe ?? appariement.reserveLe, DELAIS_APPARIEMENT.VALIDATION_HEURES);
+  }
+  return null;
+}
+
+/**
+ * Le délai d'un appariement en attente est-il dépassé ?
+ * Une échéance qu'on ne sait pas calculer sur un appariement en attente est
+ * tenue pour dépassée : l'attente ne doit pas devenir illimitée par défaut.
+ *
+ * @param {{etat: string, reserveLe?: string, reponduLe?: string}} appariement
+ * @param {Date} [maintenant]
+ * @returns {boolean}
+ */
+export function delaiDepasse(appariement, maintenant = new Date()) {
+  const enAttente =
+    appariement?.etat === ETAT_APPARIEMENT.RESERVER ||
+    appariement?.etat === ETAT_APPARIEMENT.ACCEPTER;
+  if (!enAttente) return false;
+  const echeance = echeanceDe(appariement);
+  return !echeance || new Date(echeance).getTime() <= maintenant.getTime();
 }
 
 /**

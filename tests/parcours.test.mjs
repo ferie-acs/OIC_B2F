@@ -29,7 +29,7 @@ const { connecter, contexteDe, blocageAbonnement } = await import(
   '../js/services/auth.service.js'
 );
 const matching = await import('../js/services/matching.service.js');
-const { soldeDe, crediter, mouvementsDe } = await import('../js/services/compte.service.js');
+const { soldeDe, saisirCredit, validerCredit, mouvementsDe } = await import('../js/services/compte.service.js');
 const flotte = await import('../js/services/flotte.service.js');
 const fret = await import('../js/services/fret.service.js');
 const transportSvc = await import('../js/services/transport.service.js');
@@ -194,7 +194,9 @@ describe('LE FIL NARRATIF — de la déclaration à la clôture', () => {
 
     const offre = resultats[0];
     assert.ok(offre.reference, 'la référence est visible');
-    assert.ok(offre.vehicule.immatriculation, "l'immatriculation est un critère de choix");
+    // Correctif anti-fraude n° 1 : ni plaque ni raison sociale avant validation.
+    assert.equal('immatriculation' in offre.vehicule, false, "l'immatriculation a fuité");
+    assert.ok(offre.vehicule.capaciteT, 'la capacité reste un critère de choix');
     assert.equal('carteGrise' in offre.vehicule, false, 'la carte grise a fuité');
     assert.equal('chauffeurPressentiId' in offre, false, 'le chauffeur a fuité');
     assert.equal(
@@ -202,7 +204,8 @@ describe('LE FIL NARRATIF — de la déclaration à la clôture', () => {
       false,
       'le téléphone du transporteur a fuité AVANT validation',
     );
-    assert.ok(offre.groupement.raisonSociale, "l'identité commerciale reste visible");
+    assert.equal('raisonSociale' in offre.groupement, false, "la raison sociale a fuité AVANT validation");
+    assert.equal(offre.confiance.verifie, true, 'le signal de confiance remplace le nom');
   });
 
   it('4 — l’affréteur réserve', () => {
@@ -424,11 +427,15 @@ describe('CAS D’ÉCHEC — solde insuffisant de la contrepartie (M5.3)', () =>
 
   it('la validation redevient possible une fois le compte crédité', () => {
     const ap = depot('appariement').brutOu((x) => x.offreId === 'off-3')[0];
-    crediter(a.concessionnaire, {
+    // Correctif anti-fraude n° 5 : saisie puis validation par une AUTRE personne.
+    const credit = saisirCredit(a.concessionnaire, {
       groupementId: 'grp-tra-2',
       montant: 50000,
       referenceEncaissement: 'ENC-DEMO-9001',
     });
+    assert.equal(soldeDe('grp-tra-2'), 5000, 'la saisie seule ne crédite pas');
+    const second = contexteDe(depot('utilisateur').brutParId('u-conc-2'));
+    validerCredit(second, credit.id, { rapprochementConfirme: true });
     assert.equal(soldeDe('grp-tra-2'), 55000);
 
     const p = matching.preparerValidation(a.affreteur, ap.id);
@@ -442,7 +449,7 @@ describe('CAS D’ÉCHEC — solde insuffisant de la contrepartie (M5.3)', () =>
   it('refuse le crédit manuel à tout autre rôle que le concessionnaire', () => {
     assert.throws(
       () =>
-        crediter(a.affreteur, {
+        saisirCredit(a.affreteur, {
           groupementId: 'grp-aff-1',
           montant: 100000,
           referenceEncaissement: 'X',

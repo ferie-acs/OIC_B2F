@@ -33,16 +33,21 @@ import {
   SENS_APPARIEMENT,
   SENS_OPERATION,
   CODE_TARIF,
+  MOTIF_CLOTURE,
 } from '../domain/enums.js';
 import { deciderSurAppariement, exiger, projeter } from '../domain/access.js';
 import {
   ACTION,
+  delaiDepasse,
   droitPourEngager,
+  echeanceDe,
   evaluerTransition,
 } from '../domain/matching.state.js';
+import { refuserCoordonnees } from '../domain/texte.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { soldeDe } from './compte.service.js';
-import { journaliser } from './audit.service.js';
+import { CONTEXTE_PLATEFORME, journaliser } from './audit.service.js';
+import { moyensVerifies, transporteurVerifie } from './verification.service.js';
 import { notifier } from './notification.service.js';
 import { transmettreMission } from './passerelle-dut.service.js';
 
@@ -94,15 +99,21 @@ export function fenetresSeRecouvrent(offre, demande) {
 
 /**
  * Contexte métier passé aux gardes de la machine à états.
+ *
+ * Correctifs anti-fraude n° 3 et n° 4 : il porte aussi la vérification du
+ * transporteur et de ses moyens, et le dépassement du délai de l'appariement
+ * en cours. Le nom du transporteur n'y figure plus (n° 1) : aucun message de
+ * refus ne doit pouvoir le servir à l'affréteur avant validation.
+ *
  * @param {Record<string, any>} offre
  * @param {Record<string, any>} demande
- * @param {{destinataire?: string}} [options]
+ * @param {{destinataire?: string, appariement?: Record<string, any>, motifRejet?: string}} [options]
  */
 function contexteMetier(offre, demande, options = {}) {
   const fa = tarif(CODE_TARIF.FRAIS_AFFRETEUR);
   const ft = tarif(CODE_TARIF.FRAIS_TRANSPORTEUR);
   const gAff = depot('groupement').brutParId(demande.groupementId);
-  const gTra = depot('groupement').brutParId(offre.groupementId);
+  const { appariement, ...autres } = options;
 
   return {
     offreDisponible:
@@ -114,10 +125,13 @@ function contexteMetier(offre, demande, options = {}) {
     soldeTransporteur: soldeDe(offre.groupementId),
     fraisAffreteur: fa,
     fraisTransporteur: ft,
-    nomAffreteur: gAff?.raisonSociale,
-    nomTransporteur: gTra?.raisonSociale,
+    // Nom de l'affréteur : servi au seul affréteur, dans le refus qui le concerne.
+    nomAffreteur: options.destinataire === 'affreteur' ? gAff?.raisonSociale : undefined,
+    transporteurVerifie: transporteurVerifie(offre.groupementId),
+    moyensVerifies: moyensVerifies(offre),
+    delaiDepasse: appariement ? delaiDepasse(appariement) : false,
     destinataire: options.destinataire,
-    ...options,
+    ...autres,
   };
 }
 
@@ -132,6 +146,10 @@ function contexteMetier(offre, demande, options = {}) {
  * @returns {Record<string, any>} L'appariement créé.
  */
 export function engager(ctx, { offreId, demandeId, sens = SENS_APPARIEMENT.OFFRE_VERS_DEMANDE }) {
+  // Une réservation échue ne doit pas bloquer l'offre : on constate d'abord les
+  // expirations (correctif anti-fraude n° 4).
+  expirerEchus();
+
   const offre = depot('offre').brutParId(offreId);
   const demande = depot('demande').brutParId(demandeId);
   if (!offre || !demande) throw new RefusMetier(['Offre ou demande introuvable.']);
@@ -158,7 +176,13 @@ export function engager(ctx, { offreId, demandeId, sens = SENS_APPARIEMENT.OFFRE
     ]);
   }
 
-  const evaluation = evaluerTransition(null, ACTION.ENGAGER, contexteMetier(offre, demande));
+  const evaluation = evaluerTransition(
+    null,
+    ACTION.ENGAGER,
+    contexteMetier(offre, demande, {
+      destinataire: sens === SENS_APPARIEMENT.OFFRE_VERS_DEMANDE ? 'affreteur' : 'transporteur',
+    }),
+  );
   if (!evaluation.possible) throw new RefusMetier(evaluation.refus);
 
   const maintenant = new Date().toISOString();
@@ -220,13 +244,24 @@ export function repondre(ctx, appariementId, { accepte, motif, precision }) {
 
   const decision = deciderSurAppariement(ctx, action, a);
   if (!decision.autorise) throw new RefusMetier([decision.explication]);
+  // La précision accompagne le rejet jusqu'à l'affréteur, avant toute validation :
+  // elle ne doit pas devenir un canal pour des coordonnées (correctif n° 1).
+  try {
+    refuserCoordonnees(precision, 'Précision');
+  } catch (e) {
+    throw new RefusMetier([e.message]);
+  }
 
   const offre = depot('offre').brutParId(a.offreId);
   const demande = depot('demande').brutParId(a.demandeId);
   const evaluation = evaluerTransition(
     a.etat,
     action,
-    contexteMetier(offre, demande, { motifRejet: motif }),
+    contexteMetier(offre, demande, {
+      motifRejet: motif,
+      appariement: a,
+      destinataire: ctx.groupementId === a.groupementTransporteurId ? 'transporteur' : 'affreteur',
+    }),
   );
   if (!evaluation.possible) throw new RefusMetier(evaluation.refus);
 
@@ -404,7 +439,7 @@ export function preparerValidation(ctx, appariementId) {
 
   const estTransporteur = ctx.groupementId === a.groupementTransporteurId;
   const destinataire = estTransporteur ? 'transporteur' : 'affreteur';
-  const metier = contexteMetier(offre, demande, { destinataire });
+  const metier = contexteMetier(offre, demande, { destinataire, appariement: a });
   const evaluation = evaluerTransition(a.etat, ACTION.VALIDER, metier);
   const decision = deciderSurAppariement(ctx, ACTION.VALIDER, a);
 
@@ -440,9 +475,9 @@ export function preparerValidation(ctx, appariementId) {
     utilisateurProvisionne: soldeUtilisateur >= montantUtilisateur,
     // Contrepartie : un état, jamais un chiffre.
     contrepartieProvisionnee,
-    nomAffreteur: metier.nomAffreteur,
-    nomTransporteur: metier.nomTransporteur,
     estTransporteur,
+    // Échéance de l'attente en cours : l'écran la montre (correctif n° 4).
+    echeance: echeanceDe(a),
     possible: evaluation.possible && decision.autorise,
     refus: decision.autorise ? evaluation.refus : [decision.explication],
     decision,
@@ -514,7 +549,7 @@ export function valider(ctx, appariementId, options = {}) {
 
       const offre = depot('offre').brutParId(a.offreId);
       const demande = depot('demande').brutParId(a.demandeId);
-      const metier = contexteMetier(offre, demande, { destinataire: 'affreteur' });
+      const metier = contexteMetier(offre, demande, { destinataire: 'affreteur', appariement: frais });
       const evaluation = evaluerTransition(frais.etat, ACTION.VALIDER, metier);
       if (!evaluation.possible) throw new RefusMetier(evaluation.refus);
 
@@ -624,6 +659,83 @@ export function valider(ctx, appariementId, options = {}) {
   return resultat;
 }
 
+
+/**
+ * Clôt les appariements dont le délai est dépassé — correctif anti-fraude n° 4.
+ *
+ * Réserver est gratuit. Sans délai, un abonné pouvait immobiliser les camions
+ * d'un transporteur — ou d'un concurrent — sans jamais valider ; le
+ * transporteur ne s'en apercevait qu'en consultant ses réservations. Une
+ * réservation sans réponse sous 48 h, ou une acceptation sans validation sous
+ * 48 h, expire : le camion revient sur le marché, la demande est rouverte, et
+ * les deux parties sont prévenues. Rien n'est débité.
+ *
+ * **Aucune tâche planifiée** (cohérent avec D38) : l'expiration est constatée à
+ * chaque affichage et avant toute action d'appariement. Dans un POC sans
+ * serveur, c'est le seul moment où le code s'exécute ; en production, la même
+ * fonction serait appelée par une tâche du serveur.
+ *
+ * L'expiration est imputée à la plateforme (`CONTEXTE_PLATEFORME`), jamais à
+ * l'utilisateur dont l'affichage l'a déclenchée.
+ *
+ * @param {Date} [maintenant]
+ * @returns {Array<Record<string, any>>} Les appariements expirés par cet appel.
+ */
+export function expirerEchus(maintenant = new Date()) {
+  const echus = depot('appariement').brutOu((a) => delaiDepasse(a, maintenant));
+  const expires = [];
+
+  for (const a of echus) {
+    const evaluation = evaluerTransition(a.etat, ACTION.EXPIRER, { delaiDepasse: true });
+    if (!evaluation.possible) continue;
+    const etapeAttendue = a.etat === ETAT_APPARIEMENT.RESERVER ? 'réponse' : 'validation';
+
+    const maj = stockageInterne().transaction((tx) => {
+      tx.marquer(`appariements:${a.id}`);
+      // Relecture dans la transaction : un autre onglet a pu agir entre-temps.
+      const courant = tx.lire('appariements').find((x) => x.id === a.id);
+      if (!courant || !delaiDepasse(courant, maintenant)) return null;
+
+      const ap = depot('appariement').modifier(
+        a.id,
+        {
+          etat: evaluation.vers,
+          annuleLe: maintenant.toISOString(),
+          annuleParUtilisateurId: null,
+          motifCloture: MOTIF_CLOTURE.EXPIRATION,
+        },
+        { tx },
+      );
+      const offre = depot('offre').brutParId(a.offreId);
+      if (offre?.etat === ETAT_OFFRE.RESERVEE) {
+        depot('offre').modifier(a.offreId, { etat: ETAT_OFFRE.DISPONIBLE }, { tx });
+      }
+      const demande = depot('demande').brutParId(a.demandeId);
+      if (demande?.etat === ETAT_DEMANDE.RESERVEE) {
+        depot('demande').modifier(a.demandeId, { etat: ETAT_DEMANDE.PUBLIEE }, { tx });
+      }
+
+      journaliser(CONTEXTE_PLATEFORME, EVENEMENT_AUDIT.APPARIEMENT_EXPIRE, {
+        cibleType: 'appariement',
+        cibleId: a.id,
+        details: `Mise en relation ${a.reference} expirée : délai de ${etapeAttendue} dépassé.`,
+        tx,
+      });
+      for (const g of [a.groupementAffreteurId, a.groupementTransporteurId]) {
+        notifier(g, EVENEMENT_AUDIT.APPARIEMENT_EXPIRE, {
+          code: 'appariement.expire',
+          params: { reference: a.reference, etape: etapeAttendue },
+          cibleType: 'appariement',
+          cibleId: a.id,
+          tx,
+        });
+      }
+      return ap;
+    });
+    if (maj) expires.push(maj);
+  }
+  return expires;
+}
 
 /**
  * Fiche d'une mise en relation, **vérifiée et projetée**.

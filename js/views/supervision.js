@@ -40,7 +40,8 @@ import {
   tarifDe,
 } from './_donnees.js';
 import { depot } from '../repositories/index.js';
-import { crediter, soldeDe } from '../services/compte.service.js';
+import { creditsSaisis, rejeterCredit, saisirCredit, soldeDe, validerCredit } from '../services/compte.service.js';
+import { decider } from '../domain/access.js';
 import { lireJournal } from '../services/audit.service.js';
 import { abonnementDe } from '../services/auth.service.js';
 import { etatCarteTransport } from '../services/controle.service.js';
@@ -99,8 +100,8 @@ export function dashboardConcessionnaire(ctx) {
             .slice(0, 10)
             .map((a) => [
               a.reference,
-              nomDe(a.groupementAffreteurId),
-              nomDe(a.groupementTransporteurId),
+              nomDe(ctx, a.groupementAffreteurId),
+              nomDe(ctx, a.groupementTransporteurId),
               badge(a.etat, POV.NEUTRE),
               a.valideLe ? dateHeure(a.valideLe) : '—',
             ]),
@@ -120,9 +121,12 @@ export function comptes(ctx) {
   return el('div.page.supervision-page', {}, [
     bandeau({
       ton: 'info',
+      titre: 'Crédit en deux temps — principe des quatre yeux',
       message:
-        'Le crédit manuel remplace l’intégration de paiement, écartée du périmètre. ' +
-        'Chaque opération est tracée au journal d’audit avec le nom de son auteur.',
+        'Un crédit saisi ne touche pas au solde : il doit être validé par une autre ' +
+        'personne, après rapprochement avec l’encaissement réel. Une même référence ' +
+        'd’encaissement ne sert qu’une fois. Le crédit manuel remplace l’intégration de ' +
+        'paiement, écartée du périmètre.',
     }),
     carte({
       titre: 'Comptes et soldes',
@@ -133,7 +137,7 @@ export function comptes(ctx) {
             el('div.supervision-tile-title',{},[icone('wallet',32),el('h3',{text:g.raisonSociale})]),
             el('small',{text:'Solde du compte'}),el('strong.supervision-amount',{text:montant(soldeDe(g.id))}),
             el('p',{text:`Dernier mouvement · ${dernier?dateHeure(dernier.horodatage):'Aucun mouvement'}`}),
-            bouton({libelle:'Créditer le compte',icone:'credits',variante:'primary',onClick:()=>dialogueCredit(ctx,g)}),
+            bouton({libelle:'Saisir un crédit',icone:'credits',variante:'primary',motif:decider(ctx,'compte.crediter',{groupementId:g.id}).autorise?null:decider(ctx,'compte.crediter',{groupementId:g.id}).explication,onClick:()=>dialogueCredit(ctx,g)}),
             el('span.indicator-watermark',{'aria-hidden':'true'},[icone('wallet',88)]),
           ]);
         })),
@@ -144,9 +148,14 @@ export function comptes(ctx) {
 
 function dialogueCredit(ctx, g) {
   const fermer = modale({
-    titre: `Créditer ${g.raisonSociale}`,
+    titre: `Saisir un crédit — ${g.raisonSociale}`,
     corps: [
-      el('p', { text: 'Cette opération sera inscrite au journal d’audit avec votre identité.' }),
+      el('p', {
+        text:
+          'La saisie ne crédite pas encore le compte : une autre personne devra la ' +
+          'valider après rapprochement avec l’encaissement. Elle est inscrite au journal ' +
+          'd’audit avec votre identité.',
+      }),
       champ({ id: 'c-montant', label: 'Montant (F CFA)', type: 'number', requis: true, attrs: { min: '1', step: '1' } }),
       champ({
         id: 'c-ref',
@@ -158,17 +167,146 @@ function dialogueCredit(ctx, g) {
     actions: [
       bouton({ libelle: 'Annuler', onClick: () => fermer() }),
       bouton({
-        libelle: 'Créditer',
+        libelle: 'Enregistrer la saisie',
         variante: 'primary',
         onClick: () => {
           try {
-            crediter(ctx, {
+            saisirCredit(ctx, {
               groupementId: g.id,
               montant: Number(document.getElementById('c-montant')?.value),
               referenceEncaissement: document.getElementById('c-ref')?.value,
             });
             fermer();
-            toast('Compte crédité.');
+            toast('Crédit saisi. Il attend la validation d’une autre personne.');
+            globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+          } catch (e) {
+            afficherErreur(e);
+          }
+        },
+      }),
+    ],
+  });
+}
+
+/**
+ * Crédits à valider — correctif anti-fraude n° 5.
+ *
+ * Le bouton de validation est désactivé, avec son motif, sur les saisies de
+ * l'utilisateur connecté : on ne valide pas son propre crédit (D32 : une action
+ * interdite s'explique, elle ne disparaît pas).
+ * @param {any} ctx
+ */
+export function credits(ctx) {
+  const tous = creditsSaisis(ctx);
+  const enAttente = tous.filter((c) => c.etat === 'en_attente');
+  const traites = tous.filter((c) => c.etat !== 'en_attente').slice(0, 20);
+  return el('div.page.supervision-page', {}, [
+    bandeau({
+      ton: 'info',
+      titre: 'Principe des quatre yeux',
+      message:
+        'Vous validez les crédits saisis par un autre agent, après avoir rapproché la ' +
+        'saisie de l’encaissement réel : relevé bancaire, reçu de caisse ou avis de ' +
+        'paiement mobile. Seule la validation crédite le compte.',
+    }),
+    carte({
+      titre: 'Crédits en attente de validation',
+      corps: [
+        tableau({
+          colonnes: ['Référence', 'Groupement', 'Montant', 'Encaissement', 'Saisi par', 'Saisi le', ''],
+          lignes: enAttente.map((c) => {
+            const soi = c.saisiParUtilisateurId === ctx.utilisateurId;
+            const motif = soi ? 'Vous avez saisi ce crédit : sa validation revient à une autre personne.' : null;
+            return [
+              c.reference,
+              nomDe(ctx, c.groupementId),
+              montant(c.montant),
+              c.referenceEncaissement,
+              nomUtilisateur(c.saisiParUtilisateurId),
+              dateHeure(c.saisiLe),
+              el('div.table-toolbar', {}, [
+                bouton({ libelle: 'Valider', variante: 'primary', motif, onClick: () => dialogueValidationCredit(ctx, c) }),
+                bouton({ libelle: 'Rejeter', variante: 'ghost', motif, onClick: () => dialogueRejetCredit(ctx, c) }),
+              ]),
+            ];
+          }),
+          vide: etatVide({ titre: 'Aucun crédit en attente', message: 'Les saisies des agents apparaîtront ici.' }),
+        }),
+      ],
+    }),
+    carte({
+      titre: 'Derniers crédits traités',
+      corps: [
+        tableau({
+          colonnes: ['Référence', 'Groupement', 'Montant', 'Encaissement', 'Saisi par', 'Traité par', 'État'],
+          lignes: traites.map((c) => [
+            c.reference,
+            nomDe(ctx, c.groupementId),
+            montant(c.montant),
+            c.referenceEncaissement,
+            nomUtilisateur(c.saisiParUtilisateurId),
+            nomUtilisateur(c.valideParUtilisateurId),
+            el('span', {}, [badge(c.etat), c.motifRejet ? el('small', { text: ` ${c.motifRejet}` }) : null]),
+          ]),
+          vide: etatVide({ titre: 'Aucun crédit traité', message: 'L’historique des validations apparaîtra ici.' }),
+        }),
+      ],
+    }),
+  ]);
+}
+
+function dialogueValidationCredit(ctx, c) {
+  const fermer = modale({
+    titre: `Valider le crédit ${c.reference}`,
+    corps: [
+      el('div.recap-grid', {}, [
+        el('div.recap-item', {}, [el('span', { text: 'Groupement' }), el('strong', { text: nomDe(ctx, c.groupementId) })]),
+        el('div.recap-item', {}, [el('span', { text: 'Montant' }), el('strong', { text: montant(c.montant) })]),
+        el('div.recap-item', {}, [el('span', { text: 'Encaissement' }), el('strong', { text: c.referenceEncaissement })]),
+        el('div.recap-item', {}, [el('span', { text: 'Saisi par' }), el('strong', { text: nomUtilisateur(c.saisiParUtilisateurId) })]),
+      ]),
+      el('label.checkbox-row', {}, [
+        el('input', { type: 'checkbox', id: 'cv-rappro' }),
+        ' J’ai rapproché cette saisie de l’encaissement réel : même référence, même montant.',
+      ]),
+    ],
+    actions: [
+      bouton({ libelle: 'Annuler', onClick: () => fermer() }),
+      bouton({
+        libelle: 'Valider et créditer',
+        variante: 'primary',
+        onClick: () => {
+          try {
+            validerCredit(ctx, c.id, { rapprochementConfirme: document.getElementById('cv-rappro')?.checked === true });
+            fermer();
+            toast('Crédit validé : le compte est crédité.');
+            globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
+          } catch (e) {
+            afficherErreur(e);
+          }
+        },
+      }),
+    ],
+  });
+}
+
+function dialogueRejetCredit(ctx, c) {
+  const fermer = modale({
+    titre: `Rejeter le crédit ${c.reference}`,
+    corps: [
+      el('p', { text: 'Le compte n’est pas crédité. La référence d’encaissement redevient disponible pour une saisie corrigée.' }),
+      champ({ id: 'cr-motif', label: 'Motif du rejet', type: 'textarea', requis: true, aide: 'Par exemple : encaissement introuvable, montant différent.' }),
+    ],
+    actions: [
+      bouton({ libelle: 'Annuler', onClick: () => fermer() }),
+      bouton({
+        libelle: 'Rejeter',
+        variante: 'primary',
+        onClick: () => {
+          try {
+            rejeterCredit(ctx, c.id, document.getElementById('cr-motif')?.value);
+            fermer();
+            toast('Crédit rejeté.');
             globalThis.dispatchEvent(new HashChangeEvent('hashchange'));
           } catch (e) {
             afficherErreur(e);
@@ -315,8 +453,8 @@ export function audit(ctx) {
           lignes: entrees.slice(0, 200).map((e) => [
             dateHeure(e.horodatage),
             nomUtilisateur(e.auteurUtilisateurId),
-            ROLES[e.auteurRoleId]?.libelle ?? e.auteurRoleId,
-            e.groupementId ? nomDe(e.groupementId) : '—',
+            e.auteurRoleId === 'plateforme' ? 'Plateforme (automatique)' : ROLES[e.auteurRoleId]?.libelle ?? e.auteurRoleId,
+            e.groupementId ? nomDe(ctx, e.groupementId) : '—',
             e.evenement,
             e.details ?? '—',
           ]),
@@ -411,7 +549,7 @@ export function etats(ctx) {
           colonnes: ['Référence', 'Groupement', 'Corridor', 'État'],
           lignes: declarations.map((d) => [
             d.reference,
-            nomDe(d.groupementId),
+            nomDe(ctx, d.groupementId),
             `${refDe(d.provenanceId)} → ${refDe(d.destinationId)}`,
             badge(d.etat),
           ]),
@@ -426,7 +564,7 @@ export function etats(ctx) {
           colonnes: ['Référence', 'Transporteur', 'Corridor', 'Disponibilité', 'État'],
           lignes: offres.map((o) => [
             o.reference,
-            nomDe(o.groupementId),
+            nomDe(ctx, o.groupementId),
             `${refDe(o.localiteDepartId)} → ${refDe(o.localiteArriveeId)}`,
             `${date(o.disponibleDu)} → ${date(o.disponibleAu)}`,
             badge(o.etat),
@@ -443,7 +581,7 @@ export function relationsControle(ctx) {
   const liste = depot('appariement').lisiblesPar(ctx, 'appariement.lire');
   const offresParId = new Map(projeterOu(ctx,'offre',()=>true).map(o=>[o.id,o]));
   return el('div.page.supervision-page', {}, [
-    carte({titre:'Carte des mises en relation',corps:[carteSupervision(liste.map(a=>{const o=offresParId.get(a.offreId);return {id:a.id,type:'camions',reference:a.reference,titre:`${nomDe(a.groupementAffreteurId)} · ${nomDe(a.groupementTransporteurId)}`,etat:a.etat,localiteDepartId:o?.localiteDepartId,localiteArriveeId:o?.localiteArriveeId};}))]}),
+    carte({titre:'Carte des mises en relation',corps:[carteSupervision(liste.map(a=>{const o=offresParId.get(a.offreId);return {id:a.id,type:'camions',reference:a.reference,titre:`${nomDe(ctx, a.groupementAffreteurId)} · ${nomDe(ctx, a.groupementTransporteurId)}`,etat:a.etat,localiteDepartId:o?.localiteDepartId,localiteArriveeId:o?.localiteArriveeId};}))]}),
     carte({
       titre: 'Mises en relation',
       sousTitre: 'Suivi des mises en relation, en lecture seule.',
@@ -452,8 +590,8 @@ export function relationsControle(ctx) {
           colonnes: ['Référence', 'Affréteur', 'Transporteur', 'État', 'Validée le'],
           lignes: liste.map((a) => [
             a.reference,
-            nomDe(a.groupementAffreteurId),
-            nomDe(a.groupementTransporteurId),
+            nomDe(ctx, a.groupementAffreteurId),
+            nomDe(ctx, a.groupementTransporteurId),
             badge(a.etat),
             a.valideLe ? dateHeure(a.valideLe) : '—',
           ]),
@@ -472,7 +610,7 @@ export function acteurs(ctx) {
       titre: 'Transporteurs et affréteurs',
       corps: [
         tableau({
-          colonnes: ['Raison sociale', 'Type', 'RCCM', 'Carte de transporteur', 'Localité', 'Véhicules'],
+          colonnes: ['Raison sociale', 'Type', 'RCCM', 'Carte de transporteur', 'Vérification', 'Localité', 'Véhicules'],
           lignes: liste.map((g) => [
             g.raisonSociale,
             g.type,
@@ -480,6 +618,8 @@ export function acteurs(ctx) {
             g.carteTransporteurNumero
               ? `${g.carteTransporteurNumero} — ${date(g.carteTransporteurEcheance)}`
               : '—',
+            // Correctif anti-fraude n° 3 : le contrôleur voit l'état du contrôle des pièces.
+            g.type === 'transporteur' ? badge(g.verificationEtat || 'a_verifier') : '—',
             refDe(g.localiteId),
             compter('vehicule', (v) => v.groupementId === g.id),
           ]),
@@ -494,7 +634,7 @@ export function parc(ctx) {
   const liste = depot('vehicule').lisiblesPar(ctx, 'vehicule.lire');
 
   return el('div.page.supervision-page', {}, [
-    carte({titre:'Carte du parc national',corps:[carteSupervision(liste.map(v=>({id:v.id,type:'camions',reference:v.immatriculation,titre:nomDe(v.groupementId),stationnementId:v.stationnementLocaliteId,detail:`${refDe(v.carrosserieId)} · PTAC ${v.ptacT} t`})),{parc:true})]}),
+    carte({titre:'Carte du parc national',corps:[carteSupervision(liste.map(v=>({id:v.id,type:'camions',reference:v.immatriculation,titre:nomDe(ctx, v.groupementId),stationnementId:v.stationnementLocaliteId,detail:`${refDe(v.carrosserieId)} · PTAC ${v.ptacT} t`})),{parc:true})]}),
     carte({
       titre: 'Parc de véhicules',
       corps: [
@@ -504,7 +644,7 @@ export function parc(ctx) {
             const validite = etatCarteTransport(v);
             return [
               v.immatriculation,
-              nomDe(v.groupementId),
+              nomDe(ctx, v.groupementId),
               refDe(v.carrosserieId),
               `${v.ptacT} t`,
               el('span', {}, [

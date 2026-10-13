@@ -71,7 +71,9 @@ export async function enrichirDemo() {
       const steps=['valide','a_quai','charge','en_route','livre'];
       for(let step=steps.indexOf(transport.etape);step<(kind===4?3:4);step++) avancer(tra,transport.id);
     }
-    depot('appariement').modifier(a.id,{seedScenarioComplete:true,reserveLe:jour(-(2+i%8)),...(kind!==0?{reponduLe:jour(-1)}:{})});
+    // Les dossiers encore en attente (kind 0 : réponse ; kind 1 : validation) sont datés
+    // de quelques heures : au-delà de 48 h ils expireraient dès l'ouverture (correctif n° 4).
+    depot('appariement').modifier(a.id,{seedScenarioComplete:true,reserveLe:kind<=1?jour(-(2+i%8)/24):jour(-(2+i%8)),...(kind===1?{reponduLe:jour(-1/24)}:kind!==0?{reponduLe:jour(-1)}:{})});
   }
   stockageInterne().transaction(tx=>tx.ecrire('audit',[...tx.lire('audit'),{id:`seed-${VERSION}-complete`,demo:true,seedVersion:VERSION,horodatage:jour(0),evenement:'demo.enrichie',details:'36 dossiers et véhicules de démonstration ajoutés.'}]));
 }

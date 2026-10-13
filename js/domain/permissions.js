@@ -181,6 +181,17 @@ export const DROITS = Object.freeze({
       'les champs.',
   },
 
+  'appariement.expirer': {
+    categorie: 'Mise en relation',
+    mutation: true,
+    libelle: 'Clore un appariement dont le délai est dépassé',
+    note:
+      "**Déclaré, accordé à personne : la plateforme l'exerce seule** (correctif " +
+      'anti-fraude n° 4). Une réservation sans réponse ou une acceptation sans ' +
+      'validation expirent au terme du délai, et le camion revient sur le marché. ' +
+      "Aucun utilisateur ne peut provoquer ni empêcher l'expiration.",
+  },
+
   'coordonnees.exception': {
     categorie: 'Mise en relation',
     mutation: true,
@@ -206,6 +217,14 @@ export const DROITS = Object.freeze({
     note: "Appartient à l'affréteur. Impossible avant l'étape « livré ».",
   },
   'transport.incident': { categorie: 'Transport', libelle: 'Signaler un incident' , mutation: true },
+  'avis.donner': {
+    mutation: true,
+    categorie: 'Transport',
+    libelle: 'Noter la contrepartie après clôture',
+    note:
+      'Correctif anti-fraude n° 2. Une note par partie et par transport clôturé. ' +
+      'La réputation ne se constitue que sur les transports conclus par la plateforme.',
+  },
 
   /* --- L'argent ------------------------------------------------ */
   'compte.lire': {
@@ -217,9 +236,24 @@ export const DROITS = Object.freeze({
   'compte.crediter': {
     mutation: true,
     categorie: 'Compte',
-    libelle: 'Créditer manuellement un compte',
+    libelle: 'Saisir un crédit de compte',
     teste: true,
-    note: "Réservé au concessionnaire. Remplace l'intégration de paiement (arbitrage N2).",
+    note:
+      "Réservé au concessionnaire. Remplace l'intégration de paiement (arbitrage N2). " +
+      '**Depuis le correctif anti-fraude n° 5, la saisie ne touche pas au solde** : ' +
+      'elle attend la validation d’une autre personne (`compte.valider_credit`).',
+  },
+  'compte.valider_credit': {
+    mutation: true,
+    categorie: 'Compte',
+    libelle: 'Valider un crédit saisi par un autre agent',
+    teste: true,
+    refus:
+      'La validation d’un crédit revient à une autre personne que l’agent qui l’a ' +
+      'saisi, après rapprochement avec l’encaissement.',
+    note:
+      '**Principe des quatre yeux** (correctif anti-fraude n° 5). Le droit ne suffit ' +
+      'pas : le service refuse en outre que le validateur soit l’auteur de la saisie.',
   },
   'tarif.lire': { categorie: 'Compte', libelle: 'Consulter le catalogue de tarifs' },
   'tarif.modifier': { categorie: 'Compte', libelle: 'Modifier le catalogue de tarifs' , mutation: true },
@@ -229,6 +263,19 @@ export const DROITS = Object.freeze({
   /* --- Les acteurs --------------------------------------------- */
   'groupement.lire': { categorie: 'Acteurs', libelle: 'Consulter les groupements' },
   'groupement.gerer': { categorie: 'Acteurs', libelle: 'Modifier la fiche du groupement' , mutation: true },
+  'groupement.verifier': {
+    mutation: true,
+    categorie: 'Acteurs',
+    libelle: 'Vérifier le dossier d’un transporteur',
+    teste: true,
+    refus:
+      'Le contrôle des pièces d’un transporteur relève de l’agent d’activation des ' +
+      'inscriptions.',
+    note:
+      'Correctif anti-fraude n° 3. Contrôle du RCCM, de la carte de transporteur, ' +
+      'de l’assurance, puis de la carte grise de chaque véhicule et du permis de ' +
+      'chaque chauffeur. Sans ce contrôle, un transporteur ne publie ni n’accepte.',
+  },
   'utilisateur.lire': { categorie: 'Acteurs', libelle: 'Consulter les utilisateurs' },
   'utilisateur.gerer': { categorie: 'Acteurs', libelle: 'Créer ou modifier un utilisateur' , mutation: true },
   'role.lire': { categorie: 'Acteurs', libelle: 'Consulter la matrice des rôles' },
@@ -289,6 +336,7 @@ const AFFRETEUR = Object.freeze({
   'coordonnees.lire': GROUPEMENT,
   'transport.lire': GROUPEMENT,
   'transport.cloturer': GROUPEMENT,
+  'avis.donner': GROUPEMENT,
   'dut.lire': GROUPEMENT,
   'groupement.gerer': GROUPEMENT,
   'utilisateur.lire': GROUPEMENT,
@@ -314,6 +362,7 @@ const TRANSPORTEUR = Object.freeze({
   'transport.lire': GROUPEMENT,
   'transport.avancer': GROUPEMENT,
   'transport.incident': GROUPEMENT,
+  'avis.donner': GROUPEMENT,
   'dut.lire': GROUPEMENT,
   'dut.generer': GROUPEMENT,
   'groupement.gerer': GROUPEMENT,
@@ -393,6 +442,8 @@ export const MATRICE = Object.freeze({
     'transport.lire': TOUT,
     'compte.lire': TOUT,
     'compte.crediter': TOUT,
+    // Quatre yeux : le même rôle saisit et valide, jamais la même personne.
+    'compte.valider_credit': TOUT,
     'tarif.lire': TOUT,
     'tarif.modifier': TOUT,
     'abonnement.lire': TOUT,
@@ -486,7 +537,16 @@ export const MATRICE = Object.freeze({
   /** Seul profil de niveau 3 à recevoir un droit métier : la lecture des DUT. */
   dut_transport: Object.freeze({ 'dut.lire': TOUT }),
 
-  activation_inscription: Object.freeze({ 'groupement.lire': TOUT }),
+  /**
+   * Correctif anti-fraude n° 3 : l'agent d'activation contrôle les pièces des
+   * transporteurs. Il ne transige pas, ne voit ni soldes ni coordonnées de
+   * contact ; les pièces nécessaires au contrôle lui sont servies par le seul
+   * service de vérification, sous ce droit.
+   */
+  activation_inscription: Object.freeze({
+    'groupement.lire': TOUT,
+    'groupement.verifier': TOUT,
+  }),
   activation_inscription_affreteur: Object.freeze({ 'groupement.lire': TOUT }),
 });
 

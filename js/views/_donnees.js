@@ -16,8 +16,8 @@
  *
  * ## Ce que ce module rend
  *
- * - des **libellés** (`nomDe`, `refDe`) : de l'identité commerciale, publique
- *   entre acteurs du marché, jamais une coordonnée ;
+ * - des **libellés** (`nomDe`, `refDe`) : l'identité commerciale n'en sort que
+ *   pour qui a le droit de la lire — sinon un alias (correctif anti-fraude n° 1) ;
  * - des **objets projetés**, quand la vue a besoin de plus.
  *
  * Ce qu'il ne rend jamais : un objet brut.
@@ -25,22 +25,56 @@
  * @module views/_donnees
  */
 
-import { projeter } from '../domain/access.js';
+import { identiteLiberee, projeter } from '../domain/access.js';
+import { profilConfiance } from '../services/avis.service.js';
 import { depot } from '../repositories/index.js';
 
 /**
- * Raison sociale d'un groupement.
+ * Nom d'un groupement **tel que ce lecteur a le droit de le voir**.
  *
- * Classification `identite` : c'est ce qui permet de choisir avec qui traiter,
- * et c'est visible sur le marché. Cet accesseur ne rend **que** cette chaîne —
- * il ne donne pas accès à l'objet, donc pas aux coordonnées.
+ * Correctif anti-fraude n° 1 (13/10/2026). Cet accesseur rendait la raison
+ * sociale à tout le monde, au motif qu'elle était « visible sur le marché ».
+ * C'était précisément le défaut : connaître le nom d'un transporteur avant de
+ * payer suffisait à le joindre hors plateforme. La règle est désormais celle de
+ * la projection (`identiteLiberee`) : le nom n'est servi qu'au groupement
+ * lui-même, aux rôles institutionnels, et aux deux parties d'une mise en
+ * relation validée. Aux autres, un **alias stable** — « Transporteur T-4F2A » —
+ * qui permet de reconnaître la même contrepartie d'un écran à l'autre sans
+ * pouvoir l'identifier.
  *
+ * @param {import('../domain/access.js').Contexte} ctx
  * @param {string|null|undefined} groupementId
  * @returns {string}
  */
-export function nomDe(groupementId) {
+export function nomDe(ctx, groupementId) {
   if (!groupementId) return '—';
-  return depot('groupement').brutParId(groupementId)?.raisonSociale ?? '—';
+  const g = depot('groupement').brutParId(groupementId);
+  if (!g) return '—';
+  if (identiteLiberee(ctx, `groupement:${groupementId}`, groupementId)) return g.raisonSociale ?? '—';
+  return aliasDe(g);
+}
+
+/**
+ * Alias non identifiant d'un groupement : son type et un code dérivé de son
+ * identifiant technique. Le code ne se recoupe avec aucune donnée publique.
+ * @param {{id: string, type?: string}} g
+ * @returns {string}
+ */
+function aliasDe(g) {
+  let h = 2166136261;
+  for (const c of String(g.id)) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  const code = h.toString(36).toUpperCase().padStart(4, '0').slice(-4);
+  const type = g.type === 'affreteur' ? 'Affréteur' : g.type === 'transporteur' ? 'Transporteur' : 'Partenaire';
+  return `${type} ${type[0]}-${code}`;
+}
+
+/**
+ * Profil de confiance d'un groupement : ce qu'on montre à la place de son nom.
+ * Des agrégats uniquement (correctifs n° 1 et n° 2).
+ * @param {string|null|undefined} groupementId
+ */
+export function confianceDe(groupementId) {
+  return profilConfiance(groupementId);
 }
 
 /**
@@ -54,17 +88,23 @@ export function refDe(id) {
 }
 
 /**
- * Immatriculation d'un véhicule.
+ * Immatriculation d'un véhicule, **si ce lecteur a le droit de la voir**.
  *
- * `identite` : c'est un critère de choix affiché sur le marché. Rendre la
- * chaîne plutôt que l'objet ferme l'accès à la carte grise, qui est `contact`.
+ * Correctif anti-fraude n° 1 : une plaque suffit à retrouver son propriétaire.
+ * Elle suit la règle de l'identité — propriétaire, rôles institutionnels, ou
+ * parties d'une mise en relation validée portant sur ce véhicule.
  *
+ * @param {import('../domain/access.js').Contexte} ctx
  * @param {string|null|undefined} vehiculeId
  * @returns {string}
  */
-export function immatriculationDe(vehiculeId) {
+export function immatriculationDe(ctx, vehiculeId) {
   if (!vehiculeId) return '—';
-  return depot('vehicule').brutParId(vehiculeId)?.immatriculation ?? '—';
+  const v = depot('vehicule').brutParId(vehiculeId);
+  if (!v) return '—';
+  return identiteLiberee(ctx, `vehicule:${vehiculeId}`, v.groupementId)
+    ? v.immatriculation ?? '—'
+    : 'Communiquée à la validation';
 }
 
 /**

@@ -11,6 +11,54 @@ l'Office Ivoirien des Chargeurs**. Aucun serveur, aucune donnée réelle.
 > L'application s'exécute entièrement dans le navigateur ; les données vivent
 > dans le stockage local de l'onglet et ne sont transmises nulle part.
 
+## Lutte contre la fraude — 13 octobre 2026
+
+Cinq correctifs ferment des contournements du modèle économique et de la
+confiance entre parties : traiter en direct pour ne pas payer les frais, se
+faire passer pour un transporteur, immobiliser des camions sans s'engager,
+créditer un compte sans encaissement. Chacun est signalé dans le code par la
+mention « correctif anti-fraude n° *N* ».
+
+| N° | Risque traité | Ce que fait le POC | Limite assumée |
+|:-:|---|---|---|
+| **1** | **Contournement des frais.** La raison sociale, le RCCM et l'immatriculation étaient visibles sur le marché avant tout paiement : ils suffisaient à retrouver le transporteur hors plateforme. | L'identité commerciale suit désormais la règle des coordonnées : elle n'est servie qu'au propriétaire, aux rôles institutionnels et aux deux parties d'une mise en relation **validée**, objet par objet (`identiteLiberee`, `js/domain/access.js`). À sa place, un **profil de confiance** — transporteur vérifié, transports réalisés, note, ancienneté — et un **alias stable** (« Transporteur T-XXXX », « Affréteur A-XXXX »), dans les deux sens. Les textes libres lus par la contrepartie avant validation — libellé du fret, observation, contraintes de la demande, précision d'un rejet — refusent un numéro de téléphone, une adresse électronique ou un lien de messagerie (`js/domain/texte.js`). | Un numéro écrit en toutes lettres passe, de même qu'une suite de moins de huit chiffres. Le filtre arrête le contournement par réflexe, pas le contournement déterminé. **Deux défauts connus**, consignés en `todo` dans `tests/anti-fraude.test.mjs` : un numéro séparé par des points ou des barres obliques (« 07.07.07.07.07 ») passe, pris pour une date ; une référence de la plateforme (« DT-2026-0001 ») est refusée à tort, prise pour un numéro. |
+| **2** | **Fuite après la première affaire.** Une fois les coordonnées échangées, rien ne ramenait les parties sur la plateforme. | Après la clôture d'un transport, chaque partie note l'autre **une fois**, de 1 à 5, **sans commentaire libre** — il deviendrait un canal pour des coordonnées (`js/services/avis.service.js`). La réputation affichée à la place du nom ne se constitue que sur des transports conclus par la plateforme : c'est une raison de revenir plutôt que de traiter en direct. | Une incitation, pas un verrou. Deux parties qui se connaissent peuvent traiter en direct dès la seconde affaire (voir la question de modèle économique ci-dessous). |
+| **3** | **Faux transporteur.** Rien ne prouvait qu'un transporteur était celui qu'il prétendait être : il pouvait accepter un chargement et disparaître avec la marchandise. | L'**agent d'activation des inscriptions** (`activation_inscription`, droit `groupement.verifier`, écran « Vérification des transporteurs ») contrôle le RCCM, la carte de transporteur et l'attestation d'assurance — les trois sont exigées —, puis la carte grise et la carte de transport de chaque véhicule et le permis de chaque chauffeur. Un transporteur non vérifié ne publie pas, ne propose pas, n'accepte pas, et aucune validation n'aboutit sur des moyens non contrôlés. Modifier une pièce contrôlée (immatriculation, carte grise, carte de transport ; nom ou permis du chauffeur) fait perdre le contrôle. Refuser ou retirer la vérification retire les offres du transporteur du marché. | L'agent **atteste** un contrôle : le POC ne vérifie aucune pièce auprès d'un registre, et aucun justificatif n'est téléversé. |
+| **4** | **Immobilisation gratuite.** Réserver ne coûte rien : sans délai, un abonné pouvait bloquer les camions d'un transporteur — ou d'un concurrent — sans jamais valider. | Une réservation sans réponse sous **48 h**, ou une acceptation sans validation sous **48 h**, expire. L'état stocké reste `annuler` (fidélité au système existant, D34) avec `motifCloture = expiration` ; le véhicule revient sur le marché, la demande redevient publiée, les deux parties sont notifiées, **rien n'est débité**. Le journal d'audit impute l'expiration à « Plateforme (automatique) », jamais à l'utilisateur dont l'affichage l'a déclenchée. L'échéance est affichée aux deux parties. | **Aucune tâche planifiée** : l'expiration est constatée à chaque affichage et avant chaque réservation ou proposition ; une acceptation ou une validation hors délai est refusée. Un dossier échu reste en l'état tant que personne n'ouvre l'application. Les durées sont une proposition du POC, **à confirmer par l'OIC**. |
+| **5** | **Fraude interne au crédit.** Une seule personne créditait un compte, sur une référence d'encaissement que personne ne rapprochait d'un paiement réel. | **Principe des quatre yeux.** La saisie d'un crédit par le concessionnaire **ne touche pas au solde** ; une **autre personne** (droit `compte.valider_credit`, écran « Crédits à valider ») le valide après rapprochement avec l'encaissement réel. L'auteur d'une saisie ne peut ni la valider ni la rejeter — règle du service, doublée de l'invariant `quatreYeux` du schéma. Une référence d'encaissement ne sert qu'une fois ; un rejet est motivé et rend la référence disponible pour une saisie corrigée. | Le rapprochement est une attestation cochée par le validateur, pas une confrontation automatique avec un relevé. Deux personnes complices restent possibles ; le journal les nomme toutes deux. Saisie et validation appartiennent au même rôle : la séparation des personnes repose sur le service, pas sur la matrice. |
+
+La matrice compte quatre droits de plus — `groupement.verifier`,
+`compte.valider_credit`, `avis.donner` et `appariement.expirer`, ce dernier
+**accordé à personne** : seule la plateforme l'exerce. Elle passe de 47 à
+**51 droits**.
+
+**Ce que ces correctifs ne changent pas.**
+
+- **Le POC ne prouve toujours pas la sécurité.** Tout s'exécute dans le
+  navigateur et les données vivent dans le stockage local : quiconque ouvre les
+  outils de développement y lit raisons sociales et coordonnées, se déclare
+  vérifié ou se crédite un compte. Ces correctifs montrent **où et comment** la
+  règle s'écrit ; ils ne l'appliquent pas. En production, chacune doit être
+  rejouée côté serveur à chaque requête, et l'expiration confiée à une tâche du
+  serveur.
+- **Une question de modèle économique, qui appartient à l'OIC.** Les frais de
+  mise en relation — 15 000 F par partie, reproduits du système existant (D11,
+  arbitrage N2) — sont précisément ce que les parties ont intérêt à éviter.
+  Masquer l'identité et récompenser la fidélité réduisent cette incitation sans
+  la supprimer. Un abonnement seul, sans frais par mise en relation, la
+  supprimerait, mais modifierait le modèle reproduit. Le POC présente ce choix
+  comme une limite ; il ne le tranche pas.
+- **Des tests qui rejouent la fraude, pas qui la rendent impossible.**
+  `tests/anti-fraude.test.mjs` couvre les cinq correctifs, dont de nombreux
+  « cas de fraude » rejoués un à un. Il consigne aussi, en `todo`, les deux
+  défauts du filtre des textes libres décrits ci-dessus : ils sont connus et
+  non corrigés.
+
+**Démonstration** : comptes `activation@demo.invalid`,
+`concessionnaire2@demo.invalid` et `transporteur3@demo.invalid` (§ *Comptes de
+démonstration*), et § 5 du
+[guide de démonstration](docs/guide-demo/guide-demonstration-oic.md).
+
 ## Accueil et identité OIC — 26 septembre 2026
 
 La racine ouvre la nouvelle landing page `#/accueil`, inspirée de Hexus, avec logo OIC et palette bleu/orange/vert appliquée aux vues du POC. Le marché reste directement accessible sur `#/explorer`, sans connexion.
@@ -24,9 +72,10 @@ Décisions : [marché public et carte](docs/ux/04-marche-public.md). Vérificati
 Le POC suit un même dossier de bout en bout :
 
 ```
-AFFRÉTEUR → DÉCLARATION DE FRET → DEMANDE DE TRANSPORT → MARCHÉ (coordonnées masquées)
+AFFRÉTEUR → DÉCLARATION DE FRET → DEMANDE DE TRANSPORT → MARCHÉ (identité et coordonnées masquées)
 → RÉSERVATION → ACCEPTATION PAR LE TRANSPORTEUR → VALIDATION → DOUBLE DÉBIT
-→ COORDONNÉES TRANSMISES → SUIVI EN SIX ÉTAPES → CLÔTURE → JOURNAL D'AUDIT
+→ IDENTITÉ ET COORDONNÉES TRANSMISES → SUIVI EN SIX ÉTAPES → CLÔTURE → NOTATION MUTUELLE
+→ JOURNAL D'AUDIT
 ```
 
 **Ce POC n'invente pas un produit.** Il démontre la refonte d'une application
@@ -93,8 +142,8 @@ contournent pas l'authentification.
 | Concessionnaire | `concessionnaire@demo.invalid` | Exploite : comptes, tarifs, matrice des rôles |
 | DGTTC | `dgttc@demo.invalid` | Contrôle, **sans aucune donnée financière** |
 
-**Cinq comptes supplémentaires**, à saisir à la main — ils servent les cas
-d'échec et les rôles de niveaux 2 et 3 :
+**Huit comptes supplémentaires**, à saisir à la main — ils servent les cas
+d'échec, les rôles de niveaux 2 et 3 et les correctifs anti-fraude :
 
 | Adresse | Rôle | Intérêt en démonstration |
 |---|---|---|
@@ -103,12 +152,22 @@ d'échec et les rôles de niveaux 2 et 3 :
 | `transporteur2@demo.invalid` | `transporteur` (Routière du Centre) | **Solde de 5 000 F pour 15 000 F de frais** — refus de validation |
 | `partenaire@demo.invalid` | `partenaire` (niveau 2) | Décliné de l'espace Transporteur |
 | `caisse@demo.invalid` | `agent_caisse` (niveau 3) | Espace minimal, menu généré depuis ses seuls droits |
+| `activation@demo.invalid` | `activation_inscription` (niveau 3) | **Contrôle les pièces des transporteurs** (correctif n° 3) |
+| `concessionnaire2@demo.invalid` | `concessionnaire` | **Seconde personne** : valide les crédits saisis par `concessionnaire@demo.invalid` (correctif n° 5) |
+| `transporteur3@demo.invalid` | `transporteur` (Nouvelle Route Transport DÉMO) | **Dossier non vérifié** : ne publie, ne propose ni n'accepte avant contrôle (correctif n° 3) |
 
-**Jeu de données** — quatre groupements commerciaux, crédités à l'amorçage de
-200 000 / 50 000 / 120 000 / 5 000 F CFA. Tarifs : abonnement annuel 150 000 F,
-frais de mise en relation **15 000 F pour chaque partie**. Deux dossiers
-complets sont préinstallés, ce qui mouvemente ces soldes dès le premier
-affichage.
+Les trois derniers comptes sont aussi ajoutés à un navigateur déjà amorcé par
+une version antérieure, sans rien réécrire de ce qui existe
+(`completerJeuAntiFraude`, `js/seed.js`).
+
+**Jeu de données** — cinq groupements commerciaux, crédités à l'amorçage de
+200 000 / 50 000 / 120 000 / 5 000 / 60 000 F CFA (le dernier pour Nouvelle
+Route Transport). Tarifs : abonnement annuel 150 000 F, frais de mise en
+relation **15 000 F pour chaque partie**. Deux dossiers complets sont
+préinstallés, ce qui mouvemente ces soldes dès le premier affichage. **Un crédit
+attend sa validation** : `CR-2026-0001`, 50 000 F pour Routière du Centre,
+encaissement `ENC-DEMO-2001`, saisi par `concessionnaire@demo.invalid`. Tant
+qu'il n'est pas validé, le solde de Routière du Centre n'en tient pas compte.
 
 ## Vérifier
 
@@ -122,6 +181,19 @@ Au 24/09/2026 : **494 tests, 494 verts, 0 échec, code de sortie 0** (vérifié)
 La commande exacte importe : `node --test tests/` (le répertoire) échoue —
 c'est le finding S16 de l'audit de sécurité, fixé ici et pour la future CI.
 
+Au 13/10/2026 : **680 tests, 670 verts, 8 en échec, 2 en `todo`, code de
+sortie 1** (vérifié). Les deux `todo` sont les défauts connus du filtre des
+textes libres (§ *Lutte contre la fraude*). Les huit échecs se trouvent tous
+dans `conformite.test.mjs` et
+existaient déjà, avec les mêmes messages, sur la version antérieure aux
+correctifs anti-fraude : stockage local et clé `b2f_` hors de la couche de
+persistance (`js/core/accueil-offres.js`), lecture brute d'une entité classée
+dans `js/views/supervision.js`, route d'un autre espace en dur, style en ligne,
+URL distante (`js/core/carte-corridors.js`), redéfinition de `:root` hors de
+`tokens.css`, modification d'un appariement hors de `matching.service.js` par
+`js/seed-activite.js`. Chacun de ces tests s'arrête à la première violation
+trouvée : leur stabilité ne prouve pas que les correctifs n'en ajoutent aucune.
+
 | Suite | Objet | Tests |
 |---|---|---|
 | `parcours.test.mjs` | Le fil narratif complet, sans interface | 519 l. |
@@ -132,25 +204,33 @@ c'est le finding S16 de l'audit de sécurité, fixé ici et pour la future CI.
 | `vues.test.mjs` | Rendu des écrans, et ce qu'ils ne laissent pas fuiter | 290 l. |
 | `conformite.test.mjs` | Règles non négociables de la *Definition of Done* et d'architecture | 270 l. |
 | `qa-adversarial.test.mjs` | Campagne adversariale : double clic, sept onglets, quota saturé, URL devinées | 660 l. |
+| `anti-fraude.test.mjs` | Les cinq correctifs anti-fraude du 13/10/2026, cas de fraude rejoués | 1 360 l. |
 
 ## Le parcours à jouer
 
 1. **Affréteur** — `Mon fret` → déclarer un fret (assistant en 3 étapes).
-2. **Affréteur** — `Marché` → rechercher un véhicule. *Aucune coordonnée n'est
-   visible : c'est ce que la plateforme vend.*
-3. **Affréteur** — `Réserver` (gratuit).
-4. **Transporteur** — `Réservations reçues` → `Accepter`.
+2. **Affréteur** — `Marché` → rechercher un véhicule. *Ni coordonnée, ni raison
+   sociale, ni immatriculation ne sont visibles : un profil de confiance en
+   tient lieu. La mise en relation est ce que la plateforme vend.*
+3. **Affréteur** — `Réserver` (gratuit). Le transporteur a 48 h pour répondre.
+4. **Transporteur** — `Réservations reçues` → `Accepter`. L'affréteur a 48 h
+   pour valider.
 5. **Affréteur** — `À valider`. **L'écran pivot** : les deux débits du dossier et
    le solde de **son** compte sont affichés **avant** l'action ; de la
    contrepartie, l'écran ne dit que « compte provisionné » ou non.
-6. **Affréteur** — `Valider` → double débit atomique, **coordonnées transmises**.
+6. **Affréteur** — `Valider` → double débit atomique, **identité et coordonnées
+   transmises**.
 7. **Transporteur** — `Suivi` → faire avancer les six étapes.
-8. **Affréteur** — `Clôturer` après livraison.
+8. **Affréteur** — `Clôturer` après livraison. Chaque partie peut alors noter
+   l'autre, une fois.
 
-Cas d'échec à montrer aussi : réserver le véhicule de *Routière du Centre*
-(solde insuffisant côté transporteur), se connecter en **Auxiliaire** et tenter
-de valider, se connecter en `affreteur2@demo.invalid` (abonnement expiré), ou
-saisir l'adresse d'un autre espace dans l'URL.
+Cas d'échec à montrer aussi : réserver l'offre Abidjan → Bouaké à 88 F/km·t,
+qui appartient à *Routière du Centre* — son nom n'apparaît plus sur le marché —
+(solde insuffisant côté transporteur, **avant** de valider le crédit en attente
+`CR-2026-0001`), se connecter en **Auxiliaire** et tenter de valider, se
+connecter en `affreteur2@demo.invalid` (abonnement expiré), se connecter en
+`transporteur3@demo.invalid` (dossier non vérifié), ou saisir l'adresse d'un
+autre espace dans l'URL.
 
 Un guide de démonstration pas à pas, écrit pour la personne qui présente et non
 pour un développeur, se trouve dans
@@ -169,7 +249,7 @@ test échoue si un identifiant non déclaré atteint la matrice.
 |---|---|---|
 | **1 — Démontrés** (6) | Espace propre, écrans métier, parcours de démonstration, tests de permission dédiés. | `affreteur` · `transporteur` · `auxiliaire_affreteur` · `auxiliaire_transporteur` · `concessionnaire` · `dgttc` |
 | **2 — Déclinés** (3) | Réutilisent l'espace Transporteur, variations déclaratives. Comptes accessibles et testés, sans parcours dédié. | `transporteur_prive` · `transporteur_etranger` · `partenaire` |
-| **3 — Modélisés** (10) | Déclarés, administrables, **menu généré depuis leurs seuls droits**. Consultation des DUT pour `dut_transport` ; caisse, contentieux et comptabilité restent hors périmètre. | `super_admin` · `admin_compta` · `admin_superviseur_centre_tech` · `agent_caisse` · `superviseur_comptabilite` · `superviseur_cpte` · `contentieux_paie` · `dut_transport` · `activation_inscription` · `activation_inscription_affreteur` |
+| **3 — Modélisés** (10) | Déclarés, administrables, **menu généré depuis leurs seuls droits**. Consultation des DUT pour `dut_transport` ; contrôle des pièces des transporteurs pour `activation_inscription` (depuis le 13/10/2026) ; caisse, contentieux et comptabilité restent hors périmètre. | `super_admin` · `admin_compta` · `admin_superviseur_centre_tech` · `agent_caisse` · `superviseur_comptabilite` · `superviseur_cpte` · `contentieux_paie` · `dut_transport` · `activation_inscription` · `activation_inscription_affreteur` |
 
 **19 rôles, pas 22.** Le cadrage annonçait « 8 macro-rôles + ~14 profils ».
 L'inventaire réel en établit 19 : les huit menus `*_non_actif` et
@@ -183,7 +263,7 @@ Détail : `docs/architecture/03-matrice-des-roles.md` § 2.
 
 ### Extrait de la matrice des droits
 
-La matrice complète vit dans `js/domain/permissions.js` (**47 droits × 19 rôles**) ;
+La matrice complète vit dans `js/domain/permissions.js` (**51 droits × 19 rôles**) ;
 elle est **la seule source** de ce qu'un rôle peut faire, menu compris. Un droit
 n'y est pas un booléen mais une **portée** : `—` aucune · `P` propre · `G`
 groupement · `M` marché · `T` tout.
@@ -202,15 +282,26 @@ groupement · `M` marché · `T` tout.
 | `coordonnees.lire` — après mise en relation | G | G | G | **—** | **—** |
 | `transport.avancer` — faire avancer le suivi | — | G | — | — | — |
 | `transport.cloturer` — après livraison | G | — | G | — | — |
+| `avis.donner` — noter la contrepartie après clôture | G | G | G | — | — |
+| `appariement.expirer` — clore une attente échue | — | — | — | — | — |
 | `compte.lire` — solde du groupement | G | G | G | **T** | **—** |
-| `compte.crediter` — créditer manuellement | — | — | — | **T** | — |
+| `compte.crediter` — **saisir** un crédit, sans effet sur le solde | — | — | — | **T** | — |
+| `compte.valider_credit` — valider le crédit saisi par **un autre** agent | — | — | — | **T** | — |
+| `groupement.verifier` — vérifier le dossier d'un transporteur | — | — | — | — | — |
 | `controle.etats` — états de contrôle | — | — | — | — | **T** |
 | `audit.lire` — journal d'audit | — | — | — | T | T |
 
-Deux points que ce tableau rend visibles et qui se commentent en démonstration :
-le concessionnaire **n'a aucun accès au marché** (il exploite, il ne transige
-pas), et la DGTTC **n'a aucun droit financier** — ni `compte.lire`, ni montant,
-au niveau des données et pas seulement de l'affichage.
+`appariement.expirer` n'est accordé à **aucun** rôle : seule la plateforme
+l'exerce. `groupement.verifier` n'appartient qu'à l'agent d'activation des
+inscriptions (`activation_inscription`, portée `T`), hors de cet extrait.
+
+Trois points que ce tableau rend visibles et qui se commentent en
+démonstration : le concessionnaire **n'a aucun accès au marché** (il exploite,
+il ne transige pas) ; la DGTTC **n'a aucun droit financier** — ni `compte.lire`,
+ni montant, au niveau des données et pas seulement de l'affichage ; et le
+concessionnaire détient à la fois la saisie et la validation d'un crédit, mais
+**jamais sur la même opération** — c'est le service, et non la matrice, qui
+refuse qu'une même personne fasse les deux.
 
 Quatre lignes sont couvertes par un test de permission dédié : **l'auxiliaire ne
 valide pas**, **la DGTTC ne transige pas et ne voit aucun montant**, **le
@@ -282,6 +373,10 @@ est un passif.
 - **Il ne prouve rien sur l'authentification.** PBKDF2 remplace un condensat
   rapide sans sel, mais les empreintes restent dans le navigateur : c'est la
   pratique qui est démontrée, pas une protection.
+- **Il ne prouve pas que la fraude est empêchée.** Les cinq correctifs du
+  13/10/2026 réduisent des contournements identifiés ; chacun a ses limites,
+  écrites au § *Lutte contre la fraude*, et tous reposent sur un contrôle
+  exécuté dans le navigateur.
 - **Il ne prouve pas l'adoption.** Une bourse de fret vit de sa liquidité ;
   aucun logiciel ne résout le problème de la poule et de l'œuf.
 - **Il ne prouve pas l'adéquation au terrain.** Le workflow reproduit est celui

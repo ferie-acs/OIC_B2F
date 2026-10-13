@@ -241,7 +241,11 @@ describe('Les écrans ne laissent pas fuiter ce que la matrice refuse', () => {
       assert.ok(!t.includes(mail), `courriel « ${mail} » affiché sur le marché`);
     }
     assert.ok(!t.includes('CG-DEMO'), 'carte grise affichée sur le marché');
-    assert.ok(t.includes('Routière du Centre'), "l'identité commerciale doit rester visible");
+    // Correctif anti-fraude n° 1 (13/10/2026) : la raison sociale et la plaque ne
+    // sont plus servies avant validation ; la confiance les remplace.
+    assert.ok(!t.includes('Routière du Centre'), 'raison sociale affichée avant validation');
+    assert.ok(!t.includes('3456 GH 02'), 'immatriculation affichée avant validation');
+    assert.ok(t.includes('Transporteur vérifié'), 'le signal de confiance doit remplacer le nom');
   });
 
   it('l’espace DGTTC n’affiche AUCUN montant', () => {

@@ -29,6 +29,7 @@ import {
   toast,
 } from '../core/ui.js';
 import { aller } from '../core/router.js';
+import { localiser } from '../core/nav.js';
 import { POV, CODE_TARIF, ETAT_APPARIEMENT, SENS_APPARIEMENT, MOTIF_REJET, labelOf } from '../domain/enums.js';
 import { ACTION } from '../domain/matching.state.js';
 import { decider, deciderSurAppariement } from '../domain/access.js';
@@ -48,6 +49,9 @@ import * as flotte from '../services/flotte.service.js';
 import * as fret from '../services/fret.service.js';
 import * as matching from '../services/matching.service.js';
 import { transportsVisibles } from '../services/transport.service.js';
+import { echeanceDe } from '../domain/matching.state.js';
+import { etatVerification } from '../services/verification.service.js';
+import { blocConfiance } from './confiance.js';
 
 /* ================================================================== *
  * Tableau de bord
@@ -72,7 +76,7 @@ export function dashboard(ctx) {
 
   return el('div.page.transport-dashboard', {}, [
     el('header.dash-page-heading', {}, [
-      el('div', {}, [el('span.dash-eyebrow', { text: 'ESPACE TRANSPORTEUR' }), el('h1', { text: 'Tableau de bord' }), el('p', { text: `Gérez votre flotte et préparez vos prochains transports · ${nomDe(ctx.groupementId)}` })]),
+      el('div', {}, [el('span.dash-eyebrow', { text: 'ESPACE TRANSPORTEUR' }), el('h1', { text: 'Tableau de bord' }), el('p', { text: `Gérez votre flotte et préparez vos prochains transports · ${nomDe(ctx, ctx.groupementId)}` })]),
     ]),
     el('div.transport-dashboard-actions', { 'aria-label': 'Actions rapides du transporteur' }, [
       commande('Ajouter un camion', 'vehicule.gerer', () => ouvrirVehicule(ctx), 'plus', 'primary'),
@@ -86,6 +90,20 @@ export function dashboard(ctx) {
     ].map(([n, titre, texte, route, icon]) => el('a.transport-workflow-step', { href: `#/transporteur/${route}` }, [
       el('span.transport-workflow-number', { text: n }), icone(icon, 23), el('strong', { text: titre }), el('small', { text: texte }),
     ]))),
+    // Correctif anti-fraude n° 3 : un dossier non vérifié bloque tout engagement.
+    etatVerification(ctx.groupementId) !== 'verifie'
+      ? bandeau({
+          ton: etatVerification(ctx.groupementId) === 'refuse' ? 'err' : 'warn',
+          titre: etatVerification(ctx.groupementId) === 'refuse' ? 'Vérification de votre dossier refusée' : 'Dossier transporteur en attente de vérification',
+          message:
+            'Tant que l’agent d’activation n’a pas contrôlé vos pièces (RCCM, carte de ' +
+            'transporteur, assurance, cartes grises, permis), vous ne pouvez ni publier, ni ' +
+            'proposer, ni accepter un transport.',
+          // La fiche du groupement n'est pas ouverte à tous les rôles de l'espace
+          // (auxiliaire) : le bouton n'apparaît que si la page existe pour ce rôle.
+          actions: localiser(ctx, 'groupement') ? [bouton({ libelle: 'Voir mon dossier', onClick: () => aller('#/transporteur/groupement') })] : [],
+        })
+      : null,
     aRepondre.length > 0
       ? bandeau({
           ton: 'warn',
@@ -174,7 +192,7 @@ export function chauffeurs(ctx) {
       actions: [bouton({ libelle: 'Ajouter un chauffeur', icone: 'plus', variante: 'primary', motif: decider(ctx, 'chauffeur.gerer', { groupementId: ctx.groupementId }).explication || null, onClick: () => ouvrirChauffeur(ctx) })],
       corps: [
         el('div.carrier-card-grid', {}, liste.length ? liste.map(c => el('article.carrier-person-card', {}, [
-          el('div.carrier-card-top', {}, [el('span.carrier-avatar', {text:c.nom.split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('')}),el('div',{},[el('h3',{text:c.nom}),el('span',{class:c.permisEchu?'carrier-status warning':'carrier-status',text:c.permisEchu?'Permis échu':'Permis en cours de validité'})])]),
+          el('div.carrier-card-top', {}, [el('span.carrier-avatar', {text:c.nom.split(' ').filter(Boolean).slice(0,2).map(n=>n[0]).join('')}),el('div',{},[el('h3',{text:c.nom}),el('span',{class:c.permisEchu?'carrier-status warning':'carrier-status',text:c.permisEchu?'Permis échu':'Permis en cours de validité'}),el('span',{class:c.verifieLe?'carrier-status':'carrier-status warning',text:c.verifieLe?'Permis contrôlé par la plateforme':'Permis à faire contrôler'})])]),
           el('dl.carrier-details',{},[
             el('div',{},[el('dt',{},[icone('file',18),'Permis']),el('dd',{text:c.permisNumero})]),
             el('div',{},[el('dt',{},[icone('calendar',18),'Validité']),el('dd',{text:date(c.permisEcheance)})]),
@@ -215,7 +233,7 @@ export function offres(ctx) {
       corps: [
         el('div.carrier-card-grid',{},liste.length ? liste.map(o=>el('article.carrier-offer-card',{},[
           el('div.carrier-card-top',{},[el('strong',{text:o.reference}),badge(o.etat,POV.TRANSPORTEUR)]),
-          el('div.carrier-vehicle',{},[camion(o,100),el('div',{},[el('h3',{text:immatriculationDe(o.vehiculeId)}),el('span',{text:libelleTrajet(o)})])]),
+          el('div.carrier-vehicle',{},[camion(o,100),el('div',{},[el('h3',{text:immatriculationDe(ctx, o.vehiculeId)}),el('span',{text:libelleTrajet(o)})])]),
           el('div.carrier-route',{},[el('div',{},[el('small',{text:'DÉPART'}),el('strong',{text:refDe(o.localiteDepartId)})]),icone('arrow-right',22),el('div',{},[el('small',{text:'ARRIVÉE'}),el('strong',{text:refDe(o.localiteArriveeId)})])]),
           el('p.carrier-dates',{},[icone('calendar',18),`${date(o.disponibleDu)} → ${date(o.disponibleAu)}`]),
           el('div.carrier-card-footer',{},[el('span',{text:o.prixKmT ? `${o.prixKmT} F/km·t · indicatif` : 'Tarif à convenir'}),bouton({libelle:'Retirer',variante:'ghost',motif:!decider(ctx,'offre.retirer',{groupementId:o.groupementId}).autorise?decider(ctx,'offre.retirer',{groupementId:o.groupementId}).explication:!['disponible','reservee'].includes(o.etat)?'Cette offre n’est plus disponible.':o.retirable?null:o.motif,onClick:()=>dialogueRetrait(ctx,o)})]),
@@ -373,7 +391,7 @@ function dialogueProposition(ctx, demande) {
         id: 'p-offre',
         label: 'Offre à proposer',
         requis: true,
-        options: publiables.map((o) => ({ valeur: o.id, libelle: `${immatriculationDe(o.vehiculeId)} · ${o.reference} · ${date(o.disponibleDu)}` })),
+        options: publiables.map((o) => ({ valeur: o.id, libelle: `${immatriculationDe(ctx, o.vehiculeId)} · ${o.reference} · ${date(o.disponibleDu)}` })),
       }),
     ],
     actions: [
@@ -426,12 +444,18 @@ export function reservations(ctx) {
           colonnes: ['Référence', 'Affréteur', 'Origine', 'Créée le', 'État', 'Suite du dossier'],
           lignes: liste.map((a) => [
             a.reference,
-            nomDe(a.groupementAffreteurId),
+            el('span', {}, [
+              nomDe(ctx, a.groupementAffreteurId),
+              a.etat !== ETAT_APPARIEMENT.VALIDER ? blocConfiance(a.groupementAffreteurId, { compact: true }) : null,
+            ]),
             a.sens === SENS_APPARIEMENT.DEMANDE_VERS_OFFRE ? 'Proposition envoyée' : 'Réservation reçue',
             dateHeure(a.reserveLe),
             el('span', {}, [
               badge(a.etat, POV.TRANSPORTEUR),
               a.motifRejet ? el('small', { text: ` ${labelOf(a.motifRejet)}` }) : null,
+              a.motifCloture ? el('small', { text: ` ${labelOf(a.motifCloture)}` }) : null,
+              // Correctif anti-fraude n° 4 : l'attente a une fin.
+              echeanceDe(a) ? el('small', { text: ` · échéance ${dateHeure(echeanceDe(a))}` }) : null,
             ]),
             suiteDossier(ctx, a, frais),
           ]),

@@ -16,6 +16,7 @@ import {
   EVENEMENT_AUDIT,
 } from '../domain/enums.js';
 import { exiger } from '../domain/access.js';
+import { refuserCoordonnees } from '../domain/texte.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { reference } from './matching.service.js';
@@ -34,6 +35,12 @@ import { reference } from './matching.service.js';
 export function publierFret(ctx, { fret, besoin, lignes }, options = {}) {
   exiger(ctx, 'declaration.creer', { groupementId: ctx.groupementId });
   if (!options.brouillon) exiger(ctx, 'demande.publier', { groupementId: ctx.groupementId });
+
+  // Correctif anti-fraude n° 1 : ces textes sont lus par les transporteurs avant
+  // toute validation. Un numéro glissé ici contournerait le masquage de l'identité.
+  refuserCoordonnees(fret.libelle, 'Libellé du fret');
+  refuserCoordonnees(fret.observation, 'Observation');
+  refuserCoordonnees(besoin.contraintes, 'Contraintes');
 
   const maintenant = new Date().toISOString();
   // Le départ dans le passé est refusé à la publication, pas au brouillon
