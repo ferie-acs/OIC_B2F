@@ -512,16 +512,17 @@ export function accueilMinimal(ctx) {
   const nb = Object.values(droits).reduce((n, l) => n + l.length, 0);
   const documents = routeDut(ctx);
   // Correctif anti-fraude n° 3 : l'agent d'activation a désormais un écran métier.
-  const verification = decider(ctx, 'groupement.verifier').autorise;
+  // Lot b1 : étendu à l'agent d'activation des affréteurs et intermédiaires.
+  const verification = decider(ctx, 'inscription.activer').autorise;
 
   return el('div.page', {}, [
     verification ? bandeau({
       ton: 'info',
-      titre: 'Votre espace de vérification des transporteurs',
+      titre: 'Votre espace de vérification et d’activation',
       message:
-        'Contrôlez le dossier de chaque transporteur, la carte grise de ses véhicules et ' +
-        'le permis de ses chauffeurs. Tant que ce n’est pas fait, il ne peut ni publier, ' +
-        'ni proposer, ni accepter un transport.',
+        'Contrôlez les pièces des entreprises inscrites, demandez un complément si besoin, ' +
+        'puis activez leur compte. Tant que ce n’est pas fait, une entreprise ne peut ni ' +
+        'publier, ni proposer, ni accepter un transport.',
       actions: [el('a.btn.btn-primary', { href: `#/${segmentEspace(ctx)}/verifications`, text: 'Ouvrir les dossiers' })],
     }) : bandeau({
       ton: 'info',

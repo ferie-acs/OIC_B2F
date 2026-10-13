@@ -293,6 +293,43 @@ export const DROITS = Object.freeze({
   'dut.lire': { categorie: 'DUT', libelle: 'Consulter les DUT générés' },
   'dut.generer': { categorie: 'DUT', libelle: 'Générer un DUT' , mutation: true },
   'notification.lire': { categorie: 'Annexes', libelle: 'Consulter ses notifications' },
+
+  /* --- Lot b1 : inscription, activation, messagerie ------------ */
+  'inscription.lire': {
+    categorie: 'Inscription',
+    libelle: 'Consulter le dossier d’inscription de son entreprise',
+  },
+  'inscription.deposer': {
+    mutation: true,
+    categorie: 'Inscription',
+    libelle: 'Déposer des pièces et mettre à jour la fiche de son entreprise',
+    note:
+      'Avant activation, la fiche se corrige librement. Après activation, toute ' +
+      'modification d’une donnée d’identité est soumise au contrôle de l’agent ' +
+      'd’activation avant de s’appliquer.',
+  },
+  'inscription.activer': {
+    mutation: true,
+    categorie: 'Inscription',
+    libelle: 'Contrôler les pièces, activer, refuser ou requalifier une entreprise inscrite',
+    teste: true,
+    refus:
+      'L’activation d’une entreprise relève de l’agent d’activation des ' +
+      'inscriptions, après contrôle de chaque pièce obligatoire.',
+    note:
+      '**Quatre yeux** : la personne qui active n’est pas celle qui a déclaré les ' +
+      'pièces conformes — même modèle que la validation des crédits.',
+  },
+  'message.journal': {
+    categorie: 'Messagerie',
+    libelle: 'Consulter le journal des messages envoyés',
+  },
+  'message.envoyer': {
+    mutation: true,
+    categorie: 'Messagerie',
+    libelle: 'Envoyer un message à une entreprise ou à une catégorie d’entreprises',
+    note: 'Courriels et SMS simulés : rien ne quitte la plateforme de démonstration.',
+  },
 });
 
 /* ================================================================== *
@@ -309,6 +346,9 @@ const SOCLE_MARCHE = Object.freeze({
   'tarif.lire': TOUT,
   'abonnement.lire': GROUPEMENT,
   'groupement.lire': GROUPEMENT,
+  // Lot b1 : le dossier d'inscription de son entreprise.
+  'inscription.lire': GROUPEMENT,
+  'inscription.deposer': GROUPEMENT,
 });
 
 /** Droits de l'affréteur de plein exercice. */
@@ -457,6 +497,9 @@ export const MATRICE = Object.freeze({
     'audit.lire': TOUT,
     'dut.lire': TOUT,
     'notification.lire': PROPRE,
+    // Lot b1 : journal des messages sortants et envois aux entreprises.
+    'message.journal': TOUT,
+    'message.envoyer': TOUT,
   }),
 
   /**
@@ -546,8 +589,20 @@ export const MATRICE = Object.freeze({
   activation_inscription: Object.freeze({
     'groupement.lire': TOUT,
     'groupement.verifier': TOUT,
+    // Lot b1 : activation des transporteurs inscrits et contact depuis le dossier.
+    'inscription.activer': TOUT,
+    'message.envoyer': TOUT,
   }),
-  activation_inscription_affreteur: Object.freeze({ 'groupement.lire': TOUT }),
+  /**
+   * Lot b1 : contrôle et active les affréteurs et les intermédiaires de fret. Le
+   * type d'entreprise traité par chaque agent est fixé par `domain/inscription.js`.
+   * Il ne reçoit pas `groupement.verifier`, propre aux véhicules et chauffeurs.
+   */
+  activation_inscription_affreteur: Object.freeze({
+    'groupement.lire': TOUT,
+    'inscription.activer': TOUT,
+    'message.envoyer': TOUT,
+  }),
 });
 
 /* ================================================================== *

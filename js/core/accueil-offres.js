@@ -11,21 +11,13 @@ function choisir(o,ctx){
   const connexion=`#/connexion?${new URLSearchParams({type:o.type,selection:o.id,retour})}`;
   const dialog=el('dialog.th-signup',{'aria-labelledby':'offer-signup-title'});
   const close=()=>dialog.close();
-  const form=el('form.th-signup-form');
-  const field=(name,title,type='text')=>el('label',{},[el('span',{text:title}),el('input',{name,type,required:true,autocomplete:name==='email'?'email':'organization',maxlength:'180'})]);
-  form.append(field('entreprise','Nom de l’entreprise'),field('email','Adresse électronique professionnelle','email'),el('p',{text:'POC : utilisez des informations fictives. La demande est enregistrée uniquement dans ce navigateur, sans transmission à l’OIC ni création d’un compte actif.'}),el('button.th-button',{type:'submit',text:'Simuler ma demande d’inscription'}));
-  form.addEventListener('submit',e=>{
-    e.preventDefault();
-    const values=new FormData(form);
-    try{
-      const key='b2f_poc_demandes_inscription';
-      let demandes;try{demandes=JSON.parse(localStorage.getItem(key)||'[]');}catch{demandes=[];}
-      if(!Array.isArray(demandes))demandes=[];
-      demandes.push({entreprise:String(values.get('entreprise')).trim(),email:String(values.get('email')).trim(),profil:o.type==='camions'?'affreteur':'transporteur',selection:o.id,type:o.type,retour,creeeLe:new Date().toISOString(),etat:'simulation',demo:true});
-      localStorage.setItem(key,JSON.stringify(demandes));
-      form.replaceChildren(el('strong',{text:'Votre demande de démonstration est enregistrée.'}),el('p',{text:'Votre offre est conservée. Continuez avec un compte de démonstration du profil correspondant pour découvrir la suite.'}),el('a.th-button',{href:connexion,text:'Continuer avec un compte démo',on:{click:close}}));
-    }catch{toast('Impossible d’enregistrer dans ce navigateur. Vous pouvez continuer avec un compte démo.','err');}
-  });
+  // Lot b1 : l'inscription simulée dans ce navigateur cède la place à l'inscription
+  // réelle du POC, le type d'entreprise présélectionné selon l'annonce choisie.
+  const profil=o.type==='camions'?'affreteur':'transporteur';
+  const form=el('div.th-signup-form',{},[
+    el('p',{text:'Créez le compte de votre entreprise : l’OIC l’active après contrôle des pièces de votre dossier.'}),
+    el('a.th-button',{href:`#/inscription?type=${profil}`,text:'Inscrire mon entreprise',on:{click:close}}),
+  ]);
   dialog.append(el('button.th-signup-close',{type:'button','aria-label':'Fermer',text:'×',on:{click:close}}),el('span.th-label',{text:'VOTRE CHOIX EST CONSERVÉ'}),el('h2',{id:'offer-signup-title',text:'Inscrivez-vous pour continuer'}),el('p',{text:`${o.depart} → ${o.arrivee} · ${o.titre} · ${o.tonnes} t`}),el('p',{text:o.type==='camions'?'Vous recherchez un camion : poursuivez en tant qu’affréteur.':'Vous recherchez du fret : poursuivez en tant que transporteur.'}),form,el('a.th-signin',{href:connexion,text:'Déjà inscrit ? Se connecter →',on:{click:close}}));
   const trigger=document.activeElement;
   const cleanup=()=>{dialog.remove();window.removeEventListener('hashchange',close);trigger?.focus();};
