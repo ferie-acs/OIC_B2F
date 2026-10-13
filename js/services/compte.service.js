@@ -77,7 +77,7 @@ export function mouvementsDe(ctx, groupementId) {
  * @param {string} referenceEncaissement
  * @returns {boolean}
  */
-function referenceDejaUtilisee(referenceEncaissement) {
+export function referenceDejaUtilisee(referenceEncaissement) {
   const cle = normaliserReference(referenceEncaissement);
   const parCredit = depot('credit').brutOu(
     (c) => c.etat !== ETAT_CREDIT.REJETE && normaliserReference(c.referenceEncaissement) === cle,
@@ -98,9 +98,11 @@ const normaliserReference = (r) =>
  *
  * @param {import('../domain/access.js').Contexte} ctx
  * @param {{groupementId: string, montant: number, referenceEncaissement: string}} entree
+ * @param {{tx?: any}} [options] Lot b4 : `tx` joint la saisie à la transaction
+ *   d'un encaissement au guichet (reçu et crédit écrits ensemble, ou pas du tout).
  * @returns {Record<string, any>} Le crédit saisi, à l'état `en_attente`.
  */
-export function saisirCredit(ctx, { groupementId, montant, referenceEncaissement }) {
+export function saisirCredit(ctx, { groupementId, montant, referenceEncaissement }, options = {}) {
   exiger(ctx, 'compte.crediter', { groupementId });
 
   if (!depot('groupement').brutParId(groupementId)) throw new Error('Groupement introuvable.');
@@ -121,7 +123,7 @@ export function saisirCredit(ctx, { groupementId, montant, referenceEncaissement
     );
   }
 
-  return stockageInterne().transaction((tx) => {
+  return executer(options, (tx) => {
     const credit = depot('credit').creer(
       {
         id: identifiant('cre'),
@@ -154,9 +156,10 @@ export function saisirCredit(ctx, { groupementId, montant, referenceEncaissement
  * @param {string} creditId
  * @param {{rapprochementConfirme: boolean}} confirmation Le validateur atteste
  *   avoir rapproché la saisie de l'encaissement réel. Sans cette attestation, rien.
+ * @param {{tx?: any}} [options] Lot b4 : jointure à la transaction de la caisse.
  * @returns {{credit: Record<string, any>, operation: Record<string, any>}}
  */
-export function validerCredit(ctx, creditId, { rapprochementConfirme } = { rapprochementConfirme: false }) {
+export function validerCredit(ctx, creditId, { rapprochementConfirme } = { rapprochementConfirme: false }, options = {}) {
   const c = creditAttendu(creditId);
   exiger(ctx, 'compte.valider_credit', { groupementId: c.groupementId });
 
@@ -174,7 +177,7 @@ export function validerCredit(ctx, creditId, { rapprochementConfirme } = { rappr
   }
 
   const maintenant = new Date().toISOString();
-  return stockageInterne().transaction((tx) => {
+  return executer(options, (tx) => {
     tx.marquer(`credits:${creditId}`, `operations:${c.groupementId}`);
     const courant = tx.lire('credits').find((x) => x.id === creditId);
     if (!courant || courant.etat !== ETAT_CREDIT.EN_ATTENTE) {
@@ -231,9 +234,10 @@ export function validerCredit(ctx, creditId, { rapprochementConfirme } = { rappr
  * @param {import('../domain/access.js').Contexte} ctx
  * @param {string} creditId
  * @param {string} motif
+ * @param {{tx?: any}} [options] Lot b4 : jointure à la transaction de la caisse.
  * @returns {Record<string, any>}
  */
-export function rejeterCredit(ctx, creditId, motif) {
+export function rejeterCredit(ctx, creditId, motif, options = {}) {
   const c = creditAttendu(creditId);
   exiger(ctx, 'compte.valider_credit', { groupementId: c.groupementId });
   if (c.saisiParUtilisateurId === ctx.utilisateurId) {
@@ -242,7 +246,7 @@ export function rejeterCredit(ctx, creditId, motif) {
   const texte = String(motif ?? '').trim();
   if (!texte) throw new Error('Un rejet porte son motif : l’agent doit savoir quoi corriger.');
 
-  return stockageInterne().transaction((tx) => {
+  return executer(options, (tx) => {
     const credit = depot('credit').modifier(
       creditId,
       {
@@ -273,6 +277,16 @@ export function creditsSaisis(ctx, filtre = () => true) {
   return depot('credit')
     .lisiblesPar(ctx, 'compte.lire', filtre)
     .sort((a, b) => new Date(b.saisiLe) - new Date(a.saisiLe));
+}
+
+/**
+ * Lot b4 : exécute le travail dans la transaction fournie, ou en ouvre une.
+ * Le stockage n'imbrique pas les transactions : une écriture appelée depuis la
+ * caisse doit rejoindre la sienne, sans quoi reçu et crédit seraient écrits
+ * séparément — l'un pouvant exister sans l'autre.
+ */
+function executer(options, travail) {
+  return options?.tx ? travail(options.tx) : stockageInterne().transaction(travail);
 }
 
 function creditAttendu(creditId) {

@@ -114,7 +114,13 @@ const accord = (portee) => Object.freeze({ ...AUTORISE, portee });
  * POC reproduit ce comportement, en laissant de quoi comprendre et agir.
  */
 const DROITS_HORS_ABONNEMENT = Object.freeze(
-  new Set(['abonnement.lire', 'notification.lire', 'groupement.lire']),
+  new Set([
+    'abonnement.lire',
+    'notification.lire',
+    'groupement.lire',
+    // Lot b4 : renouveler est précisément ce qu'un abonnement expiré doit permettre.
+    'abonnement.prolonger',
+  ]),
 );
 
 /**

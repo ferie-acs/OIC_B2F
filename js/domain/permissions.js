@@ -293,6 +293,51 @@ export const DROITS = Object.freeze({
   'dut.lire': { categorie: 'DUT', libelle: 'Consulter les DUT générés' },
   'dut.generer': { categorie: 'DUT', libelle: 'Générer un DUT' , mutation: true },
   'notification.lire': { categorie: 'Annexes', libelle: 'Consulter ses notifications' },
+
+  /* --- Lot b4 : abonnements, paiements, caisse et finances ----- */
+  'compte.recharger': {
+    mutation: true,
+    categorie: 'Compte',
+    libelle: 'Recharger son compte par paiement en ligne',
+    refus:
+      'Le rechargement engage les moyens de paiement de votre entreprise : il revient ' +
+      'au titulaire du compte. Un sous-compte consulte le solde, il ne paie pas.',
+    note:
+      'Paiement mobile money **simulé**. Un paiement en ligne réussi crédite directement : ' +
+      'la transaction de l’opérateur fait foi, il n’y a pas de saisie humaine à contrôler.',
+  },
+  'caisse.encaisser': {
+    mutation: true,
+    categorie: 'Caisse',
+    libelle: 'Enregistrer un encaissement au guichet',
+    note:
+      'La saisie émet le reçu mais ne crédite rien : le compte, l’abonnement ou le ' +
+      'contentieux ne bougent qu’après validation par une autre personne.',
+  },
+  'caisse.valider': {
+    mutation: true,
+    categorie: 'Caisse',
+    libelle: 'Valider un encaissement saisi par un autre agent',
+    teste: true,
+    refus:
+      'La validation d’un encaissement revient à une autre personne que l’agent qui ' +
+      'l’a saisi, après rapprochement avec la caisse ou le relevé.',
+    note: 'Principe des quatre yeux, étendu de `compte.valider_credit` à toute la caisse.',
+  },
+  'caisse.lire': { categorie: 'Caisse', libelle: 'Consulter les encaissements et leurs reçus' },
+  'rapport.financier': {
+    categorie: 'Caisse',
+    libelle: 'Éditer les états financiers et les exports',
+    note:
+      'Les états sont projetés par classification : un profil qui lit les montants ' +
+      'sans l’identité des entreprises reçoit les montants, pas les noms.',
+  },
+  'contentieux.lire': { categorie: 'Contentieux', libelle: 'Consulter les contentieux' },
+  'contentieux.gerer': {
+    mutation: true,
+    categorie: 'Contentieux',
+    libelle: 'Ouvrir, instruire et clore un contentieux',
+  },
 });
 
 /* ================================================================== *
@@ -341,6 +386,9 @@ const AFFRETEUR = Object.freeze({
   'groupement.gerer': GROUPEMENT,
   'utilisateur.lire': GROUPEMENT,
   'utilisateur.gerer': GROUPEMENT,
+  // Lot b4 : le titulaire renouvelle son abonnement et recharge son compte.
+  'abonnement.prolonger': GROUPEMENT,
+  'compte.recharger': GROUPEMENT,
 });
 
 /** Droits du transporteur de plein exercice. */
@@ -368,6 +416,9 @@ const TRANSPORTEUR = Object.freeze({
   'groupement.gerer': GROUPEMENT,
   'utilisateur.lire': GROUPEMENT,
   'utilisateur.gerer': GROUPEMENT,
+  // Lot b4 : le titulaire renouvelle son abonnement et recharge son compte.
+  'abonnement.prolonger': GROUPEMENT,
+  'compte.recharger': GROUPEMENT,
 });
 
 /**
@@ -412,6 +463,9 @@ export const MATRICE = Object.freeze({
     'utilisateur.gerer',
     'groupement.gerer',
     'declaration.supprimer',
+    // Lot b4 : payer engage les moyens de paiement du parent.
+    'abonnement.prolonger',
+    'compte.recharger',
   ]),
 
   /**
@@ -423,6 +477,9 @@ export const MATRICE = Object.freeze({
     'utilisateur.lire',
     'utilisateur.gerer',
     'groupement.gerer',
+    // Lot b4 : payer engage les moyens de paiement du parent.
+    'abonnement.prolonger',
+    'compte.recharger',
   ]),
 
   /**
@@ -457,6 +514,14 @@ export const MATRICE = Object.freeze({
     'audit.lire': TOUT,
     'dut.lire': TOUT,
     'notification.lire': PROPRE,
+    // Lot b4 : la caisse est tenue dans l'espace de l'exploitant, comme dans le
+    // système existant (vue/concessionnaire/recupaie.php, recu.php). Le même rôle
+    // saisit et valide, jamais la même personne.
+    'caisse.encaisser': TOUT,
+    'caisse.valider': TOUT,
+    'caisse.lire': TOUT,
+    'rapport.financier': TOUT,
+    'contentieux.lire': TOUT,
   }),
 
   /**
@@ -530,9 +595,11 @@ export const MATRICE = Object.freeze({
   admin_compta: Object.freeze({}),
   admin_superviseur_centre_tech: Object.freeze({}),
   agent_caisse: Object.freeze({}),
-  superviseur_comptabilite: Object.freeze({}),
+  /** Lot b4 : états financiers et exports, sans l'identité des entreprises. */
+  superviseur_comptabilite: Object.freeze({ 'rapport.financier': TOUT }),
   superviseur_cpte: Object.freeze({}),
-  contentieux_paie: Object.freeze({}),
+  /** Lot b4 : le service contentieux instruit les litiges ; il n'encaisse pas. */
+  contentieux_paie: Object.freeze({ 'contentieux.lire': TOUT, 'contentieux.gerer': TOUT }),
 
   /** Seul profil de niveau 3 à recevoir un droit métier : la lecture des DUT. */
   dut_transport: Object.freeze({ 'dut.lire': TOUT }),
@@ -593,9 +660,11 @@ export const CLASSIFICATIONS_LISIBLES = Object.freeze({
   admin_compta: Object.freeze([PUBLIC]),
   admin_superviseur_centre_tech: Object.freeze([PUBLIC]),
   agent_caisse: Object.freeze([PUBLIC]),
-  superviseur_comptabilite: Object.freeze([PUBLIC]),
+  /** Lot b4 : les montants, jamais l'identité des entreprises. */
+  superviseur_comptabilite: Object.freeze([PUBLIC, FINANCIER]),
   superviseur_cpte: Object.freeze([PUBLIC]),
-  contentieux_paie: Object.freeze([PUBLIC]),
+  /** Lot b4 : un litige se lit avec ses parties et son montant, sans coordonnées. */
+  contentieux_paie: Object.freeze([PUBLIC, IDENTITE, FINANCIER]),
   dut_transport: Object.freeze([PUBLIC, IDENTITE]),
   activation_inscription: Object.freeze([PUBLIC, IDENTITE]),
   activation_inscription_affreteur: Object.freeze([PUBLIC, IDENTITE]),

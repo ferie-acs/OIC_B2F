@@ -394,6 +394,20 @@ export const EVENEMENT_AUDIT = Object.freeze({
   CREDIT_SAISI: 'credit_saisi',
   CREDIT_REJETE: 'credit_rejete',
   AVIS_DONNE: 'avis_donne',
+  /* --- Lot b4 : abonnements, paiements, caisse et finances --- */
+  PAIEMENT_EN_LIGNE: 'paiement_en_ligne',
+  PAIEMENT_REFUSE: 'paiement_refuse',
+  ENCAISSEMENT_SAISI: 'encaissement_saisi',
+  ENCAISSEMENT_VALIDE: 'encaissement_valide',
+  ENCAISSEMENT_REJETE: 'encaissement_rejete',
+  RECU_EDITE: 'recu_edite',
+  TARIF_PROGRAMME: 'tarif_programme',
+  TARIF_PROGRAMMATION_ANNULEE: 'tarif_programmation_annulee',
+  CONTENTIEUX_OUVERT: 'contentieux_ouvert',
+  CONTENTIEUX_ETAPE: 'contentieux_etape',
+  CONTENTIEUX_PIECE: 'contentieux_piece',
+  CONTENTIEUX_CLOS: 'contentieux_clos',
+  EXPORT_FINANCIER: 'export_financier',
 });
 
 /* ------------------------------------------------------------------ *
