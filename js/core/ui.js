@@ -490,14 +490,22 @@ export function registreDebit({ lignes, contrepartie }) {
       el('div.ledger-row', {}, [
         el('div.ledger-party', {}, [
           el('strong', { text: l.partie }),
-          el('span', { text: `Solde avant : ${fmtMontant(l.solde)}` }),
+          // Lot b2 : sans `compte.lire` (intermédiaire au nom d'un mandant), le
+          // solde n'est pas transmis (`solde: null`) — seule la capacité à payer.
+          el('span', {
+            text: l.solde == null
+              ? (l.suffisant ? 'Compte provisionné' : 'Compte non provisionné — la validation sera refusée')
+              : `Solde avant : ${fmtMontant(l.solde)}`,
+          }),
         ]),
         el('div', { class: `ledger-amount${l.suffisant ? '' : ' insufficient'}` }, [
           el('strong', { text: `− ${fmtMontant(l.frais)}` }),
           el('span', {
-            text: l.suffisant
-              ? `Solde après : ${fmtMontant(l.solde - l.frais)}`
-              : `Insuffisant — il manque ${fmtMontant(l.frais - l.solde)}`,
+            text: l.solde == null
+              ? 'Débité à la validation'
+              : l.suffisant
+                ? `Solde après : ${fmtMontant(l.solde - l.frais)}`
+                : `Insuffisant — il manque ${fmtMontant(l.frais - l.solde)}`,
           }),
         ]),
       ]),

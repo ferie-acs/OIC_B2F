@@ -56,7 +56,12 @@ export const CONTEXTE_PLATEFORME = Object.freeze({
  * @returns {Record<string, any>}
  */
 export function journaliser(ctx, evenement, options = {}) {
-  const details = options.details ?? '';
+  // Lot b2 : l'action d'un intermédiaire est tracée au nom de son mandant —
+  // `groupementId` est celui du mandant, le mandat et l'intermédiaire sont nommés.
+  const mandat = ctx.mandat ?? null;
+  const details = mandat
+    ? `${options.details ?? ''} Action d’un intermédiaire au nom du mandant (mandat ${mandat.reference}).`.trim()
+    : options.details ?? '';
   if (SUSPECT.test(details.replace(REFERENCE, ''))) {
     throw new Error(
       `Entrée d'audit refusée : « ${details} » semble contenir un montant, un ` +
@@ -77,6 +82,9 @@ export function journaliser(ctx, evenement, options = {}) {
       cibleId: options.cibleId,
       details,
       demo: true,
+      ...(mandat
+        ? { mandatId: mandat.id, intermediaireGroupementId: mandat.intermediaireGroupementId }
+        : {}),
     },
     { tx: options.tx },
   );

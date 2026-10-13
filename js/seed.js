@@ -280,6 +280,12 @@ export const COMPTES_DEMO = Object.freeze([
     titre: 'DGTTC',
     sous: 'Autorité de contrôle — consultation seule — DÉMO',
   },
+  // Lot b2 : organisation interne — compte ajouté par js/seed-lot-b2.js.
+  {
+    email: 'intermediaire@demo.invalid',
+    titre: 'Intermédiaire de fret',
+    sous: 'Fret Conseil Intermédiation, deux mandants — DÉMO',
+  },
 ]);
 
 const VEHICULES = [

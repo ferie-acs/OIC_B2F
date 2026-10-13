@@ -53,6 +53,9 @@ import {
   SENS_APPARIEMENT,
   SENS_OPERATION,
   TYPE_GROUPEMENT,
+  // Lot b2 : organisation interne
+  ETAT_MANDAT,
+  PERIMETRE_MANDAT,
 } from './enums.js';
 
 /* ================================================================== *
@@ -233,6 +236,16 @@ export const ENTITES = Object.freeze({
         requis: true,
         note: 'Marque les données fictives du POC (risque R9). Toujours true ici.',
       }),
+      // --- Lot b2 : organisation interne — filiale ou entité rattachée ---
+      parentId: ref('groupement', {
+        requis: false,
+        classification: CLASSIFICATION.IDENTITE,
+        note:
+          'Entreprise mère d’une filiale. La filiale hérite de ses pièces (RCCM, carte ' +
+          'de transporteur), de sa vérification et de son abonnement ; elle tient son ' +
+          'propre compte. Elle n’est active que si la mère est vérifiée.',
+      }),
+      creeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
     }),
     invariants: Object.freeze([
       {
@@ -292,6 +305,12 @@ export const ENTITES = Object.freeze({
       dernierAccesLe: f('datetime'),
       creeLe: f('datetime', { requis: true }),
       demo: f('boolean', { requis: true }),
+      // --- Lot b2 : organisation interne ---
+      // Le code d'activation à usage unique est rangé DANS `motDePasse`
+      // (`motDePasse.activation` : { empreinte, sel, expireLe, motif, echecs… }),
+      // seul champ « systeme » de l'entité : un secret de plus n'ouvre pas un
+      // second champ jamais projeté. Le code n'est jamais stocké en clair.
+      modifieLe: f('datetime'),
     }),
     invariants: Object.freeze([
       {
@@ -1126,6 +1145,15 @@ export const ENTITES = Object.freeze({
           'rôles dont l’un (DGTTC) n’a pas accès aux montants.',
       }),
       demo: f('boolean', { requis: true }),
+      // --- Lot b2 : action d'un intermédiaire au nom de son mandant ---
+      mandatId: ref('mandat', {
+        requis: false,
+        onDelete: 'detach',
+        note:
+          'Renseigné quand l’auteur est un intermédiaire agissant au nom du mandant : ' +
+          '`groupementId` est alors celui du mandant.',
+      }),
+      intermediaireGroupementId: ref('groupement', { requis: false, onDelete: 'detach' }),
     }),
     invariants: Object.freeze([]),
   }),
@@ -1163,6 +1191,70 @@ export const ENTITES = Object.freeze({
         nom: 'parentDeMemeFamille',
         message: 'Une entrée de référentiel ne peut avoir pour parent qu’une entrée du même ensemble.',
         verifier: (r) => r.parentId == null || r.parentId !== r.id,
+      },
+    ]),
+  }),
+
+  /* ---------------------------------------------------------------- *
+   * Lot b2 : organisation interne — le mandat d'intermédiaire
+   * ---------------------------------------------------------------- */
+
+  mandat: Object.freeze({
+    collection: 'mandats',
+    proprietaire: null,
+    libelle: 'Mandat d’intermédiaire',
+    legacy: 'rattachement auxiliaire (register_auxiliaire)',
+    description:
+      'Un affréteur ou un transporteur confie à une entreprise intermédiaire un ' +
+      'périmètre d’actions, pour une période. Deux parties, comme l’appariement : ' +
+      'le mandant désigne et retire, l’intermédiaire agit au nom du mandant.',
+    champs: Object.freeze({
+      id: idPropre(),
+      reference: f('string', { requis: true, unique: true, note: 'Format MD-AAAA-NNNN.' }),
+      mandantGroupementId: ref('groupement'),
+      intermediaireGroupementId: ref('groupement'),
+      typeMandant: enumOf(
+        { AFFRETEUR: TYPE_GROUPEMENT.AFFRETEUR, TRANSPORTEUR: TYPE_GROUPEMENT.TRANSPORTEUR },
+      ),
+      perimetre: f('array', {
+        requis: true,
+        min: 1,
+        classification: CLASSIFICATION.PUBLIC,
+        note: 'Valeurs de PERIMETRE_MANDAT. Aucun sous-champ nominatif.',
+      }),
+      debuteLe: f('date', { requis: true }),
+      finitLe: f('date', { requis: true }),
+      etat: enumOf(ETAT_MANDAT),
+      creeLe: f('datetime', { requis: true }),
+      creeParUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
+      retireLe: f('datetime'),
+      retireParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      motifRetrait: f('text'),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'mandatPartiesDistinctes',
+        message: 'Une entreprise ne se désigne pas elle-même comme intermédiaire.',
+        verifier: (m) => m.mandantGroupementId !== m.intermediaireGroupementId,
+      },
+      {
+        nom: 'mandatPeriodeOrdonnee',
+        message: 'La fin du mandat doit suivre son début.',
+        verifier: (m) => String(m.finitLe) >= String(m.debuteLe),
+      },
+      {
+        nom: 'mandatPerimetreConnu',
+        message: 'Le périmètre d’un mandat ne porte que des valeurs connues.',
+        verifier: (m) =>
+          Array.isArray(m.perimetre) &&
+          m.perimetre.length > 0 &&
+          m.perimetre.every((p) => Object.values(PERIMETRE_MANDAT).includes(p)),
+      },
+      {
+        nom: 'mandatRetraitDate',
+        message: 'Un mandat retiré porte la date de son retrait.',
+        verifier: (m) => m.etat !== ETAT_MANDAT.RETIRE || Boolean(m.retireLe),
       },
     ]),
   }),

@@ -45,6 +45,8 @@ import { decider } from '../domain/access.js';
 import { lireJournal } from '../services/audit.service.js';
 import { abonnementDe } from '../services/auth.service.js';
 import { etatCarteTransport } from '../services/controle.service.js';
+// Lot b2 : organisation interne — vérification héritée d'une filiale.
+import { etatVerification } from '../services/verification.service.js';
 
 /* ================================================================== *
  * Concessionnaire — l'exploitant
@@ -619,7 +621,7 @@ export function acteurs(ctx) {
               ? `${g.carteTransporteurNumero} — ${date(g.carteTransporteurEcheance)}`
               : '—',
             // Correctif anti-fraude n° 3 : le contrôleur voit l'état du contrôle des pièces.
-            g.type === 'transporteur' ? badge(g.verificationEtat || 'a_verifier') : '—',
+            g.type === 'transporteur' ? badge(etatVerification(g.id)) : '—', // Lot b2 : vérification héritée
             refDe(g.localiteId),
             compter('vehicule', (v) => v.groupementId === g.id),
           ]),
