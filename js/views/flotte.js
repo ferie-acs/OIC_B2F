@@ -4,6 +4,7 @@ import { bouton, etatVide } from '../core/ui.js';
 import { aller } from '../core/router.js';
 import { carteFlotte } from '../core/carte-flotte.js';
 import { decider } from '../domain/access.js';
+import { localiser } from '../core/nav.js';
 import { refDe } from './_donnees.js';
 import { donneesFlotte } from './flotte-donnees.js';
 import { ouvrirVehicule } from './flotte-formulaires.js?v=20261009-carte-2';
@@ -123,7 +124,9 @@ export function vueFlotte(ctx, params = {}) {
       el('h2', { text: 'Actions rapides' }),
       action('Modifier le camion', 'vehicule.gerer', () => ouvrirVehicule(ctx, v), 'settings'),
       action('Publier une disponibilité', 'offre.publier', () => aller(`#/transporteur/offres/nouvelle?vehicule=${encodeURIComponent(v.id)}`), 'calendar', 'primary', !v.publiable ? v.motif : null),
-      d.transport ? lien('Suivre ce transport', '#/transporteur/suivi', 'map-pin') : d.appariement ? lien('Voir la réservation', '#/transporteur/reservations', 'handshake') : lien('Trouver du fret', '#/transporteur/marche', 'search'),
+      // Intégration : le lien n'apparaît que si l'écran existe pour ce rôle (le partenaire n'a pas le marché).
+      ...[d.transport ? ['Suivre ce transport', 'suivi', 'map-pin'] : d.appariement ? ['Voir la réservation', 'reservations', 'handshake'] : ['Trouver du fret', 'marche', 'search']]
+        .filter(([, page]) => localiser(ctx, page)).map(([libelle, page, ic]) => lien(libelle, `#/transporteur/${page}`, ic)),
     ]);
     const historique = el('section.fleet-panel.fleet-history', {}, [el('div.fleet-card-heading', {}, [el('h2', { text: 'Activité du véhicule' }), icone('history', 18)])]);
     const evenements = (d.historique || []).slice(0, 3);

@@ -9,9 +9,8 @@
  */
 
 import { el, icone, remplacer } from './dom.js';
-import { arborescenceDe, segmentEspace } from './nav.js';
+import { arborescenceDe, localiser, segmentEspace } from './nav.js';
 import { role } from '../domain/roles.js';
-import { decider } from '../domain/access.js';
 import { nonLues } from '../services/notification.service.js';
 import { profil } from '../services/auth.service.js';
 // Lot b2 : organisation interne — contexte délégué d'un intermédiaire.
@@ -350,7 +349,7 @@ function barreSuperieure({ ctx, titre, zone, moi, r }) {
       }, [icone('mail', 18)]),
       // Intégration : la cloche ne s'affiche que si l'écran des notifications
       // existe pour ce rôle (elle menait sinon à un refus).
-      decider(ctx, 'notification.lire').autorise
+      localiser(ctx, 'notifications')
         ? el('a', {
             class: 'icon-btn-ghost',
             href: `#/${segmentEspace(ctx)}/notifications`,
