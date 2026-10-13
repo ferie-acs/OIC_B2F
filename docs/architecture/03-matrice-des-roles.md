@@ -486,3 +486,123 @@ valide pas même avec le droit ; qu'aucun rôle ne détient `appariement.expirer
 et que la transition `expirer` appartient à la seule partie `systeme` ; qu'un
 rôle institutionnel ne peut pas noter. Le masquage de l'identité est en outre
 couvert par `tests/access.test.mjs` et `tests/vues.test.mjs`.
+
+---
+
+## 10. Démarches ajoutées (lots b0 à b5) et intégration — 13/10/2026
+
+Les lots b1 à b5 ajoutent **cinq rôles** et **trente et un droits** : le
+catalogue passe de **51 à 82 droits**, la matrice de **19 à 24 rôles**. Le lot
+b0 (recherche dans les listes) n'ajoute ni rôle ni droit. Les tableaux
+ci-dessous sont générés depuis `js/domain/permissions.js` et
+`js/domain/roles.js` après intégration ; le détail de chaque démarche est dans
+les annexes `docs/lots/lot-b1.md` à `lot-b5.md`.
+
+### 10.1 Les rôles ajoutés
+
+| Rôle | Libellé | Niveau | Espace | Droits |
+|---|---|:-:|---|:-:|
+| `intermediaire` | Intermédiaire de fret | 1 | intermediaire | 14 |
+| `collaborateur_intermediaire` | Collaborateur d'intermédiaire | 1 | intermediaire | 11 |
+| `mandataire_affreteur` | Intermédiaire au nom d'un affréteur | 2 | affreteur | 16 |
+| `mandataire_transporteur` | Intermédiaire au nom d'un transporteur | 2 | transporteur | 15 |
+| `agent_controle_route` | Agent de contrôle sur route | 3 | minimal | 2 |
+
+- **`intermediaire`** et **`collaborateur_intermediaire`** (lot b2) : les
+  comptes d'une entreprise de type « intermédiaire de fret ». **Aucun droit de
+  marché en propre** : ils lisent leurs mandants, administrent leur entreprise
+  (le collaborateur ne gère ni les comptes ni la création d'entité) et agissent
+  au nom d'un mandant par `mandat.agir`. Depuis l'intégration, le responsable
+  d'un intermédiaire **inscrit en ligne** (lot b1) reçoit `intermediaire`, et
+  ses sous-comptes `collaborateur_intermediaire` ; il suit son dossier
+  (`inscription.lire`, `inscription.deposer`) et signale un incident
+  (`incident.declarer`), comme tout acteur du marché.
+- **`mandataire_affreteur`** et **`mandataire_transporteur`** (lot b2) : rôles
+  de **contexte délégué**, jamais portés par un compte (`delegation: true`,
+  exclus de `rolesAttribuables`). Ni validation, ni réponse aux propositions
+  faites au mandant, ni coordonnées, ni solde chiffré. Leurs droits sont en
+  outre bornés, à chaque décision, par le périmètre et la période du mandat
+  (`refusMandat`, motif `hors_mandat`).
+- **`agent_controle_route`** (lot b3) : deux droits seulement, sans accès au
+  marché, aux comptes ni aux coordonnées.
+
+### 10.2 Les droits ajoutés
+
+`P` propre · `G` groupement · `T` tout. La colonne « Mutation » dit si le droit
+change un état : un compte en attente d'activation, une entreprise suspendue ou
+un abonnement expiré les perdent (voir § 10.4).
+
+| Droit | Libellé | Mutation | Rôles et portée |
+|---|---|:-:|---|
+| `inscription.lire` | Consulter le dossier d’inscription de son entreprise | non | `affreteur` G · `transporteur` G · `auxiliaire_affreteur` G · `auxiliaire_transporteur` G · `transporteur_prive` G · `transporteur_etranger` G · `intermediaire` G · `collaborateur_intermediaire` G |
+| `inscription.deposer` | Déposer des pièces et mettre à jour la fiche de son entreprise | oui | `affreteur` G · `transporteur` G · `auxiliaire_affreteur` G · `auxiliaire_transporteur` G · `transporteur_prive` G · `transporteur_etranger` G · `intermediaire` G · `collaborateur_intermediaire` G |
+| `inscription.activer` | Contrôler les pièces, activer, refuser ou requalifier une entreprise inscrite | oui | `activation_inscription` T · `activation_inscription_affreteur` T |
+| `message.journal` | Consulter le journal des messages envoyés | non | `concessionnaire` T |
+| `message.envoyer` | Envoyer un message à une entreprise ou à une catégorie d’entreprises | oui | `concessionnaire` T · `activation_inscription` T · `activation_inscription_affreteur` T |
+| `filiale.lire` | Consulter ses filiales et leur activité consolidée | non | `affreteur` G · `transporteur` G · `transporteur_prive` G · `transporteur_etranger` G · `intermediaire` G · `collaborateur_intermediaire` G |
+| `filiale.creer` | Créer une filiale ou une entité rattachée | oui | `affreteur` G · `transporteur` G · `transporteur_prive` G · `transporteur_etranger` G · `intermediaire` G |
+| `mandat.lire` | Consulter ses mandats d’intermédiaire | non | `affreteur` G · `transporteur` G · `transporteur_prive` G · `transporteur_etranger` G · `intermediaire` G · `collaborateur_intermediaire` G |
+| `mandat.gerer` | Désigner ou retirer un intermédiaire de fret | oui | `affreteur` G · `transporteur` G · `transporteur_prive` G · `transporteur_etranger` G |
+| `mandat.agir` | Agir au nom d’un mandant | oui | `intermediaire` G · `collaborateur_intermediaire` G |
+| `demande.modifier` | Modifier une demande de transport | oui | `affreteur` G · `auxiliaire_affreteur` G |
+| `attestation.lire` | Consulter les attestations de bourse de fret | non | `transporteur` G · `auxiliaire_transporteur` G · `transporteur_prive` G · `transporteur_etranger` G · `partenaire` G |
+| `attestation.generer` | Émettre ou annuler une attestation de bourse de fret | oui | `transporteur` G · `auxiliaire_transporteur` G · `transporteur_prive` G · `transporteur_etranger` G |
+| `controle.verifier` | Vérifier une attestation sur route | oui | `agent_controle_route` T |
+| `controle.historique` | Consulter l’historique de ses contrôles | non | `agent_controle_route` P |
+| `compte.recharger` | Recharger son compte par paiement en ligne | oui | `affreteur` G · `transporteur` G · `transporteur_prive` G · `transporteur_etranger` G |
+| `caisse.encaisser` | Enregistrer un encaissement au guichet | oui | `concessionnaire` T |
+| `caisse.valider` | Valider un encaissement saisi par un autre agent | oui | `concessionnaire` T |
+| `caisse.lire` | Consulter les encaissements et leurs reçus | non | `concessionnaire` T |
+| `rapport.financier` | Éditer les états financiers et les exports | non | `concessionnaire` T · `superviseur_comptabilite` T |
+| `contentieux.lire` | Consulter les contentieux | non | `concessionnaire` T · `contentieux_paie` T |
+| `contentieux.gerer` | Ouvrir, instruire et clore un contentieux | oui | `contentieux_paie` T |
+| `agent.gerer` | Gérer les comptes des agents OIC | oui | `concessionnaire` T |
+| `habilitation.parametrer` | Paramétrer les habilitations des profils | oui | `concessionnaire` T |
+| `groupement.suspendre` | Suspendre ou réactiver une entreprise | oui | `concessionnaire` T |
+| `referentiel.gerer` | Gérer les référentiels nationaux | oui | `concessionnaire` T |
+| `incident.declarer` | Signaler un incident sur la plateforme | oui | `affreteur` P · `transporteur` P · `auxiliaire_affreteur` P · `auxiliaire_transporteur` P · `concessionnaire` P · `dgttc` P · `transporteur_prive` P · `transporteur_etranger` P · `partenaire` P · `intermediaire` P · `collaborateur_intermediaire` P |
+| `incident.traiter` | Qualifier, attribuer et traiter les incidents | oui | `concessionnaire` T |
+| `flux.offres` | Générer le flux public des offres | non | `concessionnaire` T |
+| `export.donnees` | Exporter des listes au format CSV | non | `concessionnaire` T · `dgttc` T |
+| `institution.utilisateurs` | Gérer les comptes de son institution | oui | `dgttc` G |
+
+**Droits existants modifiés.** `abonnement.prolonger` (déclaré depuis J1, sans
+écran) est accordé en `G` à `affreteur`, `transporteur`, `transporteur_prive` et
+`transporteur_etranger` (lot b4) : le titulaire renouvelle son abonnement ; les
+auxiliaires ne l'ont pas (payer engage les moyens du parent). Il reste
+accessible à un abonnement expiré, comme `abonnement.lire`. À l'intégration, le
+gabarit `INTERMEDIAIRE` a été rétabli tel que le lot b2 l'avait défini : une
+fusion y avait copié `abonnement.prolonger` et `compte.recharger`, qui ne lui
+reviennent pas (l'intermédiaire renouvelle au guichet).
+
+### 10.3 Paramétrage encadré des habilitations (lot b5)
+
+Le concessionnaire (`habilitation.parametrer`) peut ouvrir ou fermer, pour un
+profil institutionnel autre que `super_admin`, les seuls droits listés dans
+`DROITS_PARAMETRABLES` : des droits de **consultation**, sans incidence
+financière. `DROITS_VERROUILLES` (validation, crédit et sa validation,
+vérification, suspension, coordonnées, expiration, gestion des comptes,
+paramétrage) ne se donnent ni ne se retirent ; un garde-fou de chargement fait
+échouer le module si une entrée paramétrable devenait mutante ou financière. Le
+second verrou (§ 4, classifications) n'est jamais paramétrable. Chaque
+décision est historisée en ajout seul.
+
+### 10.4 Ce que la matrice ne porte pas — conformément à P4
+
+| Règle | Où elle est appliquée |
+|---|---|
+| **Compte en attente d'activation** : seuls `inscription.lire` et `inscription.deposer` sont accordés (motif `inscription_en_attente`) ; le menu ne montre que « Mon compte ». | `access.js` (`DROITS_AVANT_ACTIVATION`), `auth.service.js` (`inscriptionActivee`). |
+| **Activation en quatre yeux** : l'agent qui a déclaré les pièces conformes n'active pas. | `verification.service.js` (`activerEntreprise`). |
+| **Un seul état de vérification** (intégration) : `verificationEtat`, écrit pour tout type d'entreprise par l'agent d'activation, lu par les filiales et par l'annuaire des intermédiaires. Absent, il ne vaut « vérifié » que pour un affréteur ou un intermédiaire antérieur à l'inscription en ligne. | `organisation.js` (`entrepriseVerifiee`), `mandat.service.js`, `verification.service.js`. |
+| **Mandat** : périmètre et période relus à chaque décision ; un retrait ferme l'accès même à un écran déjà affiché. | `access.js` (`refusMandat`), `mandat.service.js`. |
+| **Entreprise suspendue** : consultation seule ; toute mutation refusée sauf `incident.declarer`. Suspension et réactivation en quatre yeux. | `access.js` (`groupementSuspendu`), `groupements-admin.service.js`. |
+| **Encaissement au guichet en quatre yeux** : la saisie émet le reçu sans effet ; une autre personne valide. | `caisse.service.js`. |
+| **Codes à usage unique** : création ou réinitialisation d'un compte (lots b2 et b5) et mot de passe oublié (lot b1) partent par la messagerie unique à l'adresse **enregistrée** du compte ; aucun n'est rendu à l'administrateur. | `messagerie.service.js`, `utilisateurs-entreprise.service.js`, `agents.service.js`, `profil.service.js`. |
+| **Administrateur DGTTC** : `institution.utilisateurs` exige en outre que la personne soit désignée administrateur de son institution. | `agents.service.js`. |
+
+**Couverture de test.** `tests/lot-b1.test.mjs` à `tests/lot-b5.test.mjs`
+(règles et refus de chaque lot) ; `tests/integration-intermediaire.test.mjs`
+(inscription → activation → annuaire → mandat → action au nom du mandant,
+filiales) ; `tests/integration-messagerie.test.mjs` (points d'envoi des lots
+b2, b4 et b5, adresse enregistrée, aucun code rendu) ;
+`tests/integration-offre-proposee.test.mjs`.

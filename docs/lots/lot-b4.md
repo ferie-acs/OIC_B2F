@@ -189,3 +189,10 @@ quatre icônes Lucide), `js/app.js` (routes, amorçage), `js/core/nav.js`,
 `js/services/compte.service.js` (export de `referenceDejaUtilisee`, option `tx`),
 `js/services/notification.service.js` (gabarits), `js/views/commun.js` (accueil
 des profils contentieux et comptabilité).
+
+## Intégration du 13 octobre 2026
+
+Cette fiche décrit le lot tel qu'il a été livré. À l'intégration :
+
+- Les points d'envoi listés ci-dessus sont branchés sur la messagerie unique : `prolongerAbonnement`, `rechargerEnLigne`, `signalerEchec` (au seul payeur), `validerEncaissement`, `rejeterEncaissement` (sans le motif interne), et le rappel d'échéance à 30 jours (`rappelerEcheances()`, au démarrage, une fois par période, courriel et SMS).
+- Les droits `abonnement.prolonger` et `compte.recharger`, copiés à la fusion dans le gabarit de l'intermédiaire, en ont été retirés.

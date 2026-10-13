@@ -103,3 +103,11 @@ Les données sont ajoutées par `js/seed-lot-b2.js` (idempotent, appelé au dém
 - Pas de rattachement d'une entreprise existante comme filiale : une entité rattachée se crée depuis l'entreprise mère.
 - Côté DUT, rien n'est fait (hors périmètre de ce lot).
 - Courriels et SMS simulés : le code d'activation est remis par l'administrateur, de la main à la main.
+
+## Intégration du 13 octobre 2026
+
+Cette fiche décrit le lot tel qu'il a été livré. À l'intégration :
+
+- L'intermédiaire inscrit en ligne (lot b1) reçoit le rôle `intermediaire` ; l'annuaire exige une inscription **activée** et vérifiée. Un état de vérification absent ne vaut plus « vérifié » que pour une entreprise antérieure à l'inscription en ligne (`entrepriseVerifiee()`, `domain/organisation.js`).
+- Le code d'activation (création, réinitialisation, responsable de filiale) **n'est plus affiché à l'administrateur** : il part par la messagerie unique à l'adresse enregistrée du compte ; l'écran confirme l'envoi, adresse masquée. La limite « code remis de la main à la main » ne s'applique plus.
+- Le libellé « Fiche de l'entreprise » de l'espace Intermédiaire devient « Fiche du groupement », comme dans les autres espaces.

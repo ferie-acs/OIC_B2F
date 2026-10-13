@@ -213,3 +213,10 @@ Points de branchement dans des fichiers existants :
 - **Statut d'une offre proposée.** Sur la carte d'une offre proposée par le transporteur (sens B),
   le statut générique de l'offre reste « Réservée — en attente de votre réponse ». Le libellé
   exact figure côté affréteur et dans les notifications.
+
+## Intégration du 13 octobre 2026
+
+Cette fiche décrit le lot tel qu'il a été livré. À l'intégration :
+
+- Défaut levé : la carte d'une offre proposée par son transporteur (sens B) lit « Proposée — en attente de la réponse de l'affréteur » (`STATUT_OFFRE_PROPOSEE`, statut affiché ; l'état stocké reste `reservee`).
+- Les pages « Attestations », « Vérifier une attestation » et « Mes contrôles » ont leurs icônes propres (`qr-code`, `scan-line`, `history`).
