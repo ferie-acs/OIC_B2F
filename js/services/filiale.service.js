@@ -33,9 +33,10 @@ import { mandatEnVigueur } from '../domain/mandat.js';
 import { role, rolesAttribuables } from '../domain/roles.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
+import { adresseMasquee } from './admin-commun.js';
 import { soldeDe } from './compte.service.js';
 import { etatVerification } from './verification.service.js';
-import { RefusOrganisation, preparerCompte } from './utilisateurs-entreprise.service.js';
+import { RefusOrganisation, envoyerCodeActivation, preparerCompte } from './utilisateurs-entreprise.service.js';
 
 /** Types d'entreprise qui peuvent se doter d'entités rattachées. */
 const TYPES_AVEC_FILIALES = Object.freeze([
@@ -233,6 +234,8 @@ export async function creerFiliale(ctx, saisie) {
         `responsable de « ${raisonSociale} ». Code d’activation à usage unique émis.`,
       tx,
     });
+    // Intégration : le code part à l'adresse enregistrée du responsable (messagerie unique).
+    envoyerCodeActivation(ctx, compte, code, { entreprise: raisonSociale, tx });
   });
 
   return {
@@ -240,7 +243,7 @@ export async function creerFiliale(ctx, saisie) {
     utilisateurId: compte.id,
     active: entiteOperationnelle(filiale, mere),
     motifInactivite: motifInactivite(filiale, mere),
-    code,
+    destinataire: adresseMasquee(compte.email),
     expireLe,
   };
 }

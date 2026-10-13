@@ -28,6 +28,7 @@ import { ROLES, role } from '../domain/roles.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { RefusAdministration, adresseMasquee, maintenantIso, texteControle } from './admin-commun.js';
+import { envoyerModele } from './messagerie.service.js';
 
 /** Durée de validité d'un code d'accès. */
 export const VALIDITE_CODE_MINUTES = 15;
@@ -186,18 +187,37 @@ async function preparerCode(ctx, utilisateurId) {
   };
 }
 
-/** Message simulé : ce qui partirait à l'adresse enregistrée du compte. */
-function messageSimule(u, code, expireLe) {
+/**
+ * Intégration : le code part par la **messagerie unique** (lot b1), à l'adresse
+ * enregistrée du compte, dans la transaction qui l'émet. Le code n'est rendu
+ * à personne d'autre : l'administrateur ne reçoit que l'accusé d'envoi.
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {Record<string, any>} u
+ * @param {string} code
+ * @param {any} tx
+ */
+function envoyerCode(ctx, u, code, tx) {
+  envoyerModele({
+    modele: 'acces.code',
+    params: { minutes: VALIDITE_CODE_MINUTES },
+    utilisateurIds: [u.id],
+    code,
+    tx,
+    expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+  });
+}
+
+/** Accusé d'envoi servi à l'administrateur : adresse masquée, jamais le code. */
+function messageSimule(u, expireLe) {
   return Object.freeze({
     simule: true,
     destinataire: adresseMasquee(u.email),
-    objet: 'Bourse de Fret — votre code d’accès',
-    code,
+    objet: 'Votre code d’accès à la Bourse de Fret',
     expireLe,
     texte:
-      `Bonjour ${u.prenom ?? ''} ${u.nom}. Un code d’accès à usage unique a été émis pour votre ` +
-      `compte. Saisissez-le dans les ${VALIDITE_CODE_MINUTES} minutes sur la page « Code d’accès » ` +
-      'pour définir votre mot de passe.',
+      `Un code d’accès à usage unique, valable ${VALIDITE_CODE_MINUTES} minutes, est parti à l’adresse ` +
+      `enregistrée de ${u.prenom ?? ''} ${u.nom}. Elle le saisit sur la page « Code d’accès » pour définir ` +
+      'son mot de passe.',
   });
 }
 
@@ -256,8 +276,9 @@ export async function creerCompte(ctx, saisie) {
       details: 'Code d’accès initial adressé à l’adresse enregistrée du compte.',
       tx,
     });
+    envoyerCode(ctx, u, code.code, tx);
   });
-  return { utilisateurId: id, message: messageSimule(u, code.code, code.expireLe) };
+  return { utilisateurId: id, message: messageSimule(u, code.expireLe) };
 }
 
 /**
@@ -382,8 +403,9 @@ export async function reinitialiserAcces(ctx, id, motifSaisi) {
       details: `Code d’accès à usage unique adressé à l’adresse enregistrée du compte. Motif : ${motif}`,
       tx,
     });
+    envoyerCode(ctx, u, code.code, tx);
   });
-  return messageSimule(u, code.code, code.expireLe);
+  return messageSimule(u, code.expireLe);
 }
 
 /**

@@ -16,13 +16,14 @@
  */
 
 import { identifiant } from '../core/crypto.js';
-import { ETAT_ABONNEMENT, EVENEMENT_AUDIT, TYPE_GROUPEMENT } from '../domain/enums.js';
+import { CANAL_MESSAGE, ETAT_ABONNEMENT, EVENEMENT_AUDIT, TYPE_GROUPEMENT } from '../domain/enums.js';
 import { ETAT_REVISION, aujourdhui, joursAvant, periodeProlongation } from '../domain/finances.js';
 import { exiger, projeter } from '../domain/access.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { abonnementDe } from './auth.service.js';
 import { notifier } from './notification.service.js';
+import { envoyerModele } from './messagerie.service.js';
 import { appliquerRevisionsEchues, dateFr, estFormule } from './tarif.service.js';
 
 /** Échéance proche : le réabonnement est mis en avant à partir de ce délai. */
@@ -182,7 +183,54 @@ export function prolongerAbonnement(ctx, demande, options = {}) {
       cibleId: groupementId,
       tx,
     });
+    // Intégration : courriel simulé par la messagerie unique (lot b1).
+    envoyerModele({
+      modele: 'abonnement.prolonge',
+      params: { entreprise: g.raisonSociale, fin: dateFr(periode.finitLe), reference },
+      groupementId,
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId ?? null, roleId: ctx.roleId },
+    });
     return abonnement;
   };
   return options.tx ? travail(options.tx) : stockageInterne().transaction(travail);
+}
+
+/* ------------------------------------------------------------------ *
+ * Intégration : rappel d'échéance par la messagerie unique (lot b1)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Adresse un rappel (courriel et SMS simulés) à chaque entreprise dont
+ * l'abonnement arrive à échéance dans {@link ALERTE_ECHEANCE_JOURS} jours.
+ * Un seul rappel par période : relancé au démarrage, il ne double rien. Sans
+ * tâche planifiée dans un POC statique, il s'exécute à l'ouverture de l'application.
+ *
+ * @param {Date} [maintenant]
+ * @returns {number} Nombre d'entreprises rappelées.
+ */
+export function rappelerEcheances(maintenant = new Date()) {
+  const jour = maintenant.toISOString().slice(0, 10);
+  let rappels = 0;
+  const avecAbonnement = new Set(depot('abonnement').brutTous().map((a) => a.groupementId));
+  for (const g of depot('groupement').brutOu((x) => avecAbonnement.has(x.id) && x.type !== TYPE_GROUPEMENT.INSTITUTION)) {
+    const courant = abonnementDe(g.id);
+    if (!courant.actif || !courant.finitLe) continue;
+    const fin = String(courant.finitLe).slice(0, 10);
+    const jours = joursAvant(fin, jour);
+    if (jours === null || jours > ALERTE_ECHEANCE_JOURS) continue;
+    const debutFenetre = new Date(new Date(`${fin}T00:00:00`).getTime() - ALERTE_ECHEANCE_JOURS * 86400000);
+    const dejaRappele = depot('message').brutOu((m) =>
+      m.modele === 'abonnement.echeance' && m.destinataireGroupementId === g.id && new Date(m.envoyeLe) >= debutFenetre).length > 0;
+    if (dejaRappele) continue;
+    const envoyes = stockageInterne().transaction((tx) => envoyerModele({
+      modele: 'abonnement.echeance',
+      params: { entreprise: g.raisonSociale, fin: dateFr(fin) },
+      groupementId: g.id,
+      canaux: [CANAL_MESSAGE.COURRIEL, CANAL_MESSAGE.SMS],
+      tx,
+    }));
+    if (envoyes.length) rappels += 1;
+  }
+  return rappels;
 }

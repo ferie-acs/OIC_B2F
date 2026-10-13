@@ -42,6 +42,7 @@ import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { referenceDejaUtilisee } from './compte.service.js';
 import { notifier } from './notification.service.js';
+import { envoyerModele } from './messagerie.service.js';
 import { prolongerAbonnement, tarifFormule } from './abonnement.service.js';
 import { appliquerRevisionsEchues, dateFr } from './tarif.service.js';
 
@@ -293,6 +294,14 @@ export function rechargerEnLigne(ctx, demande) {
       cibleId: groupementId,
       tx,
     });
+    // Intégration : courriel simulé par la messagerie unique (lot b1).
+    envoyerModele({
+      modele: 'paiement.enregistre',
+      params: { entreprise: depot('groupement').brutParId(groupementId)?.raisonSociale ?? '', reference: numero },
+      groupementId,
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+    });
     return { paiement, operation };
   });
 }
@@ -319,6 +328,14 @@ export function signalerEchec(ctx, { objet, mode }) {
       cibleType: 'groupement',
       cibleId: ctx.groupementId,
       tx,
+    });
+    // Intégration : courriel simulé, à l'adresse enregistrée du seul payeur.
+    envoyerModele({
+      modele: 'paiement.non_abouti',
+      params: { objet: libelleFinance(objet).toLowerCase() },
+      utilisateurIds: [ctx.utilisateurId],
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
     });
   });
 }

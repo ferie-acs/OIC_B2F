@@ -49,6 +49,11 @@ const { ROLES } = await import('../js/domain/roles.js');
 const { arborescenceDe } = await import('../js/core/nav.js');
 
 const ctxDe = (id) => contexteDe(depot('utilisateur').brutParId(id));
+// Intégration : le code d'accès part par la messagerie unique, à l'adresse
+// enregistrée ; le test le lit là où le destinataire le lirait.
+const codeRecu = (utilisateurId) => depot('message')
+  .brutOu((m) => m.modele === 'acces.code' && m.destinataireUtilisateurId === utilisateurId)
+  .sort((a, b) => String(a.envoyeLe).localeCompare(String(b.envoyeLe))).pop()?.code;
 
 async function installer() {
   appliquerParametrage([]);
@@ -168,8 +173,11 @@ describe('Lot b5 — comptes du back-office OIC', () => {
     assert.equal(u.roleId, 'agent_caisse');
     assert.equal(res.message.simule, true);
     assert.match(res.message.destinataire, /^e•+@demo\.invalid$/);
+    assert.equal(res.message.code, undefined, 'le code n’est pas rendu à l’administrateur');
+    const msg = depot('message').brutOu((m) => m.modele === 'acces.code' && m.destinataireUtilisateurId === res.utilisateurId)[0];
+    assert.equal(msg.adresse, 'eric.tanoh@demo.invalid');
     await assert.rejects(() => connecter('eric.tanoh@demo.invalid', 'demo2026'), /Identifiants incorrects/);
-    await agents.utiliserCodeAcces({ email: 'eric.tanoh@demo.invalid', code: res.message.code, motDePasse: 'Guichet2026', confirmation: 'Guichet2026' });
+    await agents.utiliserCodeAcces({ email: 'eric.tanoh@demo.invalid', code: codeRecu(res.utilisateurId), motDePasse: 'Guichet2026', confirmation: 'Guichet2026' });
     const ctx = await connecter('eric.tanoh@demo.invalid', 'Guichet2026');
     assert.equal(ctx.roleId, 'agent_caisse');
   });
@@ -209,7 +217,8 @@ describe('Lot b5 — comptes du back-office OIC', () => {
   });
 
   it('réinitialise l’accès par un code unique, court, sans bloquer le compte', async () => {
-    const m = await agents.reinitialiserAcces(ctxDe('u-conc'), 'u-activ', 'Mot de passe oublié signalé par téléphone.'.replace('par téléphone', 'au service'));
+    await agents.reinitialiserAcces(ctxDe('u-conc'), 'u-activ', 'Mot de passe oublié signalé par téléphone.'.replace('par téléphone', 'au service'));
+    const m = { code: codeRecu('u-activ') };
     // Le compte reste utilisable tant que le nouveau mot de passe n'est pas défini.
     await connecter('activation@demo.invalid', 'demo2026');
     await assert.rejects(() => agents.utiliserCodeAcces({ email: 'activation@demo.invalid', code: 'AAAA-BBBB', motDePasse: 'Nouveau2026', confirmation: 'Nouveau2026' }), /Code invalide/);
@@ -223,12 +232,14 @@ describe('Lot b5 — comptes du back-office OIC', () => {
   });
 
   it('refuse un code expiré et invalide le code après cinq essais', async () => {
-    const m = await agents.reinitialiserAcces(ctxDe('u-conc'), 'u-caisse', 'Réinitialisation demandée.');
+    await agents.reinitialiserAcces(ctxDe('u-conc'), 'u-caisse', 'Réinitialisation demandée.');
+    const m = { code: codeRecu('u-caisse') };
     const code = depot('code_acces').brutOu((c) => c.utilisateurId === 'u-caisse' && !c.utiliseLe && !c.annuleLe)[0];
     depot('code_acces').modifier(code.id, { expireLe: new Date(Date.now() - 1000).toISOString() });
     await assert.rejects(() => agents.utiliserCodeAcces({ email: 'caisse@demo.invalid', code: m.code, motDePasse: 'Caisse2026', confirmation: 'Caisse2026' }), /Code invalide/);
 
-    const m2 = await agents.reinitialiserAcces(ctxDe('u-conc'), 'u-caisse', 'Nouvelle demande.');
+    await agents.reinitialiserAcces(ctxDe('u-conc'), 'u-caisse', 'Nouvelle demande.');
+    const m2 = { code: codeRecu('u-caisse') };
     for (let i = 0; i < agents.ESSAIS_CODE_MAX; i += 1) {
       await assert.rejects(() => agents.utiliserCodeAcces({ email: 'caisse@demo.invalid', code: 'ZZZZ-ZZZZ', motDePasse: 'Caisse2026', confirmation: 'Caisse2026' }));
     }

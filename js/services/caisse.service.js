@@ -38,6 +38,7 @@ import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { rejeterCredit, saisirCredit, validerCredit } from './compte.service.js';
 import { notifier } from './notification.service.js';
+import { envoyerModele } from './messagerie.service.js';
 import { prolongerAbonnement, tarifFormule } from './abonnement.service.js';
 import { imputerReglement, nomProjete } from './contentieux.service.js';
 import { etatEffectif, numeroRecu, referencePaiementUtilisee } from './paiement.service.js';
@@ -224,6 +225,18 @@ export function validerEncaissement(ctx, id, { rapprochementConfirme } = { rappr
       cibleId: id,
       tx,
     });
+    // Intégration : courriel simulé par la messagerie unique (lot b1).
+    envoyerModele({
+      modele: 'encaissement.valide',
+      params: {
+        entreprise: depot('groupement').brutParId(p.groupementId)?.raisonSociale ?? '',
+        reference: p.numero,
+        objet: libelleFinance(p.objet).toLowerCase(),
+      },
+      groupementId: p.groupementId,
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
+    });
     return valide;
   });
 }
@@ -270,6 +283,14 @@ export function rejeterEncaissement(ctx, id, motif) {
       cibleType: 'paiement',
       cibleId: id,
       tx,
+    });
+    // Intégration : courriel simulé ; le motif interne du contrôle n'y figure pas.
+    envoyerModele({
+      modele: 'encaissement.rejete',
+      params: { reference: p.numero },
+      groupementId: p.groupementId,
+      tx,
+      expediteur: { utilisateurId: ctx.utilisateurId, roleId: ctx.roleId },
     });
     return rejete;
   });

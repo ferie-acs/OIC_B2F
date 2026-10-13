@@ -24,10 +24,6 @@
 .mandat-perimetre legend{font-weight:650;font-size:14px;margin-bottom:var(--s2);color:var(--text)}
 
 /* Code d'activation affiché une seule fois */
-.code-activation{display:grid;gap:6px;justify-items:center;text-align:center;margin:var(--s3) 0;padding:var(--s4) var(--s3);background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:var(--r-md)}
-.code-activation span{color:var(--text-muted);font-size:12px}
-.code-activation strong{font-size:30px;letter-spacing:4px;color:var(--text);font-variant-numeric:tabular-nums;word-break:break-all}
-.code-activation small{color:var(--text-secondary);font-size:12px}
 
 /* Bandeau du contexte délégué : au nom de qui l'intermédiaire agit */
 .mandat-bar>span{flex:1 1 320px;min-width:0}

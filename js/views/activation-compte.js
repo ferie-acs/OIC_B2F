@@ -1,8 +1,9 @@
 /**
  * Lot b2 : organisation interne — activer son compte avec un code.
  *
- * Le code est remis par l'administrateur de l'entreprise (création d'un compte,
- * réinitialisation d'un accès). Il ne sert qu'une fois, expire au bout de
+ * Le code est émis par l'administrateur de l'entreprise (création d'un compte,
+ * réinitialisation d'un accès) et part à l'adresse enregistrée du compte par la
+ * messagerie unique (intégration). Il ne sert qu'une fois, expire au bout de
  * 24 heures, et le message d'échec ne dit jamais ce qui a échoué.
  *
  * @module views/activation-compte
@@ -21,8 +22,8 @@ export function ouvrirActivation() {
     corps: [
       el('p', {
         text:
-          'Saisissez l’adresse de votre compte, le code remis par l’administrateur de votre ' +
-          'entreprise, puis le mot de passe de votre choix.',
+          'Saisissez l’adresse de votre compte, le code reçu à cette adresse, puis le mot de ' +
+          'passe de votre choix.',
       }),
       champ({ id: 'ac-mail', label: 'Adresse électronique', type: 'email', requis: true, attrs: { autocomplete: 'username' } }),
       champ({ id: 'ac-code', label: 'Code d’activation', requis: true, attrs: { autocomplete: 'one-time-code', placeholder: 'XXXX-XXXX' } }),
