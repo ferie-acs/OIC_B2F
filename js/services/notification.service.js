@@ -122,6 +122,25 @@ export const GABARITS = Object.freeze({
       `L'affréteur a refusé votre proposition ${p.reference}${p.motif ? ` — ${p.motif}` : ''}. ` +
       'Votre véhicule redevient disponible.',
   },
+  /* --- Lot b4 : abonnements, paiements, caisse et finances --- */
+  'abonnement.prolonge': {
+    objet: 'Abonnement prolongé',
+    texte: (p) =>
+      `L'abonnement de votre entreprise est prolongé jusqu'au ${p.fin}` +
+      `${p.reference ? ` — reçu ${p.reference}` : ''}. Vos sous-comptes en bénéficient aussi.`,
+  },
+  'paiement.enregistre': {
+    objet: 'Paiement enregistré',
+    texte: (p) => `Votre paiement ${p.reference} (${p.objet}) est enregistré. Son reçu est disponible dans « Paiements et reçus ».`,
+  },
+  'paiement.refuse': {
+    objet: 'Paiement non abouti',
+    texte: (p) => `Le paiement ${p.objet ? `pour « ${p.objet} » ` : ''}n'a pas abouti : rien n'a été débité ni crédité.`,
+  },
+  'encaissement.rejete': {
+    objet: 'Encaissement au guichet rejeté',
+    texte: (p) => `L'encaissement ${p.reference} n'a pas été validé au contrôle de caisse. Rapprochez-vous du guichet de l'OIC.`,
+  },
 });
 
 /**

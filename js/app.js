@@ -48,6 +48,12 @@ import { completerJeuLotB2 } from './seed-lot-b2.js';
 import { vueAttestations } from './views/attestations.js';
 import { controleRoute, historiqueControles, verificationPublique } from './views/controle-route.js';
 import { completerLotB3 } from './seed-lot-b3.js';
+// Lot b4 : abonnements, paiements, caisse et finances.
+import * as financesEntreprise from './views/finances-entreprise.js';
+import * as caisseB4 from './views/caisse.js';
+import { contentieux as contentieuxB4 } from './views/contentieux.js';
+import { tarifs as tarifsB4 } from './views/tarifs-admin.js';
+import { amorcerLotB4 } from './seed-lot-b4.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -150,6 +156,23 @@ function declarerRoutes() {
     monter(verificationPublique(ctx, route.page));
     window.scrollTo(0, 0);
   });
+
+  // --- Lot b4 : abonnements, paiements, caisse et finances ------------
+  // Les trois premiers écrans de chaque espace remplacent, sous la même route,
+  // ceux qui annonçaient le paiement en ligne hors périmètre (le routeur garde
+  // la dernière déclaration).
+  for (const espace of ['affreteur', 'transporteur']) {
+    declarer(`${espace}/abonnement`, financesEntreprise.abonnement);
+    declarer(`${espace}/compte`, financesEntreprise.compte);
+    declarer(`${espace}/paiements`, financesEntreprise.paiements);
+  }
+  declarer('concessionnaire/tarifs', tarifsB4);
+  declarer('concessionnaire/caisse', caisseB4.caisse);
+  declarer('concessionnaire/encaissements', caisseB4.encaissements);
+  declarer('concessionnaire/etats-financiers', caisseB4.etatsFinanciers);
+  declarer('concessionnaire/contentieux', contentieuxB4);
+  declarer('minimal/contentieux', contentieuxB4);
+  declarer('minimal/etats-financiers', caisseB4.etatsFinanciers);
 }
 
 /* ------------------------------------------------------------------ *
@@ -270,6 +293,7 @@ async function demarrerApplication() {
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();
+  await amorcerLotB4(); // Lot b4
 
   // Messages non encore remis à la plateforme DUT : renvoyés dès que le relais répond.
   reprendreFileDut();

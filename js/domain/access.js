@@ -125,7 +125,9 @@ const accord = (portee) => Object.freeze({ ...AUTORISE, portee });
  */
 const DROITS_HORS_ABONNEMENT = Object.freeze(
   new Set(['abonnement.lire', 'notification.lire', 'groupement.lire',
-    /* Lot b1 : le dossier reste consultable */ 'inscription.lire', 'inscription.deposer']),
+    /* Lot b1 : le dossier reste consultable */ 'inscription.lire', 'inscription.deposer',
+    // Lot b4 : renouveler est précisément ce qu'un abonnement expiré doit permettre.
+    'abonnement.prolonger']),
 );
 
 /**
