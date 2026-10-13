@@ -262,8 +262,10 @@ describe('Lot b2 — l’administrateur gère les utilisateurs de son entreprise
   it('désactive et réactive un compte, tracé au journal ; un compte désactivé n’agit plus', async () => {
     const admin = ctxDe('u-aff-1');
     comptes.desactiverUtilisateur(admin, 'u-aux-1', 'Fin de mission');
-    const ctx = await auth.connecter('auxiliaire@demo.invalid', MOT_DE_PASSE_DEMO);
-    assert.equal(decider(ctx, 'declaration.lire').motif, MOTIF_REFUS.COMPTE_SUSPENDU);
+    // Après fusion avec le lot b5 : un compte désactivé ne se connecte plus du tout,
+    // et une session déjà ouverte n'agit plus (refus du moteur de décision).
+    await assert.rejects(() => auth.connecter('auxiliaire@demo.invalid', MOT_DE_PASSE_DEMO), /désactivé/);
+    assert.equal(decider(ctxDe('u-aux-1'), 'declaration.lire').motif, MOTIF_REFUS.COMPTE_SUSPENDU);
     comptes.reactiverUtilisateur(admin, 'u-aux-1');
     assert.equal(ctxDe('u-aux-1').compteActif, true);
     assert.equal(audits(EVENEMENT_AUDIT.UTILISATEUR_DESACTIVE).length, 1);

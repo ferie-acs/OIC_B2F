@@ -1,0 +1,11 @@
+/* Lot b5 : administration OIC et espace DGTTC.
+ * Uniquement des variables, rayons et espacements existants de l'application. */
+.lot-b5-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lot-b5-actions .motif-refus{flex-basis:100%;max-width:260px}
+.lot-b5-pile{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.lot-b5-pile small{font-size:11px;color:var(--text-muted)}
+.lot-b5-carte{border-radius:12px;overflow:hidden}
+.lot-b5-carte .map-city{cursor:default}
+.lot-b5-carte .market-map{max-height:420px;margin:auto}
+.lot-b5-description{font-size:13px;line-height:1.6;color:var(--text-secondary);margin:4px 0 14px}
+.lot-b5-nowrap{white-space:nowrap}

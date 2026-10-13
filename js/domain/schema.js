@@ -67,6 +67,12 @@ import {
   MODE_CONTROLE,
   RESULTAT_CONTROLE,
   TYPE_PIECE_IDENTITE,
+  // Lot b5 : administration OIC et espace DGTTC.
+  ACTION_GROUPEMENT,
+  CATEGORIE_INCIDENT_APP,
+  ETAT_DECISION,
+  ETAT_INCIDENT_APP,
+  GRAVITE_INCIDENT_APP,
 } from './enums.js';
 import { PIECES } from './inscription.js';
 // Lot b4 : abonnements, paiements, caisse et finances.
@@ -383,6 +389,11 @@ export const ENTITES = Object.freeze({
       // (`motDePasse.activation` : { empreinte, sel, expireLe, motif, echecs… }),
       // seul champ « systeme » de l'entité : un secret de plus n'ouvre pas un
       // second champ jamais projeté. Le code n'est jamais stocké en clair.
+      modifieLe: f('datetime'),
+      // Lot b5 : administrateur des comptes de son institution (DGTTC).
+      administrateur: f('boolean', {
+        note: 'Désigne qui gère les comptes de son institution. Absent = non.',
+      }),
       modifieLe: f('datetime'),
     }),
     invariants: Object.freeze([
@@ -1869,6 +1880,153 @@ export const ENTITES = Object.freeze({
         verifier: (c) => (c.montantRegle ?? 0) <= c.montant,
       },
     ]),
+  }),
+
+  /* ---------------------------------------------------------------- *
+   * Lot b5 : administration OIC et espace DGTTC
+   * ---------------------------------------------------------------- */
+
+  incident_applicatif: Object.freeze({
+    collection: 'incidents_applicatifs',
+    proprietaire: 'groupementId',
+    libelle: 'Incident applicatif',
+    legacy: null,
+    description:
+      'Défaut de la plateforme signalé par un utilisateur (accès, écran, données), ' +
+      'qualifié, attribué et suivi par l’OIC jusqu’à sa clôture. Distinct des ' +
+      'incidents de transport, portés par le journal du transport.',
+    champs: Object.freeze({
+      id: idPropre(),
+      reference: f('string', { requis: true, unique: true, note: 'Format IA-AAAA-NNNN.' }),
+      categorie: enumOf(CATEGORIE_INCIDENT_APP),
+      gravite: enumOf(GRAVITE_INCIDENT_APP, { note: 'Gravité ressentie par le déclarant.' }),
+      etat: enumOf(ETAT_INCIDENT_APP),
+      titre: f('string', { requis: true, max: 120 }),
+      description: f('text', { requis: true, max: 2000, note: 'Texte libre filtré : aucune coordonnée.' }),
+      ecran: f('string', { max: 160, note: 'Écran concerné, saisi ou proposé.' }),
+      capture: f('object', {
+        classification: CLASSIFICATION.PUBLIC,
+        note: 'Métadonnées de la capture jointe : le fichier lui-même n’est pas conservé.',
+        champs: Object.freeze({
+          nom: f('string', { max: 160 }),
+          type: f('string', { max: 80 }),
+          tailleKo: f('number', { min: 0 }),
+        }),
+      }),
+      groupementId: ref('groupement', { requis: false, onDelete: 'detach' }),
+      declareParUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
+      declareParRoleId: f('string', { requis: true, ref: 'role' }),
+      declareLe: f('datetime', { requis: true }),
+      graviteRetenue: f('enum', { valeurs: Object.freeze(Object.values(GRAVITE_INCIDENT_APP)) }),
+      impact: f('text', { max: 600 }),
+      qualifieParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      qualifieLe: f('datetime'),
+      attribueAUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      attribueLe: f('datetime'),
+      suivi: f('array', {
+        requis: true,
+        classification: CLASSIFICATION.PUBLIC,
+        note: 'Ajout seul : chaque étape du traitement, avec son auteur.',
+        elements: Object.freeze({
+          id: f('id', { requis: true }),
+          horodatage: f('datetime', { requis: true }),
+          auteurUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+          etat: f('string', { requis: true }),
+          commentaire: f('text'),
+        }),
+      }),
+      resolution: f('text', { max: 1000 }),
+      resoluLe: f('datetime'),
+      closLe: f('datetime'),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'clotureApresResolution',
+        message: 'Un incident n’est clos qu’après la description de sa résolution.',
+        verifier: (i) => i.etat !== ETAT_INCIDENT_APP.CLOS || Boolean(i.resolution && i.closLe),
+      },
+      {
+        nom: 'qualificationAvantAttribution',
+        message: 'Un incident est qualifié avant d’être attribué.',
+        verifier: (i) => !i.attribueAUtilisateurId || Boolean(i.graviteRetenue),
+      },
+    ]),
+  }),
+
+  habilitation: Object.freeze({
+    collection: 'habilitations',
+    proprietaire: null,
+    appendOnly: true,
+    libelle: 'Décision de paramétrage d’une habilitation',
+    legacy: 'profil (consultation seule dans le système existant)',
+    description:
+      'Historique en ajout seul des droits activés ou retirés pour un profil. Le ' +
+      'paramétrage en vigueur se déduit de la dernière décision par profil et par droit.',
+    champs: Object.freeze({
+      id: idPropre(),
+      roleId: f('string', { requis: true, ref: 'role' }),
+      droit: f('string', { requis: true, max: 60 }),
+      accorde: f('boolean', { requis: true }),
+      motif: f('text', { requis: true, min: 5, max: 400 }),
+      auteurUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
+      horodatage: f('datetime', { requis: true }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([]),
+  }),
+
+  decision_groupement: Object.freeze({
+    collection: 'decisions_groupements',
+    proprietaire: 'groupementId',
+    libelle: 'Suspension ou réactivation d’une entreprise',
+    legacy: null,
+    description:
+      'Décision demandée par un agent OIC et confirmée par une autre personne ' +
+      '(quatre yeux), sur le modèle de la validation des crédits.',
+    champs: Object.freeze({
+      id: idPropre(),
+      groupementId: ref('groupement'),
+      action: enumOf(ACTION_GROUPEMENT),
+      etat: enumOf(ETAT_DECISION),
+      motif: f('text', { requis: true, min: 5, max: 600 }),
+      demandeParUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
+      demandeLe: f('datetime', { requis: true }),
+      traiteParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      traiteLe: f('datetime'),
+      motifRejet: f('text', { max: 600 }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'quatreYeuxGroupement',
+        message: 'La décision est confirmée ou rejetée par une autre personne que son auteur.',
+        verifier: (d) => !d.traiteParUtilisateurId || d.traiteParUtilisateurId !== d.demandeParUtilisateurId,
+      },
+    ]),
+  }),
+
+  code_acces: Object.freeze({
+    collection: 'codes_acces',
+    proprietaire: null,
+    libelle: 'Code d’accès à usage unique',
+    legacy: null,
+    description:
+      'Code de réinitialisation émis par un administrateur et adressé à l’adresse ' +
+      'enregistrée du compte. Seule son empreinte est conservée.',
+    champs: Object.freeze({
+      id: idPropre(),
+      utilisateurId: ref('utilisateur', { onDelete: 'cascade' }),
+      empreinte: f('object', { requis: true, classification: CLASSIFICATION.SYSTEME }),
+      creeLe: f('datetime', { requis: true }),
+      expireLe: f('datetime', { requis: true }),
+      utiliseLe: f('datetime'),
+      annuleLe: f('datetime'),
+      tentatives: f('integer', { requis: true, min: 0 }),
+      creeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([]),
   }),
 });
 

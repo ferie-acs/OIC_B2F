@@ -7,6 +7,8 @@ import { publiabilite } from './flotte.service.js';
 import { moyensVerifies } from './verification.service.js';
 import { decider, exiger } from '../domain/access.js';
 import { segmentEspace } from '../core/nav.js';
+// Lot b5 : suspension d'une entreprise.
+import { groupementSuspendu } from './suspension.js';
 
 export function cataloguePublic(maintenant = new Date()) {
   const refs = new Map(depot('referentiel').brutTous().map(r => [r.id, r]));
@@ -31,7 +33,8 @@ export function cataloguePublic(maintenant = new Date()) {
       localite(o.localiteDepartId) && localite(o.localiteArriveeId) &&
       // `publiabilite` exige aussi la vérification du transporteur et du véhicule
       // (correctif anti-fraude n° 3) ; le chauffeur pressenti l'est ici.
-      v && publiabilite(v).publiable && moyensVerifies(o) && !occupes.has(v.id);
+      v && publiabilite(v).publiable && moyensVerifies(o) && !occupes.has(v.id) &&
+      !groupementSuspendu(o.groupementId); // Lot b5 : entreprise suspendue
   }).map(o => {
     const v = vehicules.get(o.vehiculeId);
     return { ...commun('camions', o.id, o.localiteDepartId, o.localiteArriveeId,
@@ -41,7 +44,8 @@ export function cataloguePublic(maintenant = new Date()) {
   const frets = depot('demande').brutTous().filter(d => {
     const dec = declarations.get(d.declarationId);
     return d.etat === 'publiee' && new Date(d.departPrevu) >= maintenant &&
-      dec?.etat === 'active' && localite(dec.provenanceId) && localite(dec.destinationId);
+      dec?.etat === 'active' && localite(dec.provenanceId) && localite(dec.destinationId) &&
+      !groupementSuspendu(d.groupementId); // Lot b5 : entreprise suspendue
   }).map(d => {
     const dec = declarations.get(d.declarationId);
     return { ...commun('frets', d.id, dec.provenanceId, dec.destinationId,
