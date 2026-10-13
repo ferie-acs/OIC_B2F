@@ -92,6 +92,8 @@ const AFFRETEUR = [
     pages: [
       { route: 'compte', libelle: 'Solde et mouvements', droit: 'compte.lire' },
       { route: 'abonnement', libelle: 'Abonnement', droit: 'abonnement.lire' },
+      // Lot b4 : paiements et reçus.
+      { route: 'paiements', libelle: 'Paiements et reçus', droit: 'compte.lire' },
     ],
   },
   {
@@ -155,6 +157,8 @@ const TRANSPORTEUR = [
     pages: [
       { route: 'compte', libelle: 'Solde et mouvements', droit: 'compte.lire' },
       { route: 'abonnement', libelle: 'Abonnement', droit: 'abonnement.lire' },
+      // Lot b4 : paiements et reçus.
+      { route: 'paiements', libelle: 'Paiements et reçus', droit: 'compte.lire' },
     ],
   },
   {
@@ -214,6 +218,18 @@ const CONCESSIONNAIRE = [
     icone: 'history',
     pages: [{ route: 'audit', libelle: "Journal d'audit", droit: 'audit.lire' }],
   },
+  /* --- Lot b4 : caisse, états financiers, contentieux --- */
+  {
+    id: 'caisse',
+    libelle: 'Caisse',
+    icone: 'receipt',
+    pages: [
+      { route: 'caisse', libelle: 'Encaissement au guichet', droit: 'caisse.encaisser' },
+      { route: 'encaissements', libelle: 'Encaissements à valider', droit: 'caisse.valider' },
+      { route: 'etats-financiers', libelle: 'États et exports', droit: 'rapport.financier' },
+      { route: 'contentieux', libelle: 'Contentieux', droit: 'contentieux.lire' },
+    ],
+  },
 ];
 
 /**
@@ -271,6 +287,9 @@ const MINIMAL = [
       // Correctif anti-fraude n° 3 : ouverte au seul agent d'activation par la matrice.
       { route: 'verifications', libelle: 'Vérification des transporteurs', droit: 'groupement.verifier' },
       { route: 'duts', libelle: 'Documents de transport', droit: 'dut.lire' },
+      // Lot b4 : service contentieux et supervision comptable.
+      { route: 'contentieux', libelle: 'Contentieux', droit: 'contentieux.lire' },
+      { route: 'etats-financiers', libelle: 'États financiers', droit: 'rapport.financier' },
     ],
   },
 ];

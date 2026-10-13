@@ -293,8 +293,9 @@ export const ROLES = Object.freeze({
     soumisAbonnement: false,
     preuve: 'menu de rôle inventorié au cadrage (id_profil = 3)',
     description:
-      'Encaissement au guichet. **La caisse est explicitement hors périmètre** ' +
-      "(`plan-suivi.md` § 1.3) : le rôle est déclaré, son écran n'existe pas.",
+      'Encaissement au guichet. Dans le POC, la caisse est tenue dans l’espace du ' +
+      'concessionnaire, comme dans le système existant (lot b4) : ce profil reste ' +
+      'déclaré sans droit, en attendant que l’OIC décide de lui ouvrir la saisie.',
   }),
 
   superviseur_comptabilite: Object.freeze({
@@ -306,7 +307,9 @@ export const ROLES = Object.freeze({
     institutionnel: true,
     soumisAbonnement: false,
     preuve: 'menu de rôle inventorié au cadrage (id_profil = 2)',
-    description: 'Supervision comptable. Module hors périmètre du POC.',
+    description:
+      'Supervision comptable. Édite les états financiers et les exports (lot b4) : ' +
+      'il reçoit les montants, jamais l’identité des entreprises.',
   }),
 
   superviseur_cpte: Object.freeze({
@@ -331,8 +334,9 @@ export const ROLES = Object.freeze({
     soumisAbonnement: false,
     preuve: 'menu de rôle inventorié au cadrage',
     description:
-      'Traitement des litiges et des impayés. **Le contentieux est explicitement ' +
-      'hors périmètre** : le rôle est déclaré, son écran n\'existe pas.',
+      'Traitement des litiges et des impayés : ouverture du dossier, instruction, ' +
+      'conciliation et clôture, avec pièces et historique (lot b4). Il n’encaisse ' +
+      'pas : les règlements passent par la caisse.',
   }),
 
   dut_transport: Object.freeze({

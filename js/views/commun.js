@@ -48,6 +48,7 @@ import { composer, marquerLue, mesNotifications } from '../services/notification
 import { avisPossible, donnerAvis } from '../services/avis.service.js';
 import { ETAT_VERIFICATION } from '../domain/enums.js';
 import { blocConfiance } from './confiance.js';
+import { bandeauAccueilFinances } from './caisse.js'; // Lot b4
 
 /* ================================================================== *
  * Suivi du transport — six étapes (U2, décision D36)
@@ -513,6 +514,8 @@ export function accueilMinimal(ctx) {
   const documents = routeDut(ctx);
   // Correctif anti-fraude n° 3 : l'agent d'activation a désormais un écran métier.
   const verification = decider(ctx, 'groupement.verifier').autorise;
+  // Lot b4 : contentieux et supervision comptable ont désormais leur écran.
+  const finances = verification ? null : bandeauAccueilFinances(ctx);
 
   return el('div.page', {}, [
     verification ? bandeau({
@@ -523,7 +526,7 @@ export function accueilMinimal(ctx) {
         'le permis de ses chauffeurs. Tant que ce n’est pas fait, il ne peut ni publier, ' +
         'ni proposer, ni accepter un transport.',
       actions: [el('a.btn.btn-primary', { href: `#/${segmentEspace(ctx)}/verifications`, text: 'Ouvrir les dossiers' })],
-    }) : bandeau({
+    }) : finances ?? bandeau({
       ton: 'info',
       titre: documents ? 'Votre espace de consultation des DUT' : `Rôle « ${r.libelle} » — modélisé, sans écran métier`,
       message: documents
