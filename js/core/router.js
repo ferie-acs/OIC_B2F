@@ -31,6 +31,19 @@ export function declarer(cle, rendu) {
   ecrans.set(cle, rendu);
 }
 
+/* Lot b1 : pages publiques (inscription, mot de passe oublié, boîte simulée). */
+/** @type {Map<string, (ctx: any, params: Record<string, string>) => void>} */
+const pagesPubliques = new Map();
+
+/**
+ * Déclare une page publique, servie hors de tout espace, connecté ou non.
+ * @param {string} segment Premier segment du fragment, ex. `inscription`.
+ * @param {(ctx: any, params: Record<string, string>) => void} rendu Monte lui-même sa page.
+ */
+export function declarerPublique(segment, rendu) {
+  pagesPubliques.set(segment, rendu);
+}
+
 /**
  * Analyse le fragment courant.
  * @returns {{espace: string, page: string, params: Record<string, string>}}
@@ -75,6 +88,8 @@ export function demarrer({ contexte, surLogin, surPublic, surAccueil, rendre }) 
     const ctx = contexte();
     const route = routeCourante();
     if (surAccueil && (route.espace === 'accueil' || !route.espace)) { surAccueil(ctx); return; }
+    // Lot b1 : pages publiques déclarées.
+    if (pagesPubliques.has(route.espace)) { pagesPubliques.get(route.espace)(ctx, route.params); return; }
     if (surPublic && (route.espace === 'explorer' || (!ctx && !route.espace))) {
       surPublic(ctx, route.params);
       return;

@@ -53,7 +53,13 @@ import {
   SENS_APPARIEMENT,
   SENS_OPERATION,
   TYPE_GROUPEMENT,
+  /* Lot b1 : inscription, dossier, messagerie */
+  CANAL_MESSAGE,
+  ETAT_INSCRIPTION,
+  ETAT_PIECE,
+  STATUT_MESSAGE,
 } from './enums.js';
+import { PIECES } from './inscription.js';
 
 /* ================================================================== *
  * 1. Classification des données
@@ -233,6 +239,52 @@ export const ENTITES = Object.freeze({
         requis: true,
         note: 'Marque les données fictives du POC (risque R9). Toujours true ici.',
       }),
+      // --- Lot b1 : inscription en ligne et activation ---------------------
+      carteChargeurNumero: f('string', { max: 40, classification: CLASSIFICATION.IDENTITE }),
+      agrementNumero: f('string', {
+        max: 40,
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Agrément d’intermédiaire de fret.',
+      }),
+      agrementEcheance: f('date', { classification: CLASSIFICATION.IDENTITE }),
+      inscriptionEtat: f('enum', {
+        valeurs: Object.freeze(Object.values(ETAT_INSCRIPTION)),
+        note: 'Absent = activée (groupements antérieurs à l’inscription en ligne).',
+      }),
+      inscritLe: f('datetime'),
+      codeBfci: f('string', {
+        unique: true,
+        max: 20,
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Code d’entreprise attribué à l’activation.',
+      }),
+      activeLe: f('datetime'),
+      activeParUtilisateurId: ref('utilisateur', {
+        requis: false,
+        onDelete: 'detach',
+        classification: CLASSIFICATION.IDENTITE,
+      }),
+      inscriptionMotif: f('text', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Dernier motif de complément ou de refus, transmis à l’entreprise.',
+      }),
+      inscriptionEchanges: f('array', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Échanges entre l’agent d’activation et l’entreprise sur le dossier.',
+        elements: Object.freeze({
+          le: f('datetime', { classification: CLASSIFICATION.IDENTITE }),
+          auteur: f('string', { classification: CLASSIFICATION.IDENTITE, note: '`oic` ou `entreprise`.' }),
+          nature: f('string', { classification: CLASSIFICATION.IDENTITE }),
+          texte: f('text', { classification: CLASSIFICATION.IDENTITE }),
+        }),
+      }),
+      modificationProposee: f('object', {
+        classification: CLASSIFICATION.IDENTITE,
+        note:
+          'Modification de données d’identité demandée après activation : ' +
+          '{ champs, demandeeLe, demandeeParUtilisateurId }. Elle ne s’applique ' +
+          'qu’après contrôle de l’agent d’activation.',
+      }),
     }),
     invariants: Object.freeze([
       {
@@ -267,6 +319,8 @@ export const ENTITES = Object.freeze({
       nom: f('string', { requis: true, max: 80, classification: CLASSIFICATION.IDENTITE }),
       prenom: f('string', { max: 80, classification: CLASSIFICATION.IDENTITE }),
       telephone: f('string', { max: 32, classification: CLASSIFICATION.CONTACT }),
+      // Lot b1 : fonction du responsable déclarée à l'inscription.
+      fonction: f('string', { max: 80, classification: CLASSIFICATION.IDENTITE }),
       roleId: f('string', {
         requis: true,
         ref: 'role',
@@ -1165,6 +1219,121 @@ export const ENTITES = Object.freeze({
         verifier: (r) => r.parentId == null || r.parentId !== r.id,
       },
     ]),
+  }),
+
+  /* ---------------------------------------------------------------- *
+   * Lot b1 : dossier d'inscription, messagerie, récupération d'accès
+   * ---------------------------------------------------------------- */
+
+  piece: Object.freeze({
+    collection: 'pieces_dossier',
+    proprietaire: 'groupementId',
+    libelle: 'Pièce du dossier d’inscription',
+    legacy: 'document_compte',
+    description:
+      'Pièce justificative déposée par l’entreprise et contrôlée par l’agent ' +
+      'd’activation. **Le POC ne stocke pas le fichier** : seules ses métadonnées ' +
+      '(nom, type, taille, date) sont enregistrées.',
+    champs: Object.freeze({
+      id: idPropre(),
+      groupementId: ref('groupement'),
+      typePiece: f('enum', { requis: true, valeurs: Object.freeze(Object.keys(PIECES)) }),
+      numero: f('string', { max: 60, classification: CLASSIFICATION.IDENTITE }),
+      delivreeLe: f('date', { classification: CLASSIFICATION.IDENTITE }),
+      expireLe: f('date', { classification: CLASSIFICATION.IDENTITE }),
+      fichier: f('object', {
+        requis: true,
+        classification: CLASSIFICATION.IDENTITE,
+        champs: Object.freeze({
+          nom: f('string', { requis: true, max: 200, classification: CLASSIFICATION.IDENTITE }),
+          type: f('string', { max: 100, classification: CLASSIFICATION.IDENTITE }),
+          taille: f('number', { min: 0, classification: CLASSIFICATION.IDENTITE }),
+        }),
+      }),
+      etat: enumOf(ETAT_PIECE),
+      motif: f('text', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Commentaire du contrôle, visible de l’entreprise.',
+      }),
+      deposeLe: f('datetime', { requis: true }),
+      deposeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      decideLe: f('datetime'),
+      decideParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'nonConformeMotivee',
+        message: 'Une pièce déclarée non conforme porte son motif.',
+        verifier: (p) => p.etat !== ETAT_PIECE.NON_CONFORME || Boolean(p.motif),
+      },
+    ]),
+  }),
+
+  message: Object.freeze({
+    collection: 'messages',
+    proprietaire: 'destinataireGroupementId',
+    libelle: 'Message sortant',
+    legacy: 'mailing',
+    description:
+      'Courriel ou SMS adressé par la plateforme. **Simulé** : rien ne quitte le ' +
+      'navigateur. Le message est déposé dans la boîte de réception simulée et ' +
+      'reste consultable du destinataire et, sans l’adresse, de l’exploitant.',
+    champs: Object.freeze({
+      id: idPropre(),
+      canal: enumOf(CANAL_MESSAGE),
+      statut: enumOf(STATUT_MESSAGE),
+      destinataireUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      destinataireGroupementId: ref('groupement', { requis: false, onDelete: 'detach' }),
+      adresse: f('string', {
+        max: 160,
+        classification: CLASSIFICATION.CONTACT,
+        note: 'Adresse ou numéro **enregistré** sur le compte, jamais une saisie de la demande.',
+      }),
+      objet: f('string', { requis: true, max: 160, classification: CLASSIFICATION.IDENTITE }),
+      corps: f('text', { requis: true, classification: CLASSIFICATION.IDENTITE }),
+      code: f('string', {
+        classification: CLASSIFICATION.SYSTEME,
+        note: 'Code à usage unique d’une récupération : servi à personne par la projection.',
+      }),
+      modele: f('string', { max: 60, note: 'Gabarit à l’origine du message.' }),
+      envoiId: f('string', { max: 40, note: 'Regroupe les messages d’un même envoi groupé.' }),
+      expediteurUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      expediteurRoleId: f('string', { max: 60 }),
+      envoyeLe: f('datetime', { requis: true }),
+      luLe: f('datetime'),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'messageRemisAdresse',
+        message: 'Un message remis porte l’adresse ou le numéro enregistré du destinataire.',
+        verifier: (m) => m.statut !== STATUT_MESSAGE.SIMULE || Boolean(m.adresse),
+      },
+    ]),
+  }),
+
+  reinitialisation: Object.freeze({
+    collection: 'reinitialisations',
+    proprietaire: null,
+    libelle: 'Demande de récupération du mot de passe',
+    legacy: 'jeton de forget_pwd',
+    description:
+      'Code à usage unique, de validité courte, envoyé à l’adresse enregistrée. ' +
+      'Seule son empreinte est conservée. **La demande ne bloque pas le compte** : ' +
+      'l’ancien mot de passe reste valable tant que le nouveau n’est pas défini.',
+    champs: Object.freeze({
+      id: idPropre(),
+      utilisateurId: ref('utilisateur', { onDelete: 'cascade', classification: CLASSIFICATION.SYSTEME }),
+      empreinte: f('object', { requis: true, classification: CLASSIFICATION.SYSTEME }),
+      creeeLe: f('datetime', { requis: true }),
+      expireLe: f('datetime', { requis: true }),
+      tentatives: f('integer', { requis: true, min: 0 }),
+      utiliseeLe: f('datetime'),
+      invalideeLe: f('datetime'),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([]),
   }),
 });
 

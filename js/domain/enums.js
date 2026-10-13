@@ -251,6 +251,9 @@ export const TYPE_GROUPEMENT = Object.freeze({
   AFFRETEUR: 'affreteur',
   TRANSPORTEUR: 'transporteur',
   INSTITUTION: 'institution',
+  /* --- Lot b1 : inscription — l'intermédiaire de fret (auxiliaire) devient une
+         entreprise inscrite. Même valeur que celle du lot b2 (mandats). --- */
+  INTERMEDIAIRE: 'intermediaire',
 });
 
 /**
@@ -394,6 +397,78 @@ export const EVENEMENT_AUDIT = Object.freeze({
   CREDIT_SAISI: 'credit_saisi',
   CREDIT_REJETE: 'credit_rejete',
   AVIS_DONNE: 'avis_donne',
+  /* --- Lot b1 : inscription, activation, mot de passe, messagerie --- */
+  INSCRIPTION_RECUE: 'inscription_recue',
+  PIECE_DEPOSEE: 'piece_deposee',
+  PIECE_RETIREE: 'piece_retiree',
+  PIECE_CONTROLEE: 'piece_controlee',
+  COMPLEMENT_DEMANDE: 'complement_demande',
+  COMPLEMENT_FOURNI: 'complement_fourni',
+  INSCRIPTION_REFUSEE: 'inscription_refusee',
+  ENTREPRISE_ACTIVEE: 'entreprise_activee',
+  ENTREPRISE_REQUALIFIEE: 'entreprise_requalifiee',
+  FICHE_MODIFIEE: 'fiche_modifiee',
+  MODIFICATION_DEMANDEE: 'modification_demandee',
+  MODIFICATION_DECIDEE: 'modification_decidee',
+  MOT_DE_PASSE_DEMANDE: 'mot_de_passe_demande',
+  MOT_DE_PASSE_REINITIALISE: 'mot_de_passe_reinitialise',
+  MOT_DE_PASSE_CHANGE: 'mot_de_passe_change',
+  PROFIL_MODIFIE: 'profil_modifie',
+  MESSAGE_ENVOYE: 'message_envoye',
+});
+
+/* ------------------------------------------------------------------ *
+ * Lot b1 : inscription, dossier, messagerie
+ * ------------------------------------------------------------------ */
+
+/**
+ * État de l'inscription d'une entreprise. **Absent vaut « activée »** : les
+ * groupements antérieurs à l'inscription en ligne ont été créés actifs.
+ * Les valeurs sont préfixées pour ne pas se confondre, dans la table des
+ * libellés, avec les états d'autres entités (`en_attente` d'un crédit).
+ * @readonly
+ * @enum {string}
+ */
+export const ETAT_INSCRIPTION = Object.freeze({
+  EN_ATTENTE: 'inscription_en_attente',
+  A_COMPLETER: 'inscription_a_completer',
+  REFUSEE: 'inscription_refusee',
+  ACTIVEE: 'inscription_activee',
+});
+
+/**
+ * État d'une pièce déposée au dossier d'inscription.
+ * @readonly
+ * @enum {string}
+ */
+export const ETAT_PIECE = Object.freeze({
+  DEPOSEE: 'piece_deposee',
+  CONFORME: 'piece_conforme',
+  NON_CONFORME: 'piece_non_conforme',
+  REMPLACEE: 'piece_remplacee',
+});
+
+/**
+ * Canal d'un message sortant. **Simulé** dans le POC : aucun courriel ni SMS ne
+ * quitte le navigateur.
+ * @readonly
+ * @enum {string}
+ */
+export const CANAL_MESSAGE = Object.freeze({
+  COURRIEL: 'courriel',
+  SMS: 'sms',
+});
+
+/**
+ * Sort d'un message sortant simulé.
+ * @readonly
+ * @enum {string}
+ */
+export const STATUT_MESSAGE = Object.freeze({
+  /** Déposé dans la boîte de réception simulée. */
+  SIMULE: 'message_simule',
+  /** Aucune adresse ni aucun numéro enregistré pour ce canal. */
+  NON_REMIS: 'message_non_remis',
 });
 
 /* ------------------------------------------------------------------ *
@@ -508,6 +583,20 @@ export const LIBELLES = Object.freeze({
   [ETAT_CREDIT.CREDITE]: Object.freeze({ [POV.NEUTRE]: 'Validé — compte crédité' }),
   [ETAT_CREDIT.REJETE]: Object.freeze({ [POV.NEUTRE]: 'Rejeté' }),
   [MOTIF_CLOTURE.EXPIRATION]: Object.freeze({ [POV.NEUTRE]: 'Expirée — délai dépassé' }),
+  /* --- Lot b1 : inscription, dossier, messagerie --- */
+  [TYPE_GROUPEMENT.INTERMEDIAIRE]: Object.freeze({ [POV.NEUTRE]: 'Intermédiaire de fret' }),
+  [ETAT_INSCRIPTION.EN_ATTENTE]: Object.freeze({ [POV.NEUTRE]: 'En attente de vérification' }),
+  [ETAT_INSCRIPTION.A_COMPLETER]: Object.freeze({ [POV.NEUTRE]: 'Complément demandé' }),
+  [ETAT_INSCRIPTION.REFUSEE]: Object.freeze({ [POV.NEUTRE]: 'Inscription refusée' }),
+  [ETAT_INSCRIPTION.ACTIVEE]: Object.freeze({ [POV.NEUTRE]: 'Compte activé' }),
+  [ETAT_PIECE.DEPOSEE]: Object.freeze({ [POV.NEUTRE]: 'À contrôler' }),
+  [ETAT_PIECE.CONFORME]: Object.freeze({ [POV.NEUTRE]: 'Conforme' }),
+  [ETAT_PIECE.NON_CONFORME]: Object.freeze({ [POV.NEUTRE]: 'Non conforme' }),
+  [ETAT_PIECE.REMPLACEE]: Object.freeze({ [POV.NEUTRE]: 'Remplacée' }),
+  [CANAL_MESSAGE.COURRIEL]: Object.freeze({ [POV.NEUTRE]: 'Courriel' }),
+  [CANAL_MESSAGE.SMS]: Object.freeze({ [POV.NEUTRE]: 'SMS' }),
+  [STATUT_MESSAGE.SIMULE]: Object.freeze({ [POV.NEUTRE]: 'Remis — envoi simulé' }),
+  [STATUT_MESSAGE.NON_REMIS]: Object.freeze({ [POV.NEUTRE]: 'Non remis' }),
 });
 
 /**

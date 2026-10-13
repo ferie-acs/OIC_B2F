@@ -13,7 +13,9 @@ export function menuPublic(page = 'accueil') {
     ['Accueil', '#/accueil', 'accueil'],
     ['Le marché', '#/explorer', 'marche'],
     ['Les acteurs', 'comprendre.html#acteurs', 'acteurs'],
-    ['Comprendre', 'comprendre.html', 'comprendre']
+    ['Comprendre', 'comprendre.html', 'comprendre'],
+    /* Lot b1 : inscription en ligne */
+    ['S’inscrire', '#/inscription', 'inscription'],
   ];
   return el('header.b2f-public-menu', {}, [
     el('a.b2f-public-brand', { href: url('#/accueil'), 'aria-label': 'Bourse de Fret — accueil' }, [

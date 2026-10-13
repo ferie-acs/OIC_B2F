@@ -55,6 +55,17 @@ export function badge(valeur, pov = POV.NEUTRE) {
     en_attente: 'warning',
     credite: 'success',
     rejete: 'error',
+    // Lot b1 : inscription, pièces, messages
+    inscription_en_attente: 'warning',
+    inscription_a_completer: 'warning',
+    inscription_refusee: 'error',
+    inscription_activee: 'success',
+    piece_deposee: 'warning',
+    piece_conforme: 'success',
+    piece_non_conforme: 'error',
+    piece_remplacee: 'neutral',
+    message_simule: 'success',
+    message_non_remis: 'error',
   };
   const icones = {
     valider: 'check-circle',
@@ -75,6 +86,16 @@ export function badge(valeur, pov = POV.NEUTRE) {
     en_attente: 'clock',
     credite: 'check-circle',
     rejete: 'x',
+    // Lot b1
+    inscription_en_attente: 'clock',
+    inscription_a_completer: 'alert',
+    inscription_refusee: 'x',
+    inscription_activee: 'check-circle',
+    piece_deposee: 'clock',
+    piece_conforme: 'check',
+    piece_non_conforme: 'x',
+    message_simule: 'check',
+    message_non_remis: 'alert',
   };
   const ton = tons[valeur] ?? 'neutral';
   // `labelOf` lève si la valeur n'a pas de libellé : un statut brut à l'écran

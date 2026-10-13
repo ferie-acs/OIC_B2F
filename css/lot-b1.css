@@ -1,0 +1,62 @@
+/* Lot b1 — inscription, dossier, profil, messagerie.
+   Uniquement des variables existantes (tokens.css), rayons et espacements de l'application. */
+
+/* Cellule sur deux lignes : libellé et précision. */
+.b1-cellule{display:flex;flex-direction:column;gap:3px;min-width:0}
+.b1-cellule small{color:var(--text-muted);font-size:12px;line-height:1.5}
+.b1-apercu{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:420px}
+.b1-texte-long{white-space:pre-line;overflow-wrap:anywhere}
+
+/* Filtres des files et du journal. */
+.b1-filtres{justify-content:flex-start}
+.supervision-page .b1-filtres input[type=date]{width:auto;min-width:170px}
+
+/* Échanges entre l'OIC et l'entreprise. */
+.b1-echanges{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
+.b1-echanges li{padding:var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2)}
+.b1-echanges p{margin:var(--s2) 0 0;color:var(--text-secondary);font-size:14px;line-height:1.65;overflow-wrap:anywhere}
+
+/* Inscription : choix du type, pièces à préparer, actions de l'assistant. */
+.b1-choix,.b1-canaux{border:0;margin:0 0 var(--s3);padding:0;display:grid;gap:var(--s2);min-width:0}
+.b1-canaux legend{font-size:12px;font-weight:650;color:var(--text-secondary);margin-bottom:var(--s2)}
+.b1-inscription .stepper-h-step .label{font-size:11.5px}
+.b1-pieces-prevues{margin:0 0 var(--s3);padding:var(--s3);border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface-2);font-size:13px;color:var(--text-secondary)}
+.b1-pieces-prevues strong{display:block;color:var(--text);font-size:13px}
+.b1-pieces-prevues ul{margin:var(--s2) 0;padding-left:18px;line-height:1.7}
+.b1-pieces-prevues small{color:var(--text-muted);font-size:12px}
+.b1-auth-actions{display:flex;gap:var(--s2);align-items:stretch;margin-top:var(--s2)}
+.b1-auth-actions>.btn-secondary{flex:none;min-height:50px}
+.b1-auth-actions>.btn-primary{flex:1}
+.auth-refresh .b1-inscription .alert-banner,.auth-refresh .auth-card form>.alert-banner{margin-bottom:var(--s3)}
+
+/* Boîte de réception simulée. */
+.b1-boite{width:100%;max-width:960px;margin:0 auto;display:grid;gap:var(--s3);padding:var(--s2) 0 var(--s5)}
+.b1-boite-liste{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.b1-boite-message{padding:20px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surface);display:grid;gap:var(--s2);min-width:0}
+.b1-boite-message p{margin:0;font-size:14px;line-height:1.65;color:var(--text-secondary)}
+.b1-boite-entete{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) 12px;font-size:12px;color:var(--text-muted);overflow-wrap:anywhere}
+.b1-code strong{font-size:20px;letter-spacing:4px;color:var(--text);font-variant-numeric:tabular-nums}
+
+@media(max-width:650px){
+  .b1-auth-actions{flex-direction:column-reverse}
+  .supervision-page .b1-filtres input[type=date],.supervision-page .b1-filtres select{width:100%;min-width:0}
+  .b1-apercu{max-width:none}
+}
+
+/* Connexion : lien « Mot de passe oublié ? » sous le champ. */
+.auth-refresh .b1-lien-oubli{margin:-10px 0 18px;text-align:right;font-size:12px}
+
+/* Barre supérieure : le bloc d'identité devient le lien vers « Mon profil ». */
+a.topbar-profile{color:inherit;text-decoration:none}
+a.topbar-profile:hover strong{color:var(--accent)}
+
+/* Choix exclusif : même présentation que la case à cocher décrite de forms.css. */
+.radio-row .label-body strong{display:block;font-size:14px;font-weight:650}
+.radio-row .label-body span{display:block;font-size:12px;color:var(--text-muted);margin-top:2px}
+
+/* Dossier de l'agent : retour à la file et actions annexes sur une ligne. */
+.b1-barre{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2)}
+/* Un état long reste dans sa case du récapitulatif. */
+.b1-recap .badge{white-space:normal;max-width:100%}
+/* Étapes de l'inscription : sur petit écran, seul le libellé de l'étape courante reste. */
+@media(max-width:650px){.b1-inscription .stepper-h-step:not(.current) .label{display:none}}
