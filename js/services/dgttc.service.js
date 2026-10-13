@@ -9,16 +9,21 @@
  */
 
 import { exiger, projeter } from '../domain/access.js';
-import { EVENEMENT_AUDIT, TYPE_GROUPEMENT, labelOf } from '../domain/enums.js';
-import { ROLES } from '../domain/roles.js';
+import { EVENEMENT_AUDIT, STATUT_MANDAT, TYPE_GROUPEMENT, labelOf } from '../domain/enums.js';
+import { statutMandat } from '../domain/mandat.js';
 import { depot } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { dansPeriode, dateCsv, versCsv } from './export-csv.js';
 
-/** Rôles d'intermédiaire (auxiliaires) et leur libellé de contrôle. */
-const INTERMEDIAIRES = Object.freeze({
-  auxiliaire_affreteur: 'Intermédiaire de fret',
-  auxiliaire_transporteur: 'Intermédiaire de transport',
+/**
+ * Qualité d'un intermédiaire selon le type de son mandant. Intégration b2 / b5 :
+ * l'intermédiaire est une entreprise (`TYPE_GROUPEMENT.INTERMEDIAIRE`) désignée
+ * par ses mandants ; les auxiliaires restent des utilisateurs internes d'un
+ * groupement et ne sont plus comptés comme intermédiaires.
+ */
+const QUALITE_INTERMEDIAIRE = Object.freeze({
+  [TYPE_GROUPEMENT.AFFRETEUR]: 'Intermédiaire de fret',
+  [TYPE_GROUPEMENT.TRANSPORTEUR]: 'Intermédiaire de transport',
 });
 
 /** Libellés de référentiel, publics. */
@@ -28,30 +33,44 @@ function libelles() {
 }
 
 /**
- * Intermédiaires (auxiliaires) et l'entreprise pour le compte de laquelle ils
- * agissent. Identité seulement : ni courriel ni téléphone.
+ * Intermédiaires de fret inscrits et les entreprises pour le compte desquelles
+ * ils agissent : une ligne par mandat en vigueur ou à venir, une ligne sans
+ * mandant pour un intermédiaire qui n'en a pas. Identité seulement : ni courriel
+ * ni téléphone, ni périmètre détaillé.
  * @param {import('../domain/access.js').Contexte} ctx
  */
 export function intermediaires(ctx) {
   exiger(ctx, 'groupement.lire');
   const groupements = new Map(depot('groupement').lisiblesPar(ctx, 'groupement.lire').map((g) => [g.id, g]));
-  return depot('utilisateur')
-    .brutOu((u) => INTERMEDIAIRES[u.roleId] && groupements.has(u.groupementId))
-    .map((u) => {
-      const vu = projeter(ctx, 'utilisateur', u, { proprietaireId: u.groupementId });
-      const mandant = groupements.get(u.groupementId);
-      return {
-        id: u.id,
-        nom: `${vu.prenom ?? ''} ${vu.nom ?? ''}`.trim() || 'Identité non communiquée',
-        role: INTERMEDIAIRES[u.roleId],
-        mandant: mandant?.raisonSociale ?? '—',
-        mandantType: mandant?.type,
-        localiteId: mandant?.localiteId,
-        etat: u.etat,
-        creeLe: u.creeLe,
-      };
-    })
-    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  const mandats = depot('mandat').brutOu((m) =>
+    [STATUT_MANDAT.EN_VIGUEUR, STATUT_MANDAT.A_VENIR].includes(statutMandat(m)));
+  /** @type {Array<Record<string, any>>} */
+  const lignes = [];
+  for (const g of groupements.values()) {
+    if (g.type !== TYPE_GROUPEMENT.INTERMEDIAIRE) continue;
+    const base = {
+      groupementId: g.id,
+      nom: g.raisonSociale || 'Identité non communiquée',
+      localiteId: g.localiteId,
+      etat: g.etat,
+      creeLe: g.inscritLe ?? g.creeLe,
+    };
+    const siens = mandats.filter((m) => m.intermediaireGroupementId === g.id);
+    if (siens.length === 0) {
+      lignes.push({ ...base, id: g.id, role: 'Intermédiaire de fret', mandant: 'Aucun mandant en vigueur', mandantType: null });
+    }
+    for (const m of siens) {
+      const mandant = groupements.get(m.mandantGroupementId);
+      lignes.push({
+        ...base,
+        id: `${g.id}-${m.id}`,
+        role: QUALITE_INTERMEDIAIRE[m.typeMandant] ?? 'Intermédiaire de fret',
+        mandant: mandant?.raisonSociale || 'Entreprise non communiquée',
+        mandantType: m.typeMandant,
+      });
+    }
+  }
+  return lignes.sort((a, b) => a.nom.localeCompare(b.nom, 'fr') || a.mandant.localeCompare(b.mandant, 'fr'));
 }
 
 /**
@@ -68,7 +87,6 @@ export function repartitions(ctx, periode = {}) {
   const acteurs = depot('groupement')
     .lisiblesPar(ctx, 'groupement.lire')
     .filter((g) => g.type !== TYPE_GROUPEMENT.INSTITUTION && dans(g.creeLe));
-  const inters = intermediaires(ctx).filter((i) => dans(i.creeLe));
   const vehicules = depot('vehicule').lisiblesPar(ctx, 'vehicule.lire').filter((v) => dans(v.creeLe));
 
   const parLocalite = new Map();
@@ -78,8 +96,10 @@ export function repartitions(ctx, periode = {}) {
     ligne[cle] += 1;
     parLocalite.set(nom, ligne);
   };
-  for (const g of acteurs) compter(g.localiteId, g.type === TYPE_GROUPEMENT.TRANSPORTEUR ? 'transporteurs' : 'affreteurs');
-  for (const i of inters) compter(i.localiteId, 'intermediaires');
+  // Intégration b2 / b5 : l'intermédiaire de fret est une entreprise, compté à part.
+  const categorie = (g) => (g.type === TYPE_GROUPEMENT.TRANSPORTEUR ? 'transporteurs'
+    : g.type === TYPE_GROUPEMENT.INTERMEDIAIRE ? 'intermediaires' : 'affreteurs');
+  for (const g of acteurs) compter(g.localiteId, categorie(g));
   const localiteDe = new Map(acteurs.map((g) => [g.id, g.localiteId]));
   for (const v of vehicules) compter(v.stationnementLocaliteId || localiteDe.get(v.groupementId), 'vehicules');
 
@@ -103,8 +123,8 @@ export function repartitions(ctx, periode = {}) {
   return {
     totaux: {
       transporteurs: transporteurs.length,
-      affreteurs: acteurs.length - transporteurs.length,
-      intermediaires: inters.length,
+      affreteurs: acteurs.filter((g) => categorie(g) === 'affreteurs').length,
+      intermediaires: acteurs.filter((g) => categorie(g) === 'intermediaires').length,
       vehicules: vehicules.length,
     },
     parLocalite: [...parLocalite.values()].sort((a, b) =>

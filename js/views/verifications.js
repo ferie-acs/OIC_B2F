@@ -405,7 +405,9 @@ function dialogueActivation(ctx, d) {
       el('ul', {}, [
         el('li', { text: 'un code d’entreprise (code BFCI) ;' }),
         el('li', { text: 'une période d’abonnement initiale d’un an, au tarif du catalogue en vigueur ;' }),
-        d.type.type === TYPE_GROUPEMENT.TRANSPORTEUR ? el('li', { text: 'la vérification du dossier transporteur (RCCM, carte de transporteur, assurance) ;' }) : null,
+        d.type.type === TYPE_GROUPEMENT.TRANSPORTEUR
+          ? el('li', { text: 'la vérification du dossier transporteur (RCCM, carte de transporteur, assurance) ;' })
+          : el('li', { text: 'la vérification de son dossier, dont héritent ses entités rattachées ;' }), // Intégration b1 / b2
         el('li', { text: 'un message d’activation par courriel et SMS (envoi simulé).' }),
       ]),
     ],

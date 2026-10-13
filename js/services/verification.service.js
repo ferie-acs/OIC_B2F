@@ -680,6 +680,10 @@ function transitionInscription(ctx, g, { etat, texte, nature, evenement, details
       inscriptionEtat: etat,
       inscriptionMotif: texte,
       inscriptionEchanges: echange(g, 'oic', nature, texte),
+      // Intégration b1 / b2 : un refus d'inscription est un refus de vérification.
+      ...(etat === ETAT_INSCRIPTION.REFUSEE
+        ? { verificationEtat: ETAT_VERIFICATION.REFUSE, verificationMotif: texte, verifieLe: null, verifieParUtilisateurId: ctx.utilisateurId }
+        : {}),
     }, { tx });
     journaliser(ctx, evenement, { cibleType: 'groupement', cibleId: g.id, details, tx });
     envoyerModele({
@@ -735,15 +739,15 @@ export function activerEntreprise(ctx, groupementId) {
       inscriptionMotif: null,
       inscriptionEchanges: echange(g, 'oic', 'activation', `Compte activé — code d’entreprise ${code}.`),
     };
-    if (g.type === TYPE_GROUPEMENT.TRANSPORTEUR) {
-      Object.assign(maj, {
-        verificationEtat: ETAT_VERIFICATION.VERIFIE,
-        verificationPieces: Object.values(PIECE_DOSSIER),
-        verifieLe: maintenant.toISOString(),
-        verifieParUtilisateurId: ctx.utilisateurId,
-        verificationMotif: null,
-      });
-    }
+    // Intégration b1 / b2 : l'activation prononce la vérification du dossier pour
+    // tout type d'entreprise (les filiales et l'annuaire des intermédiaires la lisent).
+    Object.assign(maj, {
+      verificationEtat: ETAT_VERIFICATION.VERIFIE,
+      verifieLe: maintenant.toISOString(),
+      verifieParUtilisateurId: ctx.utilisateurId,
+      verificationMotif: null,
+    });
+    if (g.type === TYPE_GROUPEMENT.TRANSPORTEUR) maj.verificationPieces = Object.values(PIECE_DOSSIER);
     const active = depot('groupement').modifier(g.id, maj, { tx });
     depot('abonnement').creer({
       id: identifiant('abo'),
@@ -821,7 +825,11 @@ export function requalifierEntreprise(ctx, groupementId, { type, motif, champs =
       type,
       inscriptionEchanges: echange(g, 'oic', 'requalification', `Requalifiée : ${avant} → ${apres}. ${texte}`),
     };
-    if (type === TYPE_GROUPEMENT.TRANSPORTEUR && !g.verificationEtat) maj.verificationEtat = ETAT_VERIFICATION.A_VERIFIER;
+    // Intégration b1 / b2 : la vérification d'un affréteur ou d'un intermédiaire ne
+    // vaut pas pour un transporteur (cartes, véhicules) ; un refus reste un refus.
+    if (type === TYPE_GROUPEMENT.TRANSPORTEUR && g.verificationEtat !== ETAT_VERIFICATION.REFUSE) {
+      maj.verificationEtat = ETAT_VERIFICATION.A_VERIFIER;
+    }
     const res = depot('groupement').modifier(g.id, maj, { tx });
     for (const u of tx.lire('users').filter((x) => x.groupementId === g.id)) {
       const roleId = roleApresRequalification(u.roleId, g.type, type);

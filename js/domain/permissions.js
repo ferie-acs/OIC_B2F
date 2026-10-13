@@ -619,6 +619,11 @@ const INTERMEDIAIRE = Object.freeze({
   'filiale.creer': GROUPEMENT,
   'mandat.lire': GROUPEMENT,
   'mandat.agir': GROUPEMENT,
+  // Intégration b1 / b2 : l'intermédiaire inscrit en ligne suit son dossier ;
+  // il signale un incident applicatif comme tout acteur du marché (lot b5).
+  'inscription.lire': GROUPEMENT,
+  'inscription.deposer': GROUPEMENT,
+  'incident.declarer': PROPRE,
 });
 
 /**

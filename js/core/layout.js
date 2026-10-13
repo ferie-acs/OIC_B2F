@@ -209,14 +209,12 @@ function initiales(moi, r) {
  * @param {string} roleId
  */
 function aideContextuelle(roleId, ctx = null) {
-  // Lot b1 : compte en attente d'activation, puis intermédiaire de fret inscrit.
+  // Lot b1 : compte en attente d'activation. (Intégration : l'intermédiaire de
+  // fret inscrit a désormais son rôle et son texte, ci-dessous.)
   const propre = ctx?.inscriptionActivee === false
     ? 'Votre compte est activé par l’OIC après le contrôle de chaque pièce obligatoire de votre ' +
       'dossier. Suivez ici l’avancement du contrôle et répondez aux demandes de complément.'
-    : ctx?.groupementType === 'intermediaire'
-      ? 'Intermédiaire de fret : vous organisez le transport pour le compte de chargeurs. ' +
-        'La validation d’une mise en relation, qui engage leurs finances, revient au chargeur.'
-      : null;
+    : null;
   if (propre) {
     return el('aside.sidebar-note', {}, [icone('info', 15), el('strong', { text: 'À retenir' }), el('p', { text: propre })]);
   }
@@ -353,14 +351,6 @@ function barreSuperieure({ ctx, titre, zone, moi, r }) {
 function bandeauDelegation(ctx) {
   if (ctx.mandat) return bandeauMandat(ctx); // Lot b2
   if (!ctx.roleId.startsWith('auxiliaire_')) return null;
-  // Lot b1 : un intermédiaire de fret inscrit n'est pas le sous-compte d'un groupement.
-  if (ctx.groupementType === 'intermediaire') {
-    return el('div.delegation-bar', {}, [
-      icone('users', 16),
-      el('strong', { text: 'Intermédiaire de fret' }),
-      el('span', { text: 'Vous agissez pour le compte de chargeurs. Les actions qui engagent leurs finances ne vous sont pas accessibles.' }),
-    ]);
-  }
   return el('div.delegation-bar', {}, [
     icone('users', 16),
     el('strong', { text: 'Délégation' }),

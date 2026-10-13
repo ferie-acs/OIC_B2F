@@ -14,23 +14,34 @@
 import { ETAT_COMPTE, ETAT_VERIFICATION, TYPE_GROUPEMENT } from './enums.js';
 
 /**
+ * Une entreprise est-elle vérifiée ? Seule source de la règle, lue par les
+ * filiales (héritage) et par l'annuaire des intermédiaires.
+ *
+ * L'état est écrit par l'agent d'activation (lot b1) pour tout type
+ * d'entreprise : « à vérifier » à l'inscription en ligne, « vérifié » à
+ * l'activation, « refusé » au refus. Sans état écrit :
+ * - un transporteur n'est **pas** vérifié (correctif anti-fraude : personne n'a
+ *   rien contrôlé) ;
+ * - un affréteur ou un intermédiaire antérieur à l'inscription en ligne (sans
+ *   `inscriptionEtat`) est tenu pour vérifié, comme il est tenu pour activé ;
+ * - une entreprise inscrite en ligne ne l'est pas tant que l'agent n'a rien écrit.
+ *
+ * @param {Record<string, any>|null|undefined} g
+ * @returns {boolean}
+ */
+export function entrepriseVerifiee(g) {
+  if (!g) return false;
+  if (g.verificationEtat != null) return g.verificationEtat === ETAT_VERIFICATION.VERIFIE;
+  return g.type !== TYPE_GROUPEMENT.TRANSPORTEUR && g.inscriptionEtat == null;
+}
+
+/**
  * L'entreprise mère est-elle vérifiée, au sens de ce qui conditionne ses filiales ?
- *
- * Un transporteur l'est quand l'agent d'activation a prononcé la vérification.
- * Les autres types ne portent pas encore de vérification dans le POC : ils sont
- * tenus pour vérifiés tant qu'aucun état n'est écrit, et ne le sont plus dès
- * qu'un état autre que « vérifié » l'est (le lot de vérification des dossiers
- * d'affréteur et d'intermédiaire écrira cet état).
- *
  * @param {Record<string, any>|null|undefined} mere
  * @returns {boolean}
  */
 export function mereVerifiee(mere) {
-  if (!mere) return false;
-  if (mere.type === TYPE_GROUPEMENT.TRANSPORTEUR) {
-    return mere.verificationEtat === ETAT_VERIFICATION.VERIFIE;
-  }
-  return mere.verificationEtat == null || mere.verificationEtat === ETAT_VERIFICATION.VERIFIE;
+  return entrepriseVerifiee(mere);
 }
 
 /**

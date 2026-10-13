@@ -35,6 +35,8 @@ export const INTERMEDIAIRE = Object.freeze([
     pages: [
       { route: 'dashboard', libelle: 'Tableau de bord', droit: 'dashboard.perimetre' },
       { route: 'notifications', libelle: 'Notifications', droit: 'notification.lire' },
+      // Intégration : incident applicatif (lot b5), comme les autres espaces du marché.
+      { route: 'incidents', libelle: 'Signaler un incident', droit: 'incident.declarer' },
     ],
   },
   {
@@ -57,6 +59,17 @@ export const INTERMEDIAIRE = Object.freeze([
       { route: 'groupement', libelle: 'Fiche de l’entreprise', droit: 'groupement.lire' },
       { route: 'utilisateurs', libelle: 'Utilisateurs', droit: 'utilisateur.lire' },
       { route: 'filiales', libelle: 'Filiales et entités', droit: 'filiale.lire' },
+    ],
+  },
+  /* --- Intégration b1 : dossier, profil et messages, comme les autres espaces --- */
+  {
+    id: 'moncompte',
+    libelle: 'Mon compte',
+    icone: 'user',
+    pages: [
+      { route: 'dossier', libelle: 'Mon dossier', droit: 'inscription.lire' },
+      { route: 'profil', libelle: 'Mon profil' },
+      { route: 'messages', libelle: 'Mes messages' },
     ],
   },
 ]);

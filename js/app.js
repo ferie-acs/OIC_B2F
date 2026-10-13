@@ -132,8 +132,9 @@ function declarerRoutes() {
   declarer('minimal/duts', documentsDut);
 
   // --- Lot b1 : dossier, profil, messages, messagerie sortante ------
-  for (const espace of ['affreteur', 'transporteur']) declarer(`${espace}/dossier`, lotB1.dossier);
-  for (const espace of ['affreteur', 'transporteur', 'concessionnaire', 'dgttc', 'minimal']) {
+  // Intégration : l'espace Intermédiaire (lot b2) reçoit les pages du lot b1.
+  for (const espace of ['affreteur', 'transporteur', 'intermediaire']) declarer(`${espace}/dossier`, lotB1.dossier);
+  for (const espace of ['affreteur', 'transporteur', 'concessionnaire', 'dgttc', 'minimal', 'intermediaire']) {
     declarer(`${espace}/profil`, lotB1.profil);
     declarer(`${espace}/messages`, lotB1.messages);
   }
@@ -195,6 +196,7 @@ function declarerRoutes() {
   declarer('concessionnaire/flux', fluxOffresVue);
   declarer('affreteur/incidents', incidentsVue);
   declarer('transporteur/incidents', incidentsVue);
+  declarer('intermediaire/incidents', incidentsVue); // Intégration
   declarer('dgttc/intermediaires', intermediairesVue);
   declarer('dgttc/repartitions', repartitionsVue);
   declarer('dgttc/exports', exportsVue);

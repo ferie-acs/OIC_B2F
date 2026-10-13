@@ -120,10 +120,10 @@ export const CHAMPS_RESPONSABLE = Object.freeze([
  * Les types d'entreprise ouverts à l'inscription.
  *
  * **Intermédiaire de fret.** Le système existant inscrit l'auxiliaire comme un
- * groupement dont l'utilisateur porte `id_user_grp = 3` et `typeauxiliaire =
- * 'affreteur'` : son responsable reçoit donc le rôle déjà déclaré
- * `auxiliaire_affreteur`. Il prépare et réserve pour le compte de chargeurs,
- * sans valider — la validation engage les finances du chargeur.
+ * groupement dont l'utilisateur porte `id_user_grp = 3`. Son responsable reçoit
+ * le rôle `intermediaire` (lot b2) : une entreprise à part entière, désignée par
+ * des mandants au nom desquels elle agit dans le périmètre de chaque mandat, sans
+ * jamais valider — la validation engage les finances du mandant.
  *
  * @type {ReadonlyArray<Readonly<TypeInscription>>}
  */
@@ -165,8 +165,9 @@ export const TYPES_INSCRIPTION = Object.freeze([
     pluriel: 'Intermédiaires de fret',
     description: 'Vous organisez le transport pour le compte de chargeurs.',
     icone: 'handshake',
-    role: 'auxiliaire_affreteur',
-    roleAuxiliaire: 'auxiliaire_affreteur',
+    // Intégration b1 / b2 : rôles de l'entreprise intermédiaire.
+    role: 'intermediaire',
+    roleAuxiliaire: 'collaborateur_intermediaire',
     agents: ['activation_inscription_affreteur'],
     champs: [
       { nom: 'agrementNumero', libelle: 'Numéro d’agrément d’intermédiaire', requis: true, max: 40, cible: 'groupement', identite: true },
