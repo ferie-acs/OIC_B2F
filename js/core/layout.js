@@ -27,7 +27,8 @@ function iconePage(route, fallback = 'dashboard') {
     tarifs:'wallet',abonnement:'wallet',abonnements:'wallet',groupement:'building',
     groupements:'building',utilisateurs:'users',roles:'users',chauffeurs:'users',
     dut:'file',duts:'file',audit:'history',etats:'shield',parametres:'settings',
-    /* Lot b1 */ dossier:'file',profil:'user',messages:'mail',messagerie:'mail',verifications:'shield'})[page]
+    /* Lot b1 */ dossier:'file',profil:'user',messages:'mail',messagerie:'mail',verifications:'shield',
+    /* Lot b4 */ paiements:'receipt',caisse:'receipt',encaissements:'banknote','etats-financiers':'file-spreadsheet',contentieux:'scale'})[page]
     ?? ICONES_PAGES_LOT_B2[page] ?? fallback; // Lot b2
 }
 
@@ -261,10 +262,18 @@ function aideContextuelle(roleId, ctx = null) {
     agent_controle_route:
       'Chaque vérification est enregistrée à votre nom, quel qu’en soit le résultat. ' +
       'Vous voyez l’authenticité et l’état du document, jamais les coordonnées des entreprises.',
+    /* Lot b4 : contentieux et supervision comptable */
+    contentieux_paie:
+      'Vous instruisez les litiges et les impayés, du dossier à sa clôture. Vous ' +
+      'n’encaissez pas : un règlement passe par la caisse, puis par sa validation.',
+    superviseur_comptabilite:
+      'Vous lisez les montants, les reçus et les modes de paiement, jamais ' +
+      'l’identité des entreprises. Chaque export est inscrit au journal.',
   };
   const defaut =
-    'Aucun droit métier n’est accordé à ce rôle dans ce POC : caisse, contentieux ' +
-    'et comptabilité sont hors périmètre. Le rôle existe et reste administrable.';
+    // Lot b4 : caisse, contentieux et comptabilité ont désormais leurs écrans.
+    'Aucun droit métier n’est accordé à ce rôle dans ce POC. Le rôle existe et ' +
+    'reste administrable.';
 
   return el('aside.sidebar-note', {}, [
     icone('info', 15),

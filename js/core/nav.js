@@ -94,6 +94,8 @@ const AFFRETEUR = [
     pages: [
       { route: 'compte', libelle: 'Solde et mouvements', droit: 'compte.lire' },
       { route: 'abonnement', libelle: 'Abonnement', droit: 'abonnement.lire' },
+      // Lot b4 : paiements et reçus.
+      { route: 'paiements', libelle: 'Paiements et reçus', droit: 'compte.lire' },
     ],
   },
   {
@@ -172,6 +174,8 @@ const TRANSPORTEUR = [
     pages: [
       { route: 'compte', libelle: 'Solde et mouvements', droit: 'compte.lire' },
       { route: 'abonnement', libelle: 'Abonnement', droit: 'abonnement.lire' },
+      // Lot b4 : paiements et reçus.
+      { route: 'paiements', libelle: 'Paiements et reçus', droit: 'compte.lire' },
     ],
   },
   {
@@ -251,6 +255,18 @@ const CONCESSIONNAIRE = [
     icone: 'mail',
     pages: [{ route: 'messagerie', libelle: 'Messages envoyés', droit: 'message.journal' }],
   },
+  /* --- Lot b4 : caisse, états financiers, contentieux --- */
+  {
+    id: 'caisse',
+    libelle: 'Caisse',
+    icone: 'receipt',
+    pages: [
+      { route: 'caisse', libelle: 'Encaissement au guichet', droit: 'caisse.encaisser' },
+      { route: 'encaissements', libelle: 'Encaissements à valider', droit: 'caisse.valider' },
+      { route: 'etats-financiers', libelle: 'États et exports', droit: 'rapport.financier' },
+      { route: 'contentieux', libelle: 'Contentieux', droit: 'contentieux.lire' },
+    ],
+  },
 ];
 
 /**
@@ -312,6 +328,9 @@ const MINIMAL = [
       /* Lot b3 : contrôle sur route */
       { route: 'controle', libelle: 'Vérifier une attestation', droit: 'controle.verifier' },
       { route: 'controles', libelle: 'Mes contrôles', droit: 'controle.historique' },
+      // Lot b4 : service contentieux et supervision comptable.
+      { route: 'contentieux', libelle: 'Contentieux', droit: 'contentieux.lire' },
+      { route: 'etats-financiers', libelle: 'États financiers', droit: 'rapport.financier' },
     ],
   },
 ];

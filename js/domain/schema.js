@@ -69,6 +69,19 @@ import {
   TYPE_PIECE_IDENTITE,
 } from './enums.js';
 import { PIECES } from './inscription.js';
+// Lot b4 : abonnements, paiements, caisse et finances.
+import {
+  CANAL_PAIEMENT,
+  ETAPE_CONTENTIEUX,
+  ETAT_PAIEMENT,
+  ETAT_REVISION,
+  ISSUE_CONTENTIEUX,
+  MODES_PAR_CANAL,
+  MODE_PAIEMENT,
+  NATURE_CONTENTIEUX,
+  OBJET_PAIEMENT,
+  OPERATEUR_MOBILE,
+} from './finances.js';
 
 /* ================================================================== *
  * 1. Classification des données
@@ -1088,6 +1101,12 @@ export const ENTITES = Object.freeze({
       actif: f('boolean', { requis: true }),
       modifieLe: f('datetime', { requis: true }),
       modifieParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      // Lot b4 : une formule d'abonnement porte sa durée. Absente : service à l'acte.
+      dureeMois: f('integer', {
+        min: 1,
+        max: 36,
+        note: 'Durée ouverte par la formule. Seuls les tarifs qui la portent sont des formules d’abonnement.',
+      }),
     }),
     invariants: Object.freeze([]),
   }),
@@ -1115,6 +1134,11 @@ export const ENTITES = Object.freeze({
       }),
       creeLe: f('datetime', { requis: true }),
       demo: f('boolean', { requis: true }),
+      // Lot b4 : chaque prolongation crée une nouvelle période, qui garde la
+      // formule et le prix du jour où elle a été payée (aucune rétroactivité).
+      tarifId: ref('tarif', { requis: false, onDelete: 'detach' }),
+      dureeMois: f('integer', { min: 1, max: 36 }),
+      prolongeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
     }),
     invariants: Object.freeze([
       {
@@ -1614,6 +1638,237 @@ export const ENTITES = Object.freeze({
       demo: f('boolean', { requis: true }),
     }),
     invariants: Object.freeze([]),
+  }),
+
+  /* ---------------------------------------------------------------- *
+   * Lot b4 : abonnements, paiements, caisse et finances
+   * ---------------------------------------------------------------- */
+
+  paiement: Object.freeze({
+    collection: 'paiements',
+    proprietaire: 'groupementId',
+    libelle: 'Paiement',
+    legacy: 'Paiement en ligne (CinetPay) et opération de caisse',
+    description:
+      'Tout argent reçu par la plateforme, quel qu’en soit le canal : paiement en ligne ' +
+      '(mobile money ou carte, **simulés**), débit du compte prépayé, ou encaissement au ' +
+      'guichet. Chaque paiement porte un numéro de reçu séquentiel. Un paiement en ligne ' +
+      'réussi est encaissé d’emblée — la transaction de l’opérateur fait foi ; un ' +
+      'encaissement au guichet est saisi par un agent puis validé par une autre personne.',
+    champs: Object.freeze({
+      id: idPropre(),
+      numero: f('string', {
+        requis: true,
+        unique: true,
+        max: 20,
+        classification: CLASSIFICATION.FINANCIER,
+        note: 'Numéro de reçu RC-AAAA-NNNN, séquentiel dans l’année.',
+      }),
+      groupementId: ref('groupement', { classification: CLASSIFICATION.FINANCIER }),
+      objet: enumOf(OBJET_PAIEMENT, { classification: CLASSIFICATION.FINANCIER }),
+      canal: enumOf(CANAL_PAIEMENT, { classification: CLASSIFICATION.FINANCIER }),
+      mode: enumOf(MODE_PAIEMENT, { classification: CLASSIFICATION.FINANCIER }),
+      operateur: f('enum', {
+        valeurs: Object.freeze(Object.values(OPERATEUR_MOBILE)),
+        classification: CLASSIFICATION.FINANCIER,
+      }),
+      numeroPayeur: f('string', {
+        max: 20,
+        classification: CLASSIFICATION.CONTACT,
+        note: 'Numéro de mobile money débité. Coordonnée : jamais servie à l’exploitant.',
+      }),
+      referenceTransaction: f('string', {
+        max: 60,
+        classification: CLASSIFICATION.FINANCIER,
+        note: 'Référence rendue par l’opérateur, ou numéro de chèque ou de virement.',
+      }),
+      montant: f('number', { requis: true, min: 0, classification: CLASSIFICATION.FINANCIER }),
+      devise: f('string', { requis: true, max: 8 }),
+      detail: f('string', { requis: true, max: 160, classification: CLASSIFICATION.FINANCIER }),
+      tarifId: ref('tarif', { requis: false, onDelete: 'detach', classification: CLASSIFICATION.FINANCIER }),
+      dureeMois: f('integer', { min: 1, max: 36, classification: CLASSIFICATION.FINANCIER }),
+      abonnementId: ref('abonnement', { requis: false, onDelete: 'detach', classification: CLASSIFICATION.FINANCIER }),
+      operationId: ref('operation', { requis: false, onDelete: 'restrict', classification: CLASSIFICATION.FINANCIER }),
+      creditId: ref('credit', { requis: false, onDelete: 'restrict', classification: CLASSIFICATION.FINANCIER }),
+      contentieuxId: ref('contentieux', { requis: false, onDelete: 'restrict', classification: CLASSIFICATION.FINANCIER }),
+      etat: enumOf(ETAT_PAIEMENT, { classification: CLASSIFICATION.FINANCIER }),
+      saisiLe: f('datetime', { requis: true, classification: CLASSIFICATION.FINANCIER }),
+      saisiParUtilisateurId: ref('utilisateur', { onDelete: 'detach', classification: CLASSIFICATION.FINANCIER }),
+      valideLe: f('datetime', { classification: CLASSIFICATION.FINANCIER }),
+      valideParUtilisateurId: ref('utilisateur', {
+        requis: false,
+        onDelete: 'detach',
+        classification: CLASSIFICATION.FINANCIER,
+      }),
+      rejeteLe: f('datetime', { classification: CLASSIFICATION.FINANCIER }),
+      motifRejet: f('text', { classification: CLASSIFICATION.FINANCIER }),
+      impressions: f('integer', {
+        min: 0,
+        classification: CLASSIFICATION.FINANCIER,
+        note: 'Nombre de reçus édités : à partir du deuxième, le reçu porte « Duplicata ».',
+      }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'montantPaiementPositif',
+        message: 'Un paiement de zéro n’est pas un paiement.',
+        verifier: (p) => p.montant > 0,
+      },
+      {
+        nom: 'modeCompatibleAvecLeCanal',
+        message: 'Ce mode de paiement n’est pas ouvert à ce canal.',
+        verifier: (p) => (MODES_PAR_CANAL[p.canal] ?? []).includes(p.mode),
+      },
+      {
+        nom: 'quatreYeuxAuGuichet',
+        message:
+          'Un encaissement au guichet est validé par une autre personne que celle qui l’a saisi.',
+        verifier: (p) =>
+          p.canal !== CANAL_PAIEMENT.GUICHET ||
+          p.etat !== ETAT_PAIEMENT.ENCAISSE ||
+          (Boolean(p.valideParUtilisateurId) && p.valideParUtilisateurId !== p.saisiParUtilisateurId),
+      },
+      {
+        nom: 'paiementEnLigneTrace',
+        message:
+          'Un paiement en ligne porte la référence de transaction de l’opérateur, ou le mouvement de compte qu’il a débité.',
+        verifier: (p) =>
+          p.canal !== CANAL_PAIEMENT.EN_LIGNE ||
+          (p.mode === MODE_PAIEMENT.DEBIT_COMPTE ? Boolean(p.operationId) : Boolean(p.referenceTransaction)),
+      },
+      {
+        nom: 'pieceDeReglement',
+        message: 'Hors espèces, un encaissement au guichet porte la référence de sa pièce (chèque, virement, transaction).',
+        verifier: (p) =>
+          p.canal !== CANAL_PAIEMENT.GUICHET || p.mode === MODE_PAIEMENT.ESPECES || Boolean(p.referenceTransaction),
+      },
+      {
+        nom: 'abonnementPorteSaFormule',
+        message: 'Le paiement d’un abonnement porte la formule choisie et sa durée.',
+        verifier: (p) => p.objet !== OBJET_PAIEMENT.ABONNEMENT || Boolean(p.tarifId && p.dureeMois),
+      },
+      {
+        nom: 'rechargementAuGuichetPorteSonCredit',
+        message: 'Un rechargement au guichet passe par un crédit saisi, validé en quatre yeux.',
+        verifier: (p) =>
+          p.objet !== OBJET_PAIEMENT.RECHARGEMENT || p.canal !== CANAL_PAIEMENT.GUICHET || Boolean(p.creditId),
+      },
+      {
+        nom: 'reglementRattacheAUnContentieux',
+        message: 'Le règlement d’un contentieux se rattache à son dossier.',
+        verifier: (p) => p.objet !== OBJET_PAIEMENT.CONTENTIEUX || Boolean(p.contentieuxId),
+      },
+      {
+        nom: 'rejetPaiementMotive',
+        message: 'Un encaissement rejeté porte son motif.',
+        verifier: (p) => p.etat !== ETAT_PAIEMENT.REJETE || Boolean(p.motifRejet),
+      },
+    ]),
+  }),
+
+  revisionTarif: Object.freeze({
+    collection: 'revisions_tarifs',
+    proprietaire: null,
+    libelle: 'Modification de tarif',
+    legacy: 'Historisation de Fiche_prix (register_tarif_modif)',
+    description:
+      'Historique des modifications du catalogue, avec leur **date d’effet**. Une ' +
+      'modification future est programmée et s’applique à sa date ; elle ne touche ' +
+      'jamais une période d’abonnement déjà payée, qui garde son montant et sa durée.',
+    champs: Object.freeze({
+      id: idPropre(),
+      tarifId: ref('tarif'),
+      montantAvant: f('number', { requis: true, min: 0, classification: CLASSIFICATION.FINANCIER }),
+      montantApres: f('number', { requis: true, min: 0, classification: CLASSIFICATION.FINANCIER }),
+      dureeMoisAvant: f('integer', { min: 1, max: 36 }),
+      dureeMoisApres: f('integer', { min: 1, max: 36 }),
+      effetLe: f('date', { requis: true }),
+      motif: f('text', { requis: true, max: 300 }),
+      etat: enumOf(ETAT_REVISION),
+      creeLe: f('datetime', { requis: true }),
+      auteurUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      appliqueeLe: f('datetime'),
+      annuleeLe: f('datetime'),
+      annuleeParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'revisionAppliqueeDatee',
+        message: 'Une modification en vigueur porte la date à laquelle elle a été appliquée.',
+        verifier: (r) => r.etat !== ETAT_REVISION.APPLIQUEE || Boolean(r.appliqueeLe),
+      },
+    ]),
+  }),
+
+  contentieux: Object.freeze({
+    collection: 'contentieux',
+    proprietaire: 'groupementId',
+    libelle: 'Contentieux',
+    legacy: 'Contentieux (allcontentieux.php, listeContentieux.php)',
+    description:
+      'Litige ou impayé suivi par le service contentieux : parties, objet, montant en ' +
+      'jeu, pièces (métadonnées seulement) et étapes jusqu’à la clôture. Chaque étape ' +
+      'est datée, signée et journalisée ; les règlements encaissés à la caisse s’y imputent.',
+    champs: Object.freeze({
+      id: idPropre(),
+      reference: f('string', { requis: true, unique: true, max: 20, note: 'Format CT-AAAA-NNNN.' }),
+      groupementId: ref('groupement', { classification: CLASSIFICATION.IDENTITE }),
+      partieAdverseGroupementId: ref('groupement', {
+        requis: false,
+        onDelete: 'detach',
+        classification: CLASSIFICATION.IDENTITE,
+      }),
+      appariementId: ref('appariement', { requis: false, onDelete: 'detach' }),
+      nature: enumOf(NATURE_CONTENTIEUX),
+      objet: f('text', { requis: true, max: 600, classification: CLASSIFICATION.IDENTITE }),
+      montant: f('number', { requis: true, min: 0, classification: CLASSIFICATION.FINANCIER }),
+      montantRegle: f('number', { min: 0, classification: CLASSIFICATION.FINANCIER }),
+      etape: enumOf(ETAPE_CONTENTIEUX),
+      issue: f('enum', { valeurs: Object.freeze(Object.values(ISSUE_CONTENTIEUX)) }),
+      pieces: f('array', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Métadonnées des pièces versées au dossier : le fichier lui-même n’est pas conservé.',
+        elements: Object.freeze({
+          nom: f('string', { requis: true, max: 160, classification: CLASSIFICATION.IDENTITE }),
+          type: f('string', { max: 80 }),
+          taille: f('integer', { min: 0 }),
+          ajouteLe: f('datetime'),
+          ajouteParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+        }),
+      }),
+      historique: f('array', {
+        classification: CLASSIFICATION.IDENTITE,
+        elements: Object.freeze({
+          etape: enumOf(ETAPE_CONTENTIEUX),
+          le: f('datetime', { requis: true }),
+          parUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+          commentaire: f('text', { max: 600, classification: CLASSIFICATION.IDENTITE }),
+        }),
+      }),
+      ouvertLe: f('datetime', { requis: true }),
+      ouvertParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      closLe: f('datetime'),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'contentieuxClosPorteSonIssue',
+        message: 'Un contentieux clos porte son issue et sa date de clôture.',
+        verifier: (c) => c.etape !== ETAPE_CONTENTIEUX.CLOS || Boolean(c.issue && c.closLe),
+      },
+      {
+        nom: 'contentieuxHistorise',
+        message: 'Un contentieux porte l’historique de ses étapes, à commencer par son ouverture.',
+        verifier: (c) => Array.isArray(c.historique) && c.historique.length > 0,
+      },
+      {
+        nom: 'reglementSansExces',
+        message: 'Les règlements imputés ne dépassent pas le montant en jeu.',
+        verifier: (c) => (c.montantRegle ?? 0) <= c.montant,
+      },
+    ]),
   }),
 });
 
