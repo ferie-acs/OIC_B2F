@@ -34,6 +34,8 @@ import { explorer } from './views/explorer.js';
 import { documentsDut } from './views/dut.js';
 import { retourPublic, routeActionPublique, routePublication } from './services/marche-public.service.js';
 import { reprendreFileDut } from './services/passerelle-dut.service.js';
+// Lot b0 : recherche intégrée à toutes les listes de choix.
+import { installerListesRecherche } from './core/liste-recherche.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -189,6 +191,7 @@ function afficherLogin(traiter) {
 
 async function demarrerApplication() {
   appliquerTheme();
+  installerListesRecherche(); // Lot b0 : tout <select> inséré reçoit sa recherche.
   document.querySelector('.skip-link')?.addEventListener('click', e => {
     e.preventDefault();
     document.getElementById('contenu')?.focus();
