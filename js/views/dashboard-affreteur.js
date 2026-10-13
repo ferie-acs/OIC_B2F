@@ -171,7 +171,7 @@ export function dashboard(ctx) {
 
   return el('div.page.aff-dashboard', {}, [
     el('header.dash-page-heading', {}, [
-      el('div', {}, [el('span.dash-eyebrow', { text: 'ESPACE AFFRÉTEUR' }), el('h1', { text: 'Tableau de bord' }), el('p', { text: `Une vue d’ensemble de votre activité · ${nomDe(ctx.groupementId)}` })]),
+      el('div', {}, [el('span.dash-eyebrow', { text: 'ESPACE AFFRÉTEUR' }), el('h1', { text: 'Tableau de bord' }), el('p', { text: `Une vue d’ensemble de votre activité · ${nomDe(ctx, ctx.groupementId)}` })]),
       peutCreer ? el('a.btn.btn-primary', { href: `#/${espace}/declarations/nouvelle` }, [icone('plus', 17), 'Déclarer un fret']) : null,
     ]),
     aValider.length ? el('section.dash-validation-notice', { 'aria-label':'Validations en attente' }, [

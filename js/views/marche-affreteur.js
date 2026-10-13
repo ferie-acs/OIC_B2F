@@ -7,6 +7,7 @@ import { chercherVehicules } from '../services/flotte.service.js';
 import * as preferences from '../services/preferences.service.js';
 import { refDe } from './_donnees.js';
 import { retourPublic } from '../services/marche-public.service.js';
+import { resumeConfiance } from './confiance.js';
 
 export function marcheCarte(ctx, params, detailOffre) {
   let filtres = preferences.lire(ctx, 'recherche', {}), resultats = [], selection, ville = '';
@@ -80,7 +81,8 @@ export function marcheCarte(ctx, params, detailOffre) {
             el('div', {}, [el('strong', { text: refDe(o.localiteArriveeId) }), el('small', { text: 'Destination proposée' })]),
           ]),
         ]),
-        el('div.market-trip-carrier', { text: o.groupement?.raisonSociale ?? 'Transporteur' }),
+        // Correctif anti-fraude n° 1 : la confiance à la place du nom.
+        el('div.market-trip-carrier', { text: o.confiance ? resumeConfiance(o.confiance) : 'Transporteur' }),
         el('span.market-dates', { text: `Disponible jusqu’au ${date(o.disponibleAu)}` }),
       ]),
       el('div.market-offer-bottom',{},[el('span', {text:o.prixKmT ? `${o.prixKmT} F/km·t · indicatif`:'Tarif non renseigné'}),bouton({libelle:'Voir l’offre',onClick:()=>voir(o)})]),

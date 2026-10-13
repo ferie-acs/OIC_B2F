@@ -35,6 +35,10 @@ const ctxNominal = {
   nomAffreteur: 'Ivoire Démo Export',
   nomTransporteur: 'Transports Démo SARL',
   motifRejet: 'dates_incompatibles',
+  // Correctifs anti-fraude n° 3 et n° 4 (13/10/2026).
+  transporteurVerifie: true,
+  moyensVerifies: true,
+  delaiDepasse: false,
 };
 
 describe('Le chemin nominal', () => {

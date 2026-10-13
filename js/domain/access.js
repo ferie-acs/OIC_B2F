@@ -296,6 +296,13 @@ export function deciderSurAppariement(ctx, action, appariement) {
     );
   }
 
+  if (habilitee === PARTIE.SYSTEME) {
+    return refus(
+      MOTIF_REFUS.PARTIE_NON_HABILITEE,
+      "Cette action est réservée à la plateforme : aucune partie ne l'exerce.",
+    );
+  }
+
   const maPartie = estAffreteur ? PARTIE.AFFRETEUR : PARTIE.TRANSPORTEUR;
   if (habilitee !== PARTIE.LES_DEUX && habilitee !== maPartie) {
     return refus(
@@ -361,6 +368,36 @@ function contactLibere(ctx, cleObjet, groupementProprietaire) {
   if (groupementProprietaire == null) return false;
   // 4. Ses propres coordonnées, toujours ; celles d'un tiers, objet par objet.
   if (groupementProprietaire === ctx.groupementId) return true;
+  return Boolean(ctx.objetsLiberes?.has(cleObjet));
+}
+
+/**
+ * Décide si un champ de classification `identite` d'un tiers peut être servi.
+ *
+ * **Correctif anti-fraude n° 1 (13/10/2026).** L'identité commerciale — raison
+ * sociale, RCCM, immatriculation — était visible sur le marché avant tout
+ * paiement. Elle suffisait à retrouver un transporteur hors plateforme et à
+ * traiter en direct : les deux parties économisaient les frais, et la
+ * plateforme avait servi d'annuaire gratuit. L'identité suit désormais la même
+ * règle que les coordonnées, à une différence près : les rôles institutionnels,
+ * qui supervisent sans transiger, la conservent.
+ *
+ * Servie :
+ * - au propriétaire de l'objet ;
+ * - aux rôles institutionnels (exploitant, contrôleur, back-office) ;
+ * - aux deux parties d'une mise en relation **validée**, objet par objet.
+ *
+ * Refusée dans tous les autres cas, y compris quand le propriétaire est
+ * inconnu : deviner serait une fuite.
+ *
+ * @param {Contexte} ctx
+ * @param {string} cleObjet
+ * @param {string|null|undefined} groupementProprietaire
+ * @returns {boolean}
+ */
+export function identiteLiberee(ctx, cleObjet, groupementProprietaire) {
+  if (role(ctx.roleId).institutionnel === true) return true;
+  if (groupementProprietaire != null && groupementProprietaire === ctx.groupementId) return true;
   return Boolean(ctx.objetsLiberes?.has(cleObjet));
 }
 
@@ -431,6 +468,7 @@ function projeterStructure(ctx, champs, objet, cleObjet, proprietaire) {
     const c = d.classification;
     if (c === CLASSIFICATION.SYSTEME) continue;
     if (c === CLASSIFICATION.CONTACT && !contactLibere(ctx, cleObjet, proprietaire)) continue;
+    if (c === CLASSIFICATION.IDENTITE && !identiteLiberee(ctx, cleObjet, proprietaire)) continue;
     if (!peutLireClassification(ctx.roleId, c)) continue;
 
     if (d.champs && valeur !== null && typeof valeur === 'object' && !Array.isArray(valeur)) {

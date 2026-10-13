@@ -36,6 +36,8 @@ export function annuaireSupervision(ctx,{abonnements=false}={}) {
         ]):el('dl.supervision-directory-info',{},[
           el('div',{},[el('dt',{text:'RCCM'}),el('dd',{text:g.rccm||'Non renseigné'})]),
           el('div',{},[el('dt',{text:'État du groupement'}),el('dd',{},[el('span',{class:`badge ${g.etat==='actif'?'badge-success':'badge-warning'}`,text:g.etat==='actif'?'Actif':g.etat==='suspendu'?'Suspendu':g.etat})])]),
+          // Correctif anti-fraude n° 3 : l'état du contrôle des pièces, pour l'exploitant comme pour le contrôleur.
+          g.type==='transporteur'?el('div',{},[el('dt',{text:'Vérification'}),el('dd',{},[badge(g.verificationEtat||'a_verifier')])]):null,
           !institution&&decider(ctx,'compte.lire',{groupementId:g.id}).autorise?el('div',{},[el('dt',{text:'Solde du compte'}),el('dd',{text:montant(soldeDe(g.id))})]):null,
         ]),
         !abonnements?el('div.supervision-directory-foot',{},[icone('calendar',18),el('span',{text:institution?'Abonnement non requis':`${statut}${abo.finitLe?' · '+date(abo.finitLe):''}`})]):null,

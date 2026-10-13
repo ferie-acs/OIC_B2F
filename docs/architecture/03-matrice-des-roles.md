@@ -82,7 +82,7 @@ attestés », ce qui est un énoncé plus vrai qu'un compte rond.
 |---|---|---|
 | **1 — Démontrés** (6) | Espace propre, écrans métier, parcours de démonstration, tests dédiés. | Affréteur · Transporteur · **Auxiliaire d'affréteur** · **Auxiliaire de transporteur** · Concessionnaire · DGTTC |
 | **2 — Déclinés** (3) | Réutilisent l'espace Transporteur, variations déclaratives. | Transporteur privé · Transporteur étranger · Partenaire |
-| **3 — Modélisés** (10) | Déclarés, administrables, menu généré. **Aucun écran métier.** | super_admin · admin_compta · admin_superviseur_centre_tech · agent_caisse · superviseur_comptabilite · superviseur_cpte · contentieux_paie · dut_transport · activation_inscription · activation_inscription_affreteur |
+| **3 — Modélisés** (10) | Déclarés, administrables, menu généré. **Aucun écran métier**, à une exception près depuis le 13/10/2026 : la vérification des transporteurs par `activation_inscription` (§ 9). | super_admin · admin_compta · admin_superviseur_centre_tech · agent_caisse · superviseur_comptabilite · superviseur_cpte · contentieux_paie · dut_transport · activation_inscription · activation_inscription_affreteur |
 
 Chaque rôle porte dans `roles.js` un champ `preuve` citant le fichier du système
 existant qui l'atteste. **Aucun rôle n'est inventé ni déduit** — vérifié par test.
@@ -131,9 +131,11 @@ permission dédié. Un droit refusé à tous les rôles d'un tableau n'y figure 
 | Faire avancer une étape | — | G | — | G | — | — |
 | Clôturer après livraison | G | — | G | — | — | — |
 | Signaler un incident | — | G | — | G | — | — |
+| Noter la contrepartie après clôture | G | G | G | G | — | — |
 | *Compte* |||||||
 | **Consulter le solde et les mouvements** | G | G | G | G | T | — |
-| **Créditer manuellement un compte** | — | — | — | — | T | — |
+| **Saisir un crédit de compte** | — | — | — | — | T | — |
+| **Valider un crédit saisi par un autre agent** | — | — | — | — | T | — |
 | Consulter le catalogue de tarifs | T | T | T | T | T | — |
 | Modifier le catalogue de tarifs | — | — | — | — | T | — |
 | Consulter l'abonnement | G | G | G | G | T | — |
@@ -154,6 +156,12 @@ permission dédié. Un droit refusé à tous les rôles d'un tableau n'y figure 
 | Générer un DUT | — | G | — | G | — | — |
 | *Annexes* |||||||
 | Consulter ses notifications | P | P | P | P | P | P |
+
+*Mise à jour du 13/10/2026 (correctifs anti-fraude, § 9).* « Saisir un crédit
+de compte » est le droit `compte.crediter`, renommé : il ne crédite plus.
+`compte.valider_credit` et `groupement.verifier` sont marqués `teste: true`
+dans `permissions.js` ; leur refus à tout autre rôle est vérifié par
+`tests/anti-fraude.test.mjs`.
 
 
 ### Niveau 2 — rôles déclinés
@@ -180,6 +188,7 @@ permission dédié. Un droit refusé à tous les rôles d'un tableau n'y figure 
 | Suivre les transports | G | G | G |
 | Faire avancer une étape | G | G | — |
 | Signaler un incident | G | G | — |
+| Noter la contrepartie après clôture | G | G | — |
 | *Compte* ||||
 | **Consulter le solde et les mouvements** | G | G | G |
 | Consulter le catalogue de tarifs | T | T | — |
@@ -204,6 +213,7 @@ permission dédié. Un droit refusé à tous les rôles d'un tableau n'y figure 
 |---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | *Acteurs* |||||||||||
 | Consulter les groupements | — | — | — | — | — | — | — | — | T | T |
+| **Vérifier le dossier d'un transporteur** | — | — | — | — | — | — | — | — | T | — |
 | *DUT* |||||||||||
 | Consulter les DUT générés | — | — | — | — | — | — | — | T | — | — |
 
@@ -216,7 +226,7 @@ ne reçoit que ce que cette table lui ouvre.
 
 | Rôle | `public` | `identite` | `contact` | `financier` | `systeme` |
 |---|:-:|:-:|:-:|:-:|:-:|
-| Acteurs du marché (7 rôles) | ✓ | ✓ | ✓\* | ✓ | ✗ |
+| Acteurs du marché (7 rôles) | ✓ | ✓\*\* | ✓\* | ✓ | ✗ |
 | Concessionnaire | ✓ | ✓ | **✗** | ✓ | ✗ |
 | **DGTTC** | ✓ | ✓ | **✗** | **✗** | ✗ |
 | Profils de niveau 3 | ✓ | selon | ✗ | ✗ | ✗ |
@@ -224,6 +234,12 @@ ne reçoit que ce que cette table lui ouvre.
 \* **Sous condition d'état.** Un champ `contact` d'un tiers n'est libéré que si le
 groupement propriétaire figure parmi les groupements avec lesquels l'utilisateur
 partage un appariement à l'état `valider`. Voir `02-modele-de-donnees.md` § 4.
+
+\*\* **Sous condition d'état depuis le 13/10/2026** (correctif anti-fraude
+n° 1). Un champ `identite` — raison sociale, RCCM, immatriculation — n'est servi
+qu'au propriétaire de l'objet, aux rôles institutionnels, et aux deux parties
+d'une mise en relation validée, objet par objet (`identiteLiberee`,
+`access.js`). Jusque-là, il était lisible de tout acteur du marché.
 
 **`systeme` ne figure dans aucune liste**, et ne doit jamais y figurer :
 empreintes et sels ne sont projetés vers personne. Vérifié par test pour les
@@ -241,7 +257,7 @@ Toutes sont couvertes.
 | **1** | **Accès sans abonnement actif** — l'accès est fermé, la consultation de l'abonnement reste ouverte pour pouvoir le renouveler. Les rôles institutionnels n'y sont pas soumis. | `tests/access.test.mjs` |
 | **2** | **L'auxiliaire ne valide pas.** Il agit pour un tiers sans engager les finances de ce tiers. L'auxiliaire de transporteur perd en outre la réponse aux réservations : accepter engage le parent sur un débit à venir. | `tests/permissions.test.mjs` |
 | **3** | **La DGTTC ne transige pas.** Dix-sept actions vérifiées une par une, plus l'interdit financier au niveau de la donnée. | `tests/permissions.test.mjs`, `tests/access.test.mjs` |
-| **4** | **Le concessionnaire ne transige pas non plus.** Il supervise et crédite ; il ne publie ni ne valide à la place d'un acteur du marché. | `tests/permissions.test.mjs` |
+| **4** | **Le concessionnaire ne transige pas non plus.** Il supervise, saisit et valide des crédits — jamais la même opération par la même personne depuis le 13/10/2026 ; il ne publie ni ne valide à la place d'un acteur du marché. | `tests/permissions.test.mjs` |
 
 **État de la suite au 24/09/2026 : 264 tests, code de sortie 0.**
 
@@ -297,6 +313,11 @@ caisse, contentieux et comptabilité sont hors périmètre, et leur accorder des
 droits « en attendant » créerait le compte fourre-tout que le POC entend
 proscrire. Conséquence assumée : ces rôles se connectent sur un espace minimal
 disant explicitement pourquoi. **C'est à énoncer en démonstration, pas à masquer.**
+
+*Mise à jour du 13/10/2026.* `activation_inscription` reçoit
+`groupement.verifier` et l'écran « Vérification des transporteurs » (§ 9). C'est
+le premier profil de niveau 3 doté d'un droit de mutation ; les huit profils sans
+aucun droit restent sans droit.
 
 ### 6.6 Ce que la matrice ne protège pas
 
@@ -410,3 +431,58 @@ le croisement que l'audit demandait.
 | **N8** | 19 rôles attestés contre 22 annoncés. | Position de l'auditeur : **ne rien inventer**, corriger l'indicateur, demander l'extrait de `profil` comme action de projet et non comme blocage. Appliqué. |
 
 **État de la suite : 329 tests, code de sortie 0.**
+
+---
+
+## 9. Correctifs anti-fraude du 13/10/2026 — incidence sur la matrice
+
+Cinq correctifs anti-fraude (README, § *Lutte contre la fraude*) ajoutent quatre
+droits au catalogue, qui passe de **47 à 51 droits**, et modifient un libellé.
+Les tableaux du § 3 en tiennent compte ; `appariement.expirer`, refusé à tous,
+n'y figure pas, conformément à leur convention.
+
+### 9.1 Les droits ajoutés ou modifiés
+
+| Droit | Catégorie | Accordé à | Portée | Objet |
+|---|---|---|:-:|---|
+| `groupement.verifier` | Acteurs | `activation_inscription` | `T` | **Correctif n° 3.** Contrôler le RCCM, la carte de transporteur et l'assurance d'un transporteur, puis la carte grise de chaque véhicule et le permis de chaque chauffeur. Les pièces ne sont servies que par `verification.service.js`, sous ce droit : ni téléphone, ni courriel, ni solde. |
+| `compte.valider_credit` | Compte | `concessionnaire` | `T` | **Correctif n° 5.** Valider ou rejeter un crédit saisi par une autre personne, après rapprochement avec l'encaissement. |
+| `avis.donner` | Transport | `affreteur`, `transporteur`, `auxiliaire_affreteur`, `auxiliaire_transporteur`, `transporteur_prive`, `transporteur_etranger` | `G` | **Correctif n° 2.** Noter la contrepartie d'un transport clôturé, une fois par groupement et par transport. `partenaire` ne l'a pas. |
+| `appariement.expirer` | Mise en relation | **aucun rôle** | — | **Correctif n° 4.** Clore un appariement dont le délai est dépassé. Comme `coordonnees.exception`, il est déclaré au catalogue et accordé à personne : la transition `expirer` appartient à la partie `systeme`, et `deciderSurAppariement()` la refuse à toute partie — « Cette action est réservée à la plateforme ». |
+| `compte.crediter` | Compte | `concessionnaire` | `T` | **Libellé modifié** : « Saisir un crédit de compte ». La saisie ne touche plus au solde. |
+
+### 9.2 Ce que la matrice ne porte pas — conformément à P4
+
+Les règles suivantes dépendent de l'état ou de la personne, non du rôle. Elles
+sont appliquées hors de la matrice, et un auditeur doit les chercher là :
+
+| Règle | Où elle est appliquée |
+|---|---|
+| **Quatre yeux** : celui qui a saisi un crédit ne le valide ni ne le rejette. Saisie et validation appartiennent au **même rôle** ; seule la personne diffère. | `compte.service.js` (`validerCredit`, `rejeterCredit`), doublé de l'invariant `quatreYeux` de l'entité `credit` dans `schema.js`. |
+| **Identité retenue jusqu'à la validation** : la classification `identite` d'un tiers n'est servie qu'aux parties d'une mise en relation validée, objet par objet (§ 4, note \*\*). | `access.js` (`identiteLiberee`), appelé par la projection et par `views/_donnees.js` (`nomDe`, `immatriculationDe`). |
+| **Transporteur vérifié** : un transporteur non vérifié conserve ses droits dans la matrice ; ce sont la publiabilité de ses véhicules et les gardes `transporteurVerifie` et `moyensVerifies` qui l'empêchent de publier, de proposer, d'accepter, et qui font échouer une validation. | `flotte.service.js` (`publiabilite`, `chercherVehicules`), `matching.state.js`. |
+| **Délai d'attente** : une acceptation ou une validation hors délai est refusée. | Garde `delaiTenu`, `matching.state.js` ; clôture par `expirerEchus()`, `matching.service.js`. |
+
+### 9.3 Deux points à soumettre à l'audit
+
+- **L'auxiliaire note pour son groupement.** `avis.donner` est accordé aux
+  auxiliaires ; la note engage la réputation de la contrepartie, pas les
+  finances du parent, ce qui la distingue de la validation. Une seule note par
+  groupement et par transport. **À contester si** la notation est tenue pour un
+  acte réservé au titulaire.
+- **Les rôles institutionnels échappent à la retenue de l'identité.**
+  Concessionnaire, DGTTC et profils de niveau 3 lisent raison sociale et
+  immatriculation sans condition d'état, dans la mesure où leur classification
+  l'ouvre (§ 4) : ils supervisent sans transiger, et ne tirent aucun avantage
+  d'un contournement des frais. Téléphone, courriel et adresse leur restent
+  fermés ; l'agent d'activation reçoit en outre, par le seul service de
+  vérification, la carte grise et le permis qu'il contrôle.
+
+**Couverture de test.** `tests/anti-fraude.test.mjs` vérifie notamment que
+`groupement.verifier` n'appartient qu'à `activation_inscription` et que
+transporteur, concessionnaire, DGTTC et affréteur sont refusés ; qu'aucun rôle
+sans `compte.valider_credit` ne valide un crédit, et que son auteur ne le
+valide pas même avec le droit ; qu'aucun rôle ne détient `appariement.expirer`
+et que la transition `expirer` appartient à la seule partie `systeme` ; qu'un
+rôle institutionnel ne peut pas noter. Le masquage de l'identité est en outre
+couvert par `tests/access.test.mjs` et `tests/vues.test.mjs`.

@@ -4,6 +4,7 @@
  */
 import { depot } from '../repositories/index.js';
 import { publiabilite } from './flotte.service.js';
+import { moyensVerifies } from './verification.service.js';
 import { decider, exiger } from '../domain/access.js';
 import { segmentEspace } from '../core/nav.js';
 
@@ -28,7 +29,9 @@ export function cataloguePublic(maintenant = new Date()) {
     const v = vehicules.get(o.vehiculeId);
     return o.etat === 'disponible' && new Date(o.disponibleAu) >= maintenant &&
       localite(o.localiteDepartId) && localite(o.localiteArriveeId) &&
-      v && publiabilite(v).publiable && !occupes.has(v.id);
+      // `publiabilite` exige aussi la vérification du transporteur et du véhicule
+      // (correctif anti-fraude n° 3) ; le chauffeur pressenti l'est ici.
+      v && publiabilite(v).publiable && moyensVerifies(o) && !occupes.has(v.id);
   }).map(o => {
     const v = vehicules.get(o.vehiculeId);
     return { ...commun('camions', o.id, o.localiteDepartId, o.localiteArriveeId,

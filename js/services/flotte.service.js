@@ -16,7 +16,14 @@ import { champsManquantsPourRole } from '../domain/permissions.js';
 import { depot, stockageInterne } from '../repositories/index.js';
 import { journaliser } from './audit.service.js';
 import { cloreSurRetraitOffre, reference } from './matching.service.js';
+import { profilConfiance } from './avis.service.js';
 import { notifier } from './notification.service.js';
+import {
+  motifNonVerifie,
+  moyensVerifies,
+  pieceModifiee,
+  transporteurVerifie,
+} from './verification.service.js';
 
 /**
  * Un véhicule est-il publiable ?
@@ -56,6 +63,9 @@ export function publiabilite(vehicule) {
         'mais ne peut pas être publié sur le marché tant qu’elle n’est pas renouvelée.',
     };
   }
+  // Correctif anti-fraude n° 3 : ni transporteur, ni véhicule non vérifiés.
+  const nonVerifie = motifNonVerifie(vehicule, null);
+  if (nonVerifie) return { publiable: false, motif: nonVerifie };
   return { publiable: true, motif: null };
 }
 
@@ -171,6 +181,12 @@ export function enregistrerVehicule(ctx, saisie, vehiculeId = null) {
   if (champsManquantsPourRole(ctx.roleId, 'vehicule', donnees).length) {
     throw new Error('Renseignez le pays d’immatriculation pour votre véhicule.');
   }
+  // Correctif anti-fraude n° 3 : une pièce contrôlée qui change perd son contrôle.
+  // Sans cela, on ferait vérifier un camion puis on lui substituerait une plaque.
+  if (actuel && pieceModifiee('vehicule', actuel, donnees)) {
+    donnees.verifieLe = null;
+    donnees.verifieParUtilisateurId = null;
+  }
   if (actuel) return depot('vehicule').modifier(actuel.id, donnees);
   return depot('vehicule').creer({
     ...donnees, id: identifiant('veh'), groupementId: ctx.groupementId,
@@ -194,6 +210,10 @@ export function enregistrerChauffeur(ctx, saisie, chauffeurId = null) {
     permisEcheance: verifierDate(saisie.permisEcheance, 'Validité du permis', true),
     telephone: texte(saisie.telephone) || null,
   };
+  if (actuel && pieceModifiee('chauffeur', actuel, donnees)) {
+    donnees.verifieLe = null;
+    donnees.verifieParUtilisateurId = null;
+  }
   if (actuel) return depot('chauffeur').modifier(actuel.id, donnees);
   return depot('chauffeur').creer({
     ...donnees, id: identifiant('chf'), groupementId: ctx.groupementId,
@@ -244,6 +264,8 @@ export function publierOffre(ctx, saisie) {
   if (chauffeurPressentiId && depot('chauffeur').brutParId(chauffeurPressentiId)?.groupementId !== ctx.groupementId) {
     throw new Error('Le chauffeur sélectionné ne fait pas partie de votre groupement.');
   }
+  const chauffeurNonVerifie = motifNonVerifie(v, chauffeurPressentiId);
+  if (chauffeurNonVerifie) throw new Error(chauffeurNonVerifie);
   const debutSaisi = texte(saisie.disponibleDu);
   const finSaisie = texte(saisie.disponibleAu);
   const debut = new Date(debutSaisi.length === 10 ? `${debutSaisi}T00:00:00` : debutSaisi);
@@ -417,6 +439,9 @@ export function chercherVehicules(ctx, filtres = {}) {
     .filter((o) => {
       const v = vehicules.get(o.vehiculeId);
       if (!v || !publiabilite(v).publiable) return false;
+      // Correctif anti-fraude n° 3 : un transporteur dont la vérification a été
+      // retirée disparaît du marché, avec ses offres déjà publiées.
+      if (!transporteurVerifie(o.groupementId) || !moyensVerifies(o)) return false;
       if (filtres.departId && o.localiteDepartId !== filtres.departId) return false;
       if (filtres.arriveeId && o.localiteArriveeId !== filtres.arriveeId) return false;
       if (filtres.aPartirDu && new Date(o.disponibleAu) < new Date(filtres.aPartirDu)) return false;
@@ -433,7 +458,10 @@ export function chercherVehicules(ctx, filtres = {}) {
         // Données du véhicule et du groupement servies via leur propre
         // projection : la carte grise et les contacts restent fermés.
         vehicule: depot('vehicule').lire(ctx, v.id, { proprietaireId: v.groupementId }),
+        // Correctif anti-fraude n° 1 : la projection retire raison sociale et
+        // RCCM avant validation. Ce qui est servi à la place, c'est la confiance.
         groupement: depot('groupement').lire(ctx, g.id, { proprietaireId: g.id }),
+        confiance: profilConfiance(g.id),
       };
     })
     .sort((a, b) => new Date(a.disponibleDu) - new Date(b.disponibleDu));

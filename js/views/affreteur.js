@@ -50,6 +50,8 @@ import * as matching from '../services/matching.service.js';
 import * as preferences from '../services/preferences.service.js';
 import * as transportSvc from '../services/transport.service.js';
 import { rafraichirContexte } from '../services/auth.service.js';
+import { echeanceDe } from '../domain/matching.state.js';
+import { blocConfiance, resumeConfiance } from './confiance.js';
 
 /** Libellé d'une entrée de référentiel. */
 
@@ -396,8 +398,10 @@ function carteOffre(ctx, offre, apresAction) {
   return el('article.vehicle-detail-info', {}, [
     el('div.vehicle-detail-identity', {}, [
       el('span.vehicle-detail-truck', {}, [camion(offre, 42)]),
-      el('div', {}, [el('h2', {text:v.immatriculation ?? 'Véhicule disponible'}), el('p', {text:offre.groupement?.raisonSociale ?? 'Transporteur'})]),
+      // Correctif anti-fraude n° 1 : ni plaque ni raison sociale avant validation.
+      el('div', {}, [el('h2', {text:`${refDe(v.carrosserieId)} · ${v.capaciteT ?? '—'} t`}), el('p', {text: offre.confiance ? resumeConfiance(offre.confiance) : 'Transporteur'})]),
     ]),
+    blocConfiance(offre.groupementId),
     el('span.truck-journey-label', {text:libelleTrajet(offre)}),
     ligne('map-pin', 'Trajet proposé', `${refDe(offre.localiteDepartId)} → ${refDe(offre.localiteArriveeId)}`),
     ligne('package', 'Véhicule et capacité', `${refDe(v.carrosserieId)} · ${v.capaciteT ?? '—'} t · ${refDe(v.essieuxId)}`),
@@ -529,8 +533,10 @@ export function validation(ctx, params = {}) {
     enAttente.length ? carte({titre:'Mises en relation à valider',sousTitre:'Consultez le transport et les frais avant de confirmer.',corps:[
       el('div.carrier-card-grid',{},enAttente.map(a=>el('article.carrier-person-card',{},[
         el('div.carrier-card-top',{},[icone('handshake',36),el('strong',{text:a.reference})]),
-        el('h3',{text:nomDe(a.groupementTransporteurId)}),
+        el('h3',{text:nomDe(ctx, a.groupementTransporteurId)}),
+        blocConfiance(a.groupementTransporteurId,{compact:true}),
         el('p.carrier-dates',{},[icone('calendar',18),`Acceptée le ${dateHeure(a.reponduLe)}`]),
+        echeanceDe(a) ? el('p.carrier-dates',{},[icone('clock',18),`À valider avant le ${dateHeure(echeanceDe(a))}`]) : null,
         badge(a.etat),
         el('a.btn.btn-primary',{href:`#/${segmentEspace(ctx)}/validation/${a.id}`,text:'Examiner la réservation'}),
       ]))),
@@ -566,6 +572,16 @@ function ecranValidation(ctx, appariementId) {
           titre: 'Validation impossible',
           message: el('div', {}, p.refus.map((m) => el('p', { text: m }))),
         }),
+    // Correctif anti-fraude n° 4 : l'acceptation du transporteur n'immobilise
+    // pas son camion indéfiniment.
+    p.possible && p.echeance
+      ? bandeau({
+          ton: 'info',
+          message:
+            `Validez avant le ${dateHeure(p.echeance)}. Passé ce délai, la mise en relation ` +
+            'expire et le véhicule revient sur le marché ; rien n’est débité.',
+        })
+      : null,
 
     el('div.validation-layout', {}, [
       el('div.validation-main', {}, [
@@ -585,10 +601,13 @@ function ecranValidation(ctx, appariementId) {
         carte({
           titre: 'Le véhicule retenu',
           corps: [
-            el('div.validation-truck',{},[camion(offre,160),el('div',{},[el('strong',{text:vehicule.immatriculation}),el('span',{text:libelleTrajet(offre)})])]),
+            el('div.validation-truck',{},[camion(offre,160),el('div',{},[el('strong',{text:`${refDe(vehicule.carrosserieId)} · ${vehicule.capaciteT} t`}),el('span',{text:libelleTrajet(offre)})])]),
+            // Correctif anti-fraude n° 1 : le nom et la plaque sont ce que la
+            // validation achète. Avant, l'affréteur choisit sur la confiance.
+            blocConfiance(a.groupementTransporteurId),
             el('div.recap-grid', {}, [
-              el('div.recap-item', {}, [el('span', { text: 'Transporteur' }), el('strong', { text: nomDe(a.groupementTransporteurId) })]),
-              el('div.recap-item', {}, [el('span', { text: 'Immatriculation' }), el('strong', { text: vehicule.immatriculation })]),
+              el('div.recap-item', {}, [el('span', { text: 'Transporteur' }), el('strong', { text: nomDe(ctx, a.groupementTransporteurId) })]),
+              el('div.recap-item', {}, [el('span', { text: 'Immatriculation' }), el('strong', { text: immatriculationDe(ctx, offre.vehiculeId) })]),
               el('dt', { text: 'Capacité' }),
               el('dd', { text: `${vehicule.capaciteT} t · ${refDe(vehicule.carrosserieId)} · ${refDe(vehicule.essieuxId)}` }),
               el('dt', { text: 'Prix déclaré' }),
@@ -618,14 +637,17 @@ function ecranValidation(ctx, appariementId) {
             registreDebit({
               lignes: [
                 {
-                  partie: `Vous — ${nomDe(a.groupementAffreteurId)}`,
+                  partie: `Vous — ${nomDe(ctx, a.groupementAffreteurId)}`,
                   solde: p.soldeUtilisateur,
                   frais: p.montantUtilisateur,
                   suffisant: p.utilisateurProvisionne,
                 },
               ],
               contrepartie: {
-                partie: `Transporteur — ${nomDe(a.groupementTransporteurId)}`,
+                // Avant validation, nomDe rend l'alias « Transporteur T-XXXX » : ne pas le préfixer deux fois.
+                partie: nomDe(ctx, a.groupementTransporteurId).startsWith('Transporteur ')
+                  ? nomDe(ctx, a.groupementTransporteurId)
+                  : `Transporteur — ${nomDe(ctx, a.groupementTransporteurId)}`,
                 frais: p.fraisTransporteur,
                 provisionnee: p.contrepartieProvisionnee,
               },
@@ -668,7 +690,7 @@ function ecranValidation(ctx, appariementId) {
           etapeChrono('Le transporteur a accepté', dateHeure(a.reponduLe), true),
           etapeChrono('Vous validez', 'Maintenant', false, true),
           etapeChrono('Les deux comptes sont débités', `${montant(p.fraisAffreteur + p.fraisTransporteur)} au total`, false),
-          etapeChrono('Les coordonnées vous sont transmises', 'Véhicule, chauffeur, contacts', false),
+          etapeChrono('Le nom et les coordonnées vous sont transmis', 'Transporteur, véhicule, chauffeur, contacts', false),
           etapeChrono('Le suivi du transport commence', 'Six étapes déclaratives', false),
         ]),
         ]),
@@ -707,7 +729,7 @@ export function relations(ctx, params) {
             colonnes: ['Référence', 'Contrepartie', 'Validée le', ''],
             lignes: validees.map((a) => [
               a.reference,
-              nomDe(
+              nomDe(ctx, 
                 a.groupementAffreteurId === ctx.groupementId
                   ? a.groupementTransporteurId
                   : a.groupementAffreteurId,

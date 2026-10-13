@@ -37,13 +37,16 @@ import {
   ETAT_ABONNEMENT,
   ETAT_APPARIEMENT,
   ETAT_COMPTE,
+  ETAT_CREDIT,
   ETAT_DECLARATION,
   ETAT_DEMANDE,
   ETAT_OFFRE,
   ETAT_VEHICULE,
+  ETAT_VERIFICATION,
   ETAPE_TRANSPORT,
   EVENEMENT_AUDIT,
   CODE_TARIF,
+  MOTIF_CLOTURE,
   MOTIF_OPERATION,
   MOTIF_REJET,
   NATURE_INCIDENT,
@@ -64,8 +67,12 @@ import {
 export const CLASSIFICATION = Object.freeze({
   /** Lisible par tout utilisateur authentifié. Corridors, dates, capacités. */
   PUBLIC: 'public',
-  /** Identité commerciale d'une entreprise. Visible sur le marché : c'est ce qui
-   *  permet de choisir avec qui traiter. Raison sociale, immatriculation, RCCM. */
+  /** Identité commerciale d'une entreprise. Raison sociale, immatriculation, RCCM.
+   *  **Correctif anti-fraude n° 1 (13/10/2026)** : elle n'est plus servie à la
+   *  contrepartie avant la validation. Connaître le nom d'un transporteur avant
+   *  de payer suffisait à le joindre hors plateforme et à contourner les frais.
+   *  Elle reste lisible du propriétaire, des rôles institutionnels, et des deux
+   *  parties d'une mise en relation validée (`access.js`, `identiteLiberee`). */
   IDENTITE: 'identite',
   /** **Coordonnées nominatives.** Téléphone, courriel, chauffeur, carte grise.
    *  Servies aux deux parties d'un appariement UNIQUEMENT à l'état `valider`.
@@ -199,6 +206,28 @@ export const ENTITES = Object.freeze({
       contactTelephone: f('string', { max: 32, classification: CLASSIFICATION.CONTACT }),
       contactEmail: f('string', { max: 160, classification: CLASSIFICATION.CONTACT }),
       etat: enumOf(ETAT_COMPTE),
+      // --- Correctif anti-fraude n° 3 : vérification du dossier transporteur ---
+      verificationEtat: f('enum', {
+        valeurs: Object.freeze(Object.values(ETAT_VERIFICATION)),
+        note:
+          'Absent = à vérifier. Seul `verifie` ouvre la publication, la proposition, ' +
+          'l’acceptation et la validation. Public : c’est le signal de confiance ' +
+          'affiché sur le marché à la place de la raison sociale.',
+      }),
+      verificationPieces: f('array', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Pièces contrôlées par l’agent d’activation (PIECE_DOSSIER).',
+      }),
+      verifieLe: f('datetime'),
+      verifieParUtilisateurId: ref('utilisateur', {
+        requis: false,
+        onDelete: 'detach',
+        classification: CLASSIFICATION.IDENTITE,
+      }),
+      verificationMotif: f('text', {
+        classification: CLASSIFICATION.IDENTITE,
+        note: 'Motif d’un refus, transmis au transporteur.',
+      }),
       creeLe: f('datetime', { requis: true }),
       demo: f('boolean', {
         requis: true,
@@ -410,7 +439,9 @@ export const ENTITES = Object.freeze({
         unique: true,
         max: 24,
         classification: CLASSIFICATION.IDENTITE,
-        note: 'Visible sur le marché avant validation : c’est un critère de choix.',
+        note:
+          'Masquée à la contrepartie avant validation (correctif anti-fraude n° 1) : ' +
+          'une plaque suffit à retrouver son propriétaire hors plateforme.',
       }),
       carteGrise: f('string', {
         max: 40,
@@ -447,6 +478,18 @@ export const ENTITES = Object.freeze({
           'système existant comme dans le POC. Information de marché affichée.',
       }),
       etat: enumOf(ETAT_VEHICULE),
+      verifieLe: f('datetime', {
+        note:
+          'Carte grise et carte de transport contrôlées par l’agent d’activation ' +
+          '(correctif anti-fraude n° 3). Remis à vide dès que l’immatriculation, la ' +
+          'carte grise ou la carte de transport changent : une plaque ne se ' +
+          'substitue pas après contrôle.',
+      }),
+      verifieParUtilisateurId: ref('utilisateur', {
+        requis: false,
+        onDelete: 'detach',
+        classification: CLASSIFICATION.IDENTITE,
+      }),
       creeLe: f('datetime', { requis: true }),
       demo: f('boolean', { requis: true }),
     }),
@@ -483,6 +526,16 @@ export const ENTITES = Object.freeze({
       vehiculeId: ref('vehicule', {
         requis: false, onDelete: 'detach',
         note: 'Champ historique conservé pour les anciens seeds. Non utilisé : le chauffeur est choisi par offre via chauffeurPressentiId. Toute modification de sa fiche remet ce champ à null.',
+      }),
+      verifieLe: f('datetime', {
+        note:
+          'Permis contrôlé par l’agent d’activation (correctif anti-fraude n° 3). ' +
+          'Remis à vide si le nom ou le numéro de permis change.',
+      }),
+      verifieParUtilisateurId: ref('utilisateur', {
+        requis: false,
+        onDelete: 'detach',
+        classification: CLASSIFICATION.IDENTITE,
       }),
       creeLe: f('datetime', { requis: true }),
       demo: f('boolean', { requis: true }),
@@ -571,6 +624,12 @@ export const ENTITES = Object.freeze({
       precisionRejet: f('text', { note: 'Complément libre. Ne remplace pas le motif.' }),
       annuleLe: f('datetime'),
       annuleParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
+      motifCloture: f('enum', {
+        valeurs: Object.freeze(Object.values(MOTIF_CLOTURE)),
+        note:
+          'Renseigné quand la plateforme, et non une partie, a clos l’appariement — ' +
+          'aujourd’hui la seule expiration du délai (correctif anti-fraude n° 4).',
+      }),
       valideLe: f('datetime'),
       valideParUtilisateurId: ref('utilisateur', { requis: false, onDelete: 'detach' }),
       fraisAffreteur: f('number', {
@@ -769,6 +828,72 @@ export const ENTITES = Object.freeze({
     ]),
   }),
 
+  credit: Object.freeze({
+    collection: 'credits',
+    proprietaire: 'groupementId',
+    libelle: 'Crédit de compte saisi',
+    legacy: 'RefOperation (paiement hors plateforme)',
+    description:
+      '**Correctif anti-fraude n° 5 — principe des quatre yeux.** Un crédit est ' +
+      'd’abord saisi, sans effet sur le solde ; il ne devient un mouvement de compte ' +
+      'qu’après validation par une AUTRE personne, qui confirme le rapprochement ' +
+      'avec l’encaissement réel. Une même référence d’encaissement ne peut servir ' +
+      'qu’une fois.',
+    champs: Object.freeze({
+      id: idPropre(),
+      reference: f('string', { requis: true, unique: true, note: 'Format CR-AAAA-NNNN.' }),
+      groupementId: ref('groupement', { classification: CLASSIFICATION.FINANCIER }),
+      montant: f('number', { requis: true, min: 0, classification: CLASSIFICATION.FINANCIER }),
+      referenceEncaissement: f('string', {
+        requis: true,
+        max: 60,
+        classification: CLASSIFICATION.FINANCIER,
+        note: 'Trace du paiement reçu hors plateforme. Unique parmi les crédits non rejetés.',
+      }),
+      etat: enumOf(ETAT_CREDIT, { classification: CLASSIFICATION.FINANCIER }),
+      saisiLe: f('datetime', { requis: true, classification: CLASSIFICATION.FINANCIER }),
+      saisiParUtilisateurId: ref('utilisateur', {
+        onDelete: 'detach',
+        classification: CLASSIFICATION.FINANCIER,
+      }),
+      valideLe: f('datetime', { classification: CLASSIFICATION.FINANCIER }),
+      valideParUtilisateurId: ref('utilisateur', {
+        requis: false,
+        onDelete: 'detach',
+        classification: CLASSIFICATION.FINANCIER,
+      }),
+      rejeteLe: f('datetime', { classification: CLASSIFICATION.FINANCIER }),
+      motifRejet: f('text', { classification: CLASSIFICATION.FINANCIER }),
+      operationId: ref('operation', {
+        requis: false,
+        onDelete: 'restrict',
+        classification: CLASSIFICATION.FINANCIER,
+      }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'quatreYeux',
+        message:
+          'Un crédit est validé par une autre personne que celle qui l’a saisi : ' +
+          'c’est ce qui empêche une personne seule de créditer un compte.',
+        verifier: (c) =>
+          c.etat !== ETAT_CREDIT.CREDITE ||
+          (Boolean(c.valideParUtilisateurId) && c.valideParUtilisateurId !== c.saisiParUtilisateurId),
+      },
+      {
+        nom: 'creditValideComptabilise',
+        message: 'Un crédit validé porte le mouvement de compte qu’il a créé.',
+        verifier: (c) => c.etat !== ETAT_CREDIT.CREDITE || Boolean(c.operationId && c.valideLe),
+      },
+      {
+        nom: 'rejetCreditMotive',
+        message: 'Un crédit rejeté porte son motif.',
+        verifier: (c) => c.etat !== ETAT_CREDIT.REJETE || Boolean(c.motifRejet),
+      },
+    ]),
+  }),
+
   tarif: Object.freeze({
     collection: 'tarifs',
     proprietaire: null,
@@ -886,6 +1011,36 @@ export const ENTITES = Object.freeze({
             (v) => v == null || ['string', 'number', 'boolean'].includes(typeof v),
           );
         },
+      },
+    ]),
+  }),
+
+  avis: Object.freeze({
+    collection: 'avis',
+    proprietaire: 'auteurGroupementId',
+    libelle: 'Avis après transport',
+    legacy: null,
+    description:
+      '**Correctif anti-fraude n° 2 — ajout du POC.** Après la clôture d’un ' +
+      'transport, chaque partie note l’autre, une fois. Les avis ne se constituent ' +
+      'que sur des transports conclus par la plateforme : c’est ce qui donne à un ' +
+      'transporteur une raison de revenir plutôt que de traiter en direct. Aucun ' +
+      'commentaire libre : il deviendrait un canal pour des coordonnées.',
+    champs: Object.freeze({
+      id: idPropre(),
+      appariementId: ref('appariement'),
+      auteurGroupementId: ref('groupement'),
+      cibleGroupementId: ref('groupement'),
+      note: f('integer', { requis: true, min: 1, max: 5 }),
+      donneLe: f('datetime', { requis: true }),
+      auteurUtilisateurId: ref('utilisateur', { onDelete: 'detach' }),
+      demo: f('boolean', { requis: true }),
+    }),
+    invariants: Object.freeze([
+      {
+        nom: 'avisEntreDeuxParties',
+        message: 'Un groupement ne se note pas lui-même.',
+        verifier: (a) => a.auteurGroupementId !== a.cibleGroupementId,
       },
     ]),
   }),

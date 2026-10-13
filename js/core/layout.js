@@ -216,7 +216,11 @@ function aideContextuelle(roleId) {
     dgttc: 'Le contrôleur ne transige pas sur ce qu’il contrôle.',
     concessionnaire:
       'Vous exploitez la plateforme : comptes, tarifs, abonnements. Vous ne publiez ' +
-      'ni ne validez à la place d’un acteur du marché.',
+      'ni ne validez à la place d’un acteur du marché. Un crédit que vous saisissez ' +
+      'est validé par une autre personne.',
+    activation_inscription:
+      'Aucun transporteur ne s’engage sur le marché sans votre contrôle : dossier, ' +
+      'cartes grises, permis. Vous ne voyez ni soldes ni coordonnées de contact.',
   };
   const defaut =
     'Aucun droit métier n’est accordé à ce rôle dans ce POC : caisse, contentieux ' +

@@ -36,6 +36,18 @@ const SUSPECT =
   /(\d[\d\s  ]*\s?F\s?CFA)|(\d{1,3}(?:[\s  ]\d{3})+)|(\+\d[\d\s]{7,})|(@[\w.-]+\.\w{2,})/;
 
 /**
+ * Auteur des actions que la plateforme accomplit seule — aujourd'hui la seule
+ * expiration des appariements (correctif anti-fraude n° 4). Aucun utilisateur,
+ * aucun groupement : l'entrée de journal ne doit pas être imputée à la personne
+ * dont l'affichage a déclenché le constat.
+ */
+export const CONTEXTE_PLATEFORME = Object.freeze({
+  utilisateurId: null,
+  roleId: 'plateforme',
+  groupementId: null,
+});
+
+/**
  * Inscrit un événement.
  *
  * @param {import('../domain/access.js').Contexte} ctx

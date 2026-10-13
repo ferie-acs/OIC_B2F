@@ -278,6 +278,82 @@ export const ETAT_VEHICULE = Object.freeze({
 });
 
 /* ------------------------------------------------------------------ *
+ * Lutte contre la fraude — ajouts du 13/10/2026
+ * ------------------------------------------------------------------ */
+
+/**
+ * État de vérification du dossier d'un transporteur.
+ *
+ * **Correctif anti-fraude n° 3.** Rien ne prouvait qu'un transporteur était
+ * celui qu'il prétendait être : un faux transporteur pouvait s'inscrire,
+ * accepter un chargement et disparaître avec la marchandise. Un transporteur
+ * dont le dossier n'est pas `verifie` ne publie pas, ne propose pas, n'accepte
+ * pas, et son offre ne peut pas être validée. Un état absent vaut « à vérifier ».
+ * @readonly
+ * @enum {string}
+ */
+export const ETAT_VERIFICATION = Object.freeze({
+  A_VERIFIER: 'a_verifier',
+  VERIFIE: 'verifie',
+  REFUSE: 'refuse',
+});
+
+/**
+ * Pièces contrôlées par l'agent d'activation sur le dossier d'un transporteur.
+ * Les trois sont exigées pour prononcer la vérification.
+ * @readonly
+ * @enum {string}
+ */
+export const PIECE_DOSSIER = Object.freeze({
+  RCCM: 'rccm',
+  CARTE_TRANSPORTEUR: 'carte_transporteur',
+  ASSURANCE: 'assurance',
+});
+
+/**
+ * État d'un crédit de compte saisi.
+ *
+ * **Correctif anti-fraude n° 5.** Une seule personne pouvait créditer un compte
+ * sur une simple référence que personne ne contrôlait. Le crédit est désormais
+ * saisi par un agent, puis validé par une autre personne après rapprochement
+ * avec l'encaissement. Seule la validation touche au solde.
+ * @readonly
+ * @enum {string}
+ */
+export const ETAT_CREDIT = Object.freeze({
+  EN_ATTENTE: 'en_attente',
+  CREDITE: 'credite',
+  REJETE: 'rejete',
+});
+
+/**
+ * Motif de fin d'un appariement non abouti, quand ce n'est pas une partie qui
+ * l'a décidée. La valeur stockée de l'état reste `annuler` (fidélité au système
+ * existant, D34) ; ce champ dit pourquoi.
+ * @readonly
+ * @enum {string}
+ */
+export const MOTIF_CLOTURE = Object.freeze({
+  /** Délai de réponse ou de validation dépassé. Correctif anti-fraude n° 4. */
+  EXPIRATION: 'expiration',
+});
+
+/**
+ * Délais au-delà desquels un appariement en attente expire.
+ *
+ * **Correctif anti-fraude n° 4.** Réserver est gratuit : sans délai, un abonné
+ * pouvait immobiliser des camions sans jamais valider. Durées proposées par le
+ * POC, **à confirmer par l'OIC**.
+ * @readonly
+ */
+export const DELAIS_APPARIEMENT = Object.freeze({
+  /** Le répondeur dispose de ce délai pour accepter ou rejeter. */
+  REPONSE_HEURES: 48,
+  /** L'affréteur dispose de ce délai, après acceptation, pour valider. */
+  VALIDATION_HEURES: 48,
+});
+
+/* ------------------------------------------------------------------ *
  * Journal d'audit
  * ------------------------------------------------------------------ */
 
@@ -309,6 +385,15 @@ export const EVENEMENT_AUDIT = Object.freeze({
   TRANSPORT_ETAPE: 'transport_etape',
   TRANSPORT_INCIDENT: 'transport_incident',
   DUT_GENERE: 'dut_genere',
+  /* --- Lutte contre la fraude (13/10/2026) --- */
+  APPARIEMENT_EXPIRE: 'appariement_expire',
+  TRANSPORTEUR_VERIFIE: 'transporteur_verifie',
+  TRANSPORTEUR_REFUSE: 'transporteur_refuse',
+  VEHICULE_VERIFIE: 'vehicule_verifie',
+  CHAUFFEUR_VERIFIE: 'chauffeur_verifie',
+  CREDIT_SAISI: 'credit_saisi',
+  CREDIT_REJETE: 'credit_rejete',
+  AVIS_DONNE: 'avis_donne',
 });
 
 /* ------------------------------------------------------------------ *
@@ -413,6 +498,16 @@ export const LIBELLES = Object.freeze({
   [MOTIF_REJET.DESTINATION_NON_DESSERVIE]: Object.freeze({
     [POV.NEUTRE]: 'Destination non desservie',
   }),
+  [ETAT_VERIFICATION.A_VERIFIER]: Object.freeze({ [POV.NEUTRE]: 'Dossier à vérifier' }),
+  [ETAT_VERIFICATION.VERIFIE]: Object.freeze({ [POV.NEUTRE]: 'Transporteur vérifié' }),
+  [ETAT_VERIFICATION.REFUSE]: Object.freeze({ [POV.NEUTRE]: 'Vérification refusée' }),
+  [PIECE_DOSSIER.RCCM]: Object.freeze({ [POV.NEUTRE]: 'Registre du commerce (RCCM)' }),
+  [PIECE_DOSSIER.CARTE_TRANSPORTEUR]: Object.freeze({ [POV.NEUTRE]: 'Carte de transporteur en cours de validité' }),
+  [PIECE_DOSSIER.ASSURANCE]: Object.freeze({ [POV.NEUTRE]: 'Attestation d’assurance marchandises transportées' }),
+  [ETAT_CREDIT.EN_ATTENTE]: Object.freeze({ [POV.NEUTRE]: 'En attente de validation' }),
+  [ETAT_CREDIT.CREDITE]: Object.freeze({ [POV.NEUTRE]: 'Validé — compte crédité' }),
+  [ETAT_CREDIT.REJETE]: Object.freeze({ [POV.NEUTRE]: 'Rejeté' }),
+  [MOTIF_CLOTURE.EXPIRATION]: Object.freeze({ [POV.NEUTRE]: 'Expirée — délai dépassé' }),
 });
 
 /**

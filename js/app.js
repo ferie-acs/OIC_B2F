@@ -14,7 +14,9 @@ import { routeAccueil } from './core/nav.js';
 import { installerSentinelle } from './core/sentinelle.js';
 import { bandeau, bouton, toast } from './core/ui.js';
 import { initialiserPersistance } from './repositories/index.js';
-import { amorcer, dejaAmorce } from './seed.js';
+import { amorcer, completerJeuAntiFraude, dejaAmorce } from './seed.js';
+import { expirerEchus } from './services/matching.service.js';
+import { verifications } from './views/verifications.js';
 import {
   blocageAbonnement,
   connecter,
@@ -77,6 +79,7 @@ function declarerRoutes() {
   declarer('concessionnaire/groupements', supervision.groupements);
   declarer('concessionnaire/roles', supervision.roles);
   declarer('concessionnaire/comptes', supervision.comptes);
+  declarer('concessionnaire/credits', supervision.credits);
   declarer('concessionnaire/tarifs', supervision.tarifs);
   declarer('concessionnaire/abonnements', supervision.abonnements);
   declarer('concessionnaire/marche', supervision.etats);
@@ -95,6 +98,7 @@ function declarerRoutes() {
   // --- Espace minimal, rôles de niveau 3 -----------------------------
   declarer('minimal/dashboard', commun.accueilMinimal);
   declarer('minimal/groupements', supervision.groupements);
+  declarer('minimal/verifications', verifications);
   declarer('minimal/duts', documentsDut);
 }
 
@@ -208,6 +212,7 @@ async function demarrerApplication() {
   }
 
   if (!dejaAmorce()) await amorcer();
+  await completerJeuAntiFraude();
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();
@@ -218,7 +223,12 @@ async function demarrerApplication() {
   declarerRoutes();
 
   const traiter = demarrer({
-    contexte: () => contexteCourant() ?? reprendreSession(),
+    contexte: () => {
+      // Correctif anti-fraude n° 4 : les attentes échues sont closes avant tout
+      // affichage. Sans tâche planifiée, c'est le moment où le code s'exécute.
+      try { expirerEchus(); } catch (e) { console.warn('[B2F] Expiration non appliquée :', e); }
+      return contexteCourant() ?? reprendreSession();
+    },
     surLogin: () => afficherLogin(() => traiter()),
     surAccueil: ctx => { monter(accueil(ctx)); window.scrollTo(0,0); },
     surPublic: (ctx, params) => {

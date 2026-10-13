@@ -48,6 +48,13 @@ export function badge(valeur, pov = POV.NEUTRE) {
     actif: 'success',
     expire: 'error',
     suspendu: 'error',
+    // Correctifs anti-fraude (13/10/2026)
+    a_verifier: 'warning',
+    verifie: 'success',
+    refuse: 'error',
+    en_attente: 'warning',
+    credite: 'success',
+    rejete: 'error',
   };
   const icones = {
     valider: 'check-circle',
@@ -62,6 +69,12 @@ export function badge(valeur, pov = POV.NEUTRE) {
     suspendu: 'alert',
     cloture: 'check-circle',
     livre: 'check',
+    a_verifier: 'clock',
+    verifie: 'shield',
+    refuse: 'x',
+    en_attente: 'clock',
+    credite: 'check-circle',
+    rejete: 'x',
   };
   const ton = tons[valeur] ?? 'neutral';
   // `labelOf` lève si la valeur n'a pas de libellé : un statut brut à l'écran

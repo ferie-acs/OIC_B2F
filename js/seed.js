@@ -22,7 +22,9 @@ import {
   ETAT_DEMANDE,
   ETAT_OFFRE,
   ETAT_VEHICULE,
+  ETAT_VERIFICATION,
   MOTIF_OPERATION,
+  PIECE_DOSSIER,
   SENS_OPERATION,
   TYPE_GROUPEMENT,
 } from './domain/enums.js';
@@ -112,6 +114,59 @@ function referentiels() {
  * Acteurs
  * ------------------------------------------------------------------ */
 
+/**
+ * Dossier vérifié — correctif anti-fraude n° 3. Les transporteurs du jeu
+ * historique sont réputés contrôlés par l'agent d'activation : sans cela, plus
+ * aucun camion ne serait proposé sur le marché de démonstration.
+ */
+const VERIFIE = Object.freeze({
+  verificationEtat: ETAT_VERIFICATION.VERIFIE,
+  verificationPieces: Object.values(PIECE_DOSSIER),
+  verifieLe: dans(-60),
+  verifieParUtilisateurId: 'u-activ',
+});
+
+/** Moyens contrôlés (véhicule, chauffeur). */
+const CONTROLE = Object.freeze({ verifieLe: dans(-60), verifieParUtilisateurId: 'u-activ' });
+
+/**
+ * Transporteur récemment inscrit, **non vérifié** : il démontre que l'on ne
+ * publie ni n'accepte avant le contrôle des pièces (correctif n° 3), puis que
+ * l'agent d'activation lève ce blocage.
+ */
+export const TRANSPORTEUR_NON_VERIFIE = Object.freeze({
+  groupement: Object.freeze({
+    id: 'grp-tra-3',
+    raisonSociale: 'Nouvelle Route Transport DÉMO',
+    type: TYPE_GROUPEMENT.TRANSPORTEUR,
+    rccm: 'CI-DEMO-2026-T-0131',
+    compteContribuable: 'DEMO-CC-0131',
+    carteTransporteurNumero: 'CT-DEMO-0131',
+    carteTransporteurEcheance: dansDate(330),
+    pays: 'Côte d’Ivoire',
+    localiteId: 'loc-san-pedro',
+    adresse: 'Zone portuaire, San-Pédro (DÉMO)',
+    contactNom: 'Kader OUÉDRAOGO (DÉMO)',
+    contactTelephone: '+225 00 31 31 31',
+    contactEmail: 'contact@nouvelle-route.invalid',
+    verificationEtat: ETAT_VERIFICATION.A_VERIFIER,
+  }),
+  vehicule: Object.freeze(['veh-6', 'grp-tra-3', '2468 KL 03', 'CG-DEMO-2468', 25, 38, 'car-bache', 'ess-3', 250, 90]),
+  chauffeur: Object.freeze(['chf-4', 'grp-tra-3', 'BAKAYOKO Issa (DÉMO)', 'PC-DEMO-0004', 300, '+225 00 13 57 91', null]),
+});
+
+/**
+ * Comptes ajoutés par les correctifs anti-fraude — absents des jeux antérieurs,
+ * et donc rajoutés aussi par `completerJeuAntiFraude()` sur un navigateur déjà amorcé.
+ */
+export const UTILISATEURS_ANTI_FRAUDE = Object.freeze([
+  // N° 5 : la validation d'un crédit revient à une autre personne que l'agent qui l'a saisi.
+  ['u-conc-2', 'concessionnaire2@demo.invalid', 'ASSI', 'Marc', 'concessionnaire', 'grp-oic'],
+  // N° 3 : l'agent d'activation contrôle les pièces des transporteurs.
+  ['u-activ', 'activation@demo.invalid', 'KOFFI', 'Mariam', 'activation_inscription', 'grp-oic'],
+  ['u-tra-3', 'transporteur3@demo.invalid', 'OUÉDRAOGO', 'Kader', 'transporteur', 'grp-tra-3'],
+]);
+
 const GROUPEMENTS = [
   {
     id: 'grp-aff-1',
@@ -153,6 +208,7 @@ const GROUPEMENTS = [
     contactNom: 'Moussa DIABATÉ (DÉMO)',
     contactTelephone: '+225 00 77 88 99',
     contactEmail: 'exploitation@translagunes.invalid',
+    ...VERIFIE,
   },
   {
     id: 'grp-tra-2',
@@ -168,7 +224,9 @@ const GROUPEMENTS = [
     contactNom: 'Awa TRAORÉ (DÉMO)',
     contactTelephone: '+225 00 12 34 56',
     contactEmail: 'contact@routiere-centre.invalid',
+    ...VERIFIE,
   },
+  TRANSPORTEUR_NON_VERIFIE.groupement,
   {
     id: 'grp-oic',
     raisonSociale: 'Exploitant de la plateforme (DÉMO)',
@@ -200,6 +258,7 @@ const UTILISATEURS = [
   ['u-dgttc', 'dgttc@demo.invalid', 'OUATTARA', 'Bakary', 'dgttc', 'grp-dgttc'],
   ['u-part', 'partenaire@demo.invalid', 'KOFFI', 'Danielle', 'partenaire', 'grp-tra-2'],
   ['u-caisse', 'caisse@demo.invalid', 'N’GUESSAN', 'Paul', 'agent_caisse', 'grp-oic'],
+  ...UTILISATEURS_ANTI_FRAUDE,
 ];
 
 /** Comptes proposés sur l'écran de connexion (spécification A.1). */
@@ -232,11 +291,51 @@ const VEHICULES = [
   ['veh-5', 'grp-tra-2', '7890 IJ 02', 'CG-DEMO-7890', 40, 48, 'car-citerne', 'ess-4', 400, 130],
 ];
 
+/** Véhicules et chauffeurs du jeu historique : contrôlés. Ceux de grp-tra-3 : non. */
+const MOYENS_CONTROLES = new Set(['veh-1', 'veh-2', 'veh-3', 'veh-4', 'veh-5', 'chf-1', 'chf-2', 'chf-3']);
+
 const CHAUFFEURS = [
   ['chf-1', 'grp-tra-1', 'KOUASSI Yao (DÉMO)', 'PC-DEMO-0001', 400, '+225 00 21 43 65', 'veh-1'],
   ['chf-2', 'grp-tra-1', 'DIALLO Amadou (DÉMO)', 'PC-DEMO-0002', 150, '+225 00 65 43 21', 'veh-2'],
   ['chf-3', 'grp-tra-2', 'KONÉ Salif (DÉMO)', 'PC-DEMO-0003', 250, '+225 00 98 76 54', 'veh-4'],
 ];
+
+/** @returns {Record<string, any>} */
+function vehiculeDemo([id, groupementId, immat, cg, cap, ptac, carr, ess, joursCarte, prix], maintenant) {
+  return {
+    id,
+    groupementId,
+    immatriculation: immat,
+    carteGrise: cg,
+    capaciteT: cap,
+    ptacT: ptac,
+    carrosserieId: carr,
+    essieuxId: ess,
+    carteTransportNumero: `CT-${id.toUpperCase()}`,
+    carteTransportEcheance: dansDate(joursCarte),
+    prixKmT: prix,
+    etat: ETAT_VEHICULE.DISPONIBLE,
+    ...(MOYENS_CONTROLES.has(id) ? CONTROLE : {}),
+    creeLe: maintenant,
+    demo: true,
+  };
+}
+
+/** @returns {Record<string, any>} */
+function chauffeurDemo([id, groupementId, nom, permis, joursPermis, tel, vehiculeId], maintenant) {
+  return {
+    id,
+    groupementId,
+    nom,
+    permisNumero: permis,
+    permisEcheance: dansDate(joursPermis),
+    telephone: tel,
+    vehiculeId,
+    ...(MOYENS_CONTROLES.has(id) ? CONTROLE : {}),
+    creeLe: maintenant,
+    demo: true,
+  };
+}
 
 /* ------------------------------------------------------------------ *
  * Amorçage
@@ -373,6 +472,7 @@ export async function amorcer() {
         ['grp-aff-2', -15, ETAT_ABONNEMENT.EXPIRE],
         ['grp-tra-1', 180, ETAT_ABONNEMENT.ACTIF],
         ['grp-tra-2', 300, ETAT_ABONNEMENT.ACTIF],
+        ['grp-tra-3', 360, ETAT_ABONNEMENT.ACTIF],
       ].map(([groupementId, joursRestants, etat]) => ({
         id: `abo-${groupementId}`,
         groupementId,
@@ -413,39 +513,12 @@ export async function amorcer() {
     // --- Flotte -------------------------------------------------------
     tx.ecrire(
       'vehicules',
-      VEHICULES.map(
-        ([id, groupementId, immat, cg, cap, ptac, carr, ess, joursCarte, prix]) => ({
-          id,
-          groupementId,
-          immatriculation: immat,
-          carteGrise: cg,
-          capaciteT: cap,
-          ptacT: ptac,
-          carrosserieId: carr,
-          essieuxId: ess,
-          carteTransportNumero: `CT-${id.toUpperCase()}`,
-          carteTransportEcheance: dansDate(joursCarte),
-          prixKmT: prix,
-          etat: ETAT_VEHICULE.DISPONIBLE,
-          creeLe: maintenant,
-          demo: true,
-        }),
-      ),
+      [...VEHICULES, TRANSPORTEUR_NON_VERIFIE.vehicule].map((v) => vehiculeDemo(v, maintenant)),
     );
 
     tx.ecrire(
       'chauffeurs',
-      CHAUFFEURS.map(([id, groupementId, nom, permis, joursPermis, tel, vehiculeId]) => ({
-        id,
-        groupementId,
-        nom,
-        permisNumero: permis,
-        permisEcheance: dansDate(joursPermis),
-        telephone: tel,
-        vehiculeId,
-        creeLe: maintenant,
-        demo: true,
-      })),
+      [...CHAUFFEURS, TRANSPORTEUR_NON_VERIFIE.chauffeur].map((c) => chauffeurDemo(c, maintenant)),
     );
 
     // --- Un fret déclaré, prêt à être apparié -------------------------
@@ -687,12 +760,102 @@ export async function amorcer() {
     tx.ecrire('notifications', []);
     tx.ecrire('duts', []);
     tx.ecrire('audit', []);
+    tx.ecrire('avis', []);
+    tx.ecrire('credits', [
+      // N° 5 : un crédit saisi par la concessionnaire, en attente d'une seconde personne.
+      {
+        id: 'cre-demo-1',
+        reference: 'CR-2026-0001',
+        groupementId: 'grp-tra-2',
+        montant: 50000,
+        referenceEncaissement: 'ENC-DEMO-2001',
+        etat: 'en_attente',
+        saisiLe: dans(-0.1),
+        saisiParUtilisateurId: 'u-conc',
+        demo: true,
+      },
+    ]);
+    // Le nouveau transporteur a de quoi régler des frais, une fois vérifié.
+    tx.ecrire('operations', [
+      ...tx.lire('operations'),
+      {
+        id: 'ope-init-6',
+        groupementId: 'grp-tra-3',
+        sens: SENS_OPERATION.CREDIT,
+        montant: 60000,
+        motif: MOTIF_OPERATION.RECHARGEMENT,
+        libelle: 'Rechargement initial (DÉMO)',
+        referenceEncaissement: 'ENC-DEMO-1006',
+        horodatage: dans(-3),
+        auteurUtilisateurId: 'u-conc-2',
+        demo: true,
+      },
+    ]);
   });
 
   // Hors de la transaction d'amorçage : ce dossier passe par les services, donc
   // par leurs propres transactions. Il produit un second transport complet
   // appartenant à un autre groupement.
   await secondDossier();
+}
+
+/**
+ * Met un navigateur déjà amorcé au niveau des correctifs anti-fraude (13/10/2026).
+ *
+ * **Idempotent, sans remplacement** : rien de ce qui existe n'est réécrit. Sur un
+ * jeu antérieur, les transporteurs DÉMO connus n'ont pas d'état de vérification ;
+ * sans cette migration, le marché se viderait d'un coup — l'état absent valant
+ * « à vérifier ». Seuls les identifiants du jeu de démonstration sont concernés :
+ * un véhicule saisi par l'utilisateur reste à faire contrôler.
+ *
+ * @returns {Promise<void>}
+ */
+export async function completerJeuAntiFraude() {
+  if (!depot('utilisateur').brutParId('u-aff-1')?.demo) return;
+  const maintenant = new Date().toISOString();
+  const transporteursDemo = /^(grp-tra-[12]|grp-demo-[0-3])$/;
+  const moyensDemo = /^(veh-[1-5]|chf-[1-3]|veh-seed-v1-\d+|chf-seed-v1-\d+)$/;
+  const empreinte = depot('utilisateur').brutTous().some((u) => UTILISATEURS_ANTI_FRAUDE.some(([id]) => id === u.id))
+    ? null
+    : await hacher(MOT_DE_PASSE_DEMO);
+
+  stockageInterne().transaction((tx) => {
+    const maj = (collection, test, champs) => {
+      const lignes = tx.lire(collection);
+      if (!lignes.some(test)) return;
+      tx.ecrire(collection, lignes.map((l) => (test(l) ? { ...l, ...champs } : l)));
+    };
+    maj('groupements', (g) => g.demo && transporteursDemo.test(g.id) && g.verificationEtat === undefined, VERIFIE);
+    maj('vehicules', (v) => v.demo && moyensDemo.test(v.id) && v.verifieLe === undefined, CONTROLE);
+    maj('chauffeurs', (c) => c.demo && moyensDemo.test(c.id) && c.verifieLe === undefined, CONTROLE);
+
+    const ajouter = (collection, objet) => {
+      const lignes = tx.lire(collection);
+      if (!lignes.some((l) => l.id === objet.id)) tx.ecrire(collection, [...lignes, objet]);
+    };
+    ajouter('groupements', { ...TRANSPORTEUR_NON_VERIFIE.groupement, etat: ETAT_COMPTE.ACTIF, creeLe: maintenant, demo: true });
+    if (empreinte) {
+      for (const [id, email, nom, prenom, roleId, groupementId] of UTILISATEURS_ANTI_FRAUDE) {
+        ajouter('users', { id, email, nom, prenom, roleId, groupementId, motDePasse: empreinte, etat: ETAT_COMPTE.ACTIF, creeLe: maintenant, demo: true });
+      }
+    }
+    ajouter('abonnements', {
+      id: 'abo-grp-tra-3', groupementId: 'grp-tra-3', montant: 150000, devise: 'XOF',
+      debuteLe: dansDate(-5), finitLe: dansDate(360), etat: ETAT_ABONNEMENT.ACTIF, creeLe: maintenant, demo: true,
+    });
+    ajouter('vehicules', vehiculeDemo(TRANSPORTEUR_NON_VERIFIE.vehicule, maintenant));
+    ajouter('chauffeurs', chauffeurDemo(TRANSPORTEUR_NON_VERIFIE.chauffeur, maintenant));
+    ajouter('operations', {
+      id: 'ope-init-6', groupementId: 'grp-tra-3', sens: SENS_OPERATION.CREDIT, montant: 60000,
+      motif: MOTIF_OPERATION.RECHARGEMENT, libelle: 'Rechargement initial (DÉMO)',
+      referenceEncaissement: 'ENC-DEMO-1006', horodatage: dans(-3), auteurUtilisateurId: 'u-conc-2', demo: true,
+    });
+    ajouter('credits', {
+      id: 'cre-demo-1', reference: 'CR-2026-0001', groupementId: 'grp-tra-2', montant: 50000,
+      referenceEncaissement: 'ENC-DEMO-2001', etat: 'en_attente', saisiLe: dans(-0.1),
+      saisiParUtilisateurId: 'u-conc', demo: true,
+    });
+  });
 }
 
 /**

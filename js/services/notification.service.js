@@ -66,6 +66,30 @@ export const GABARITS = Object.freeze({
     objet: 'Incident signalé',
     texte: (p) => `Un incident a été signalé sur le transport ${p.reference}.`,
   },
+  /* --- Lutte contre la fraude (13/10/2026) --- */
+  'appariement.expire': {
+    objet: 'Mise en relation expirée',
+    texte: (p) =>
+      `La mise en relation ${p.reference} a expiré : le délai de ${p.etape} est ` +
+      `dépassé. Le véhicule est revenu sur le marché et la demande est de nouveau ` +
+      `ouverte. Aucun montant n'a été débité.`,
+  },
+  'transporteur.verifie': {
+    objet: 'Dossier transporteur vérifié',
+    texte: () =>
+      'Votre dossier a été vérifié par l’agent d’activation. Vos véhicules et ' +
+      'chauffeurs contrôlés peuvent désormais être proposés sur le marché.',
+  },
+  'transporteur.refuse': {
+    objet: 'Vérification du dossier refusée',
+    texte: () =>
+      'La vérification de votre dossier de transporteur a été refusée. Le motif ' +
+      'figure dans la fiche de votre groupement.',
+  },
+  'compte.credite': {
+    objet: 'Compte crédité',
+    texte: (p) => `Votre compte a été crédité — encaissement ${p.reference}.`,
+  },
 });
 
 /**
