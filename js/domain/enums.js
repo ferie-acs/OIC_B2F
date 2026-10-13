@@ -128,6 +128,10 @@ export const MOTIF_REJET = Object.freeze({
   DATES_INCOMPATIBLES: 'dates_incompatibles',
   MARCHANDISE_NON_TRANSPORTABLE: 'marchandise_non_transportable',
   DESTINATION_NON_DESSERVIE: 'destination_non_desservie',
+  /* --- Lot b3 : motifs de l'affréteur qui refuse une proposition (sens B) --- */
+  VEHICULE_INADAPTE: 'vehicule_inadapte',
+  AUTRE_VEHICULE_RETENU: 'autre_vehicule_retenu',
+  PRIX_TROP_ELEVE: 'prix_trop_eleve',
 });
 
 /* ------------------------------------------------------------------ *
@@ -394,6 +398,113 @@ export const EVENEMENT_AUDIT = Object.freeze({
   CREDIT_SAISI: 'credit_saisi',
   CREDIT_REJETE: 'credit_rejete',
   AVIS_DONNE: 'avis_donne',
+  /* --- Lot b3 : marché, flotte, attestation et contrôle sur route --- */
+  DEMANDE_MODIFIEE: 'demande_modifiee',
+  DEMANDE_REPUBLIEE: 'demande_republiee',
+  OFFRE_MODIFIEE: 'offre_modifiee',
+  OFFRE_DUPLIQUEE: 'offre_dupliquee',
+  CHAUFFEUR_ENREGISTRE: 'chauffeur_enregistre',
+  CHAUFFEUR_MODIFIE: 'chauffeur_modifie',
+  CHAUFFEUR_RETIRE: 'chauffeur_retire',
+  CHAUFFEUR_REACTIVE: 'chauffeur_reactive',
+  ATTESTATION_GENEREE: 'attestation_generee',
+  ATTESTATION_ANNULEE: 'attestation_annulee',
+  ATTESTATION_VERIFIEE: 'attestation_verifiee',
+});
+
+/* ------------------------------------------------------------------ *
+ * Lot b3 : marché, flotte, attestation et contrôle sur route
+ * ------------------------------------------------------------------ */
+
+/**
+ * Motifs de rejet proposés à chaque partie. Le transporteur qui décline une
+ * réservation et l'affréteur qui refuse une proposition (sens B) n'ont pas les
+ * mêmes raisons ; la valeur stockée reste une valeur de `MOTIF_REJET`.
+ * @readonly
+ */
+export const MOTIFS_REJET_PAR_PARTIE = Object.freeze({
+  transporteur: Object.freeze([
+    MOTIF_REJET.VEHICULE_ENGAGE,
+    MOTIF_REJET.DATES_INCOMPATIBLES,
+    MOTIF_REJET.MARCHANDISE_NON_TRANSPORTABLE,
+    MOTIF_REJET.DESTINATION_NON_DESSERVIE,
+  ]),
+  affreteur: Object.freeze([
+    MOTIF_REJET.VEHICULE_INADAPTE,
+    MOTIF_REJET.DATES_INCOMPATIBLES,
+    MOTIF_REJET.AUTRE_VEHICULE_RETENU,
+    MOTIF_REJET.PRIX_TROP_ELEVE,
+  ]),
+});
+
+/**
+ * Pièce d'identité d'un chauffeur.
+ * @readonly
+ * @enum {string}
+ */
+export const TYPE_PIECE_IDENTITE = Object.freeze({
+  CNI: 'cni',
+  PASSEPORT: 'passeport',
+  CARTE_SEJOUR: 'carte_sejour',
+  CARTE_CONSULAIRE: 'carte_consulaire',
+});
+
+/**
+ * Catégories du permis de conduire ivoirien retenues par le POC.
+ * @readonly
+ * @enum {string}
+ */
+export const CATEGORIE_PERMIS = Object.freeze({
+  A: 'A',
+  B: 'B',
+  C: 'C',
+  D: 'D',
+  E: 'E',
+});
+
+/**
+ * Nationalités proposées à la saisie d'un chauffeur. Liste courte, centrée sur
+ * les corridors desservis ; « Autre nationalité » couvre le reste.
+ * @readonly
+ */
+export const NATIONALITES = Object.freeze([
+  'Ivoirienne', 'Burkinabè', 'Malienne', 'Guinéenne', 'Ghanéenne', 'Libérienne',
+  'Nigérienne', 'Sénégalaise', 'Togolaise', 'Béninoise', 'Nigériane', 'Autre nationalité',
+]);
+
+/**
+ * État d'une attestation de bourse de fret. « En vigueur » se calcule à la
+ * lecture (D38) : l'échéance fait autorité, aucune tâche planifiée.
+ * @readonly
+ * @enum {string}
+ */
+export const ETAT_ATTESTATION = Object.freeze({
+  EN_VIGUEUR: 'en_vigueur',
+  EXPIREE: 'expiree',
+  ANNULEE: 'annulee',
+});
+
+/**
+ * Verdict d'une vérification sur route, tel qu'il est journalisé.
+ * @readonly
+ * @enum {string}
+ */
+export const RESULTAT_CONTROLE = Object.freeze({
+  VALIDE: 'controle_valide',
+  EXPIREE: 'controle_expiree',
+  ANNULEE: 'controle_annulee',
+  INCONNUE: 'controle_inconnu',
+});
+
+/**
+ * Manière dont le code a été lu.
+ * @readonly
+ * @enum {string}
+ */
+export const MODE_CONTROLE = Object.freeze({
+  QR: 'qr',
+  SAISIE: 'saisie',
+  PUBLIC: 'public',
 });
 
 /* ------------------------------------------------------------------ *
@@ -508,6 +619,28 @@ export const LIBELLES = Object.freeze({
   [ETAT_CREDIT.CREDITE]: Object.freeze({ [POV.NEUTRE]: 'Validé — compte crédité' }),
   [ETAT_CREDIT.REJETE]: Object.freeze({ [POV.NEUTRE]: 'Rejeté' }),
   [MOTIF_CLOTURE.EXPIRATION]: Object.freeze({ [POV.NEUTRE]: 'Expirée — délai dépassé' }),
+  /* --- Lot b3 : marché, flotte, attestation et contrôle sur route --- */
+  [MOTIF_REJET.VEHICULE_INADAPTE]: Object.freeze({ [POV.NEUTRE]: 'Véhicule inadapté au fret' }),
+  [MOTIF_REJET.AUTRE_VEHICULE_RETENU]: Object.freeze({ [POV.NEUTRE]: 'Un autre véhicule a été retenu' }),
+  [MOTIF_REJET.PRIX_TROP_ELEVE]: Object.freeze({ [POV.NEUTRE]: 'Prix indicatif trop élevé' }),
+  [TYPE_PIECE_IDENTITE.CNI]: Object.freeze({ [POV.NEUTRE]: 'Carte nationale d’identité' }),
+  [TYPE_PIECE_IDENTITE.PASSEPORT]: Object.freeze({ [POV.NEUTRE]: 'Passeport' }),
+  [TYPE_PIECE_IDENTITE.CARTE_SEJOUR]: Object.freeze({ [POV.NEUTRE]: 'Carte de séjour' }),
+  [TYPE_PIECE_IDENTITE.CARTE_CONSULAIRE]: Object.freeze({ [POV.NEUTRE]: 'Carte consulaire' }),
+  [CATEGORIE_PERMIS.A]: Object.freeze({ [POV.NEUTRE]: 'A — motocyclettes' }),
+  [CATEGORIE_PERMIS.B]: Object.freeze({ [POV.NEUTRE]: 'B — véhicules légers' }),
+  [CATEGORIE_PERMIS.C]: Object.freeze({ [POV.NEUTRE]: 'C — poids lourds' }),
+  [CATEGORIE_PERMIS.D]: Object.freeze({ [POV.NEUTRE]: 'D — transport de personnes' }),
+  [CATEGORIE_PERMIS.E]: Object.freeze({ [POV.NEUTRE]: 'E — ensembles articulés et remorques' }),
+  [ETAT_ATTESTATION.EN_VIGUEUR]: Object.freeze({ [POV.NEUTRE]: 'En vigueur' }),
+  [ETAT_ATTESTATION.EXPIREE]: Object.freeze({ [POV.NEUTRE]: 'Expirée' }),
+  [RESULTAT_CONTROLE.VALIDE]: Object.freeze({ [POV.NEUTRE]: 'Authentique et valide' }),
+  [RESULTAT_CONTROLE.EXPIREE]: Object.freeze({ [POV.NEUTRE]: 'Authentique mais expirée' }),
+  [RESULTAT_CONTROLE.ANNULEE]: Object.freeze({ [POV.NEUTRE]: 'Authentique mais annulée' }),
+  [RESULTAT_CONTROLE.INCONNUE]: Object.freeze({ [POV.NEUTRE]: 'Code inconnu' }),
+  [MODE_CONTROLE.QR]: Object.freeze({ [POV.NEUTRE]: 'QR code scanné' }),
+  [MODE_CONTROLE.SAISIE]: Object.freeze({ [POV.NEUTRE]: 'Code saisi' }),
+  [MODE_CONTROLE.PUBLIC]: Object.freeze({ [POV.NEUTRE]: 'Page publique' }),
 });
 
 /**

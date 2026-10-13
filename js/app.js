@@ -34,6 +34,11 @@ import { explorer } from './views/explorer.js';
 import { documentsDut } from './views/dut.js';
 import { retourPublic, routeActionPublique, routePublication } from './services/marche-public.service.js';
 import { reprendreFileDut } from './services/passerelle-dut.service.js';
+/* Lot b3 : marché, flotte, attestation et contrôle sur route */
+import { declarerPublique } from './core/router.js';
+import { vueAttestations } from './views/attestations.js';
+import { controleRoute, historiqueControles, verificationPublique } from './views/controle-route.js';
+import { completerLotB3 } from './seed-lot-b3.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -100,6 +105,15 @@ function declarerRoutes() {
   declarer('minimal/groupements', supervision.groupements);
   declarer('minimal/verifications', verifications);
   declarer('minimal/duts', documentsDut);
+
+  // --- Lot b3 : attestation de bourse de fret et contrôle sur route ---
+  declarer('transporteur/attestations', vueAttestations);
+  declarer('minimal/controle', controleRoute);
+  declarer('minimal/controles', historiqueControles);
+  declarerPublique('verifier', (ctx, route) => {
+    monter(verificationPublique(ctx, route.page));
+    window.scrollTo(0, 0);
+  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -213,6 +227,7 @@ async function demarrerApplication() {
 
   if (!dejaAmorce()) await amorcer();
   await completerJeuAntiFraude();
+  await completerLotB3();
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();

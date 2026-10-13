@@ -24,6 +24,9 @@ import {
   pieceModifiee,
   transporteurVerifie,
 } from './verification.service.js';
+/* Lot b3 : fiche complète du chauffeur et aptitude à une mission */
+import { alertesFiche, motifInaptitude } from '../domain/chauffeur.regles.js';
+export { enregistrerChauffeur } from './chauffeur.service.js';
 
 /**
  * Un véhicule est-il publiable ?
@@ -92,6 +95,9 @@ export function mesChauffeurs(ctx) {
     .map(({ vehiculeId: _ancienneAffectation, ...c }) => ({
       ...c,
       permisEchu: c.permisEcheance ? finDeJour(c.permisEcheance) < Date.now() : false,
+      /* Lot b3 : un chauffeur retiré reste listé, signalé, et n'est plus proposé. */
+      actif: c.actif !== false,
+      alertes: alertesFiche(c),
     }));
 }
 
@@ -194,32 +200,11 @@ export function enregistrerVehicule(ctx, saisie, vehiculeId = null) {
   }, { roleAuteur: ctx.roleId });
 }
 
-/** Enregistre un chauffeur de l'équipe ; son choix se fait ensuite pour chaque offre. */
-export function enregistrerChauffeur(ctx, saisie, chauffeurId = null) {
-  const actuel = objetDuParc(ctx, 'chauffeur', chauffeurId, 'chauffeur.gerer');
-  const nom = texte(saisie.nom);
-  const permisNumero = texte(saisie.permisNumero).toLocaleUpperCase('fr');
-  if (!nom || !permisNumero) throw new Error('Renseignez le nom du chauffeur et son numéro de permis.');
-  if (depot('chauffeur').brutTous().some(c => c.groupementId === ctx.groupementId && c.id !== chauffeurId && clePiece(c.permisNumero) === clePiece(permisNumero))) {
-    throw new Error('Ce permis est déjà associé à un chauffeur de votre groupement.');
-  }
-  const donnees = {
-    nom, permisNumero,
-    // Nettoie les anciennes affectations du POC sans accepter ce champ en saisie.
-    vehiculeId: null,
-    permisEcheance: verifierDate(saisie.permisEcheance, 'Validité du permis', true),
-    telephone: texte(saisie.telephone) || null,
-  };
-  if (actuel && pieceModifiee('chauffeur', actuel, donnees)) {
-    donnees.verifieLe = null;
-    donnees.verifieParUtilisateurId = null;
-  }
-  if (actuel) return depot('chauffeur').modifier(actuel.id, donnees);
-  return depot('chauffeur').creer({
-    ...donnees, id: identifiant('chf'), groupementId: ctx.groupementId,
-    creeLe: new Date().toISOString(), demo: true,
-  }, { roleAuteur: ctx.roleId });
-}
+/*
+ * Lot b3 : `enregistrerChauffeur` vit désormais dans `chauffeur.service.js`
+ * (fiche complète, retrait, réactivation) et reste exporté d'ici pour les
+ * appelants existants.
+ */
 
 /** Prépare une annonce retour, sans rien publier ni modifier le transport. */
 export function preparerRetour(ctx, transportId) {
@@ -248,7 +233,52 @@ export function preparerRetour(ctx, transportId) {
  */
 export function publierOffre(ctx, saisie) {
   exiger(ctx, 'offre.publier', { groupementId: ctx.groupementId });
+  const champs = preparerOffre(ctx, saisie);
 
+  /* Lot b3 : « partager » une offre, c'est en publier une copie ajustée. */
+  const source = saisie.dupliqueeDeOffreId ? depot('offre').brutParId(saisie.dupliqueeDeOffreId) : null;
+  if (saisie.dupliqueeDeOffreId && source?.groupementId !== ctx.groupementId) {
+    throw new Error('L’offre d’origine ne fait pas partie de votre groupement.');
+  }
+
+  const maintenant = new Date().toISOString();
+  return stockageInterne().transaction((tx) => {
+    const offre = depot('offre').creer(
+      {
+        id: identifiant('off'),
+        reference: reference('OV'),
+        groupementId: ctx.groupementId,
+        ...champs,
+        dupliqueeDeOffreId: source?.id ?? null,
+        etat: ETAT_OFFRE.DISPONIBLE,
+        publieeLe: maintenant,
+        creeeParUtilisateurId: ctx.utilisateurId,
+        demo: true,
+      },
+      { tx, roleAuteur: ctx.roleId },
+    );
+    journaliser(ctx, source ? EVENEMENT_AUDIT.OFFRE_DUPLIQUEE : EVENEMENT_AUDIT.OFFRE_PUBLIEE, {
+      cibleType: 'offre',
+      cibleId: offre.id,
+      details: source
+        ? `Offre ${offre.reference} publiée par copie de ${source.reference}.`
+        : `Offre ${offre.reference} publiée.`,
+      tx,
+    });
+    return offre;
+  });
+}
+
+/**
+ * Contrôle et normalise la saisie d'une offre — publication, modification ou
+ * copie (lot b3 : extrait de `publierOffre` pour qu'une offre modifiée passe par
+ * exactement les mêmes contrôles qu'une offre publiée).
+ *
+ * @param {import('../domain/access.js').Contexte} ctx
+ * @param {Record<string, any>} saisie
+ * @returns {Record<string, any>} Champs prêts à écrire.
+ */
+export function preparerOffre(ctx, saisie) {
   const v = depot('vehicule').brutParId(saisie.vehiculeId);
   if (!v) throw new Error('Véhicule introuvable.');
   if (v.groupementId !== ctx.groupementId) {
@@ -266,6 +296,15 @@ export function publierOffre(ctx, saisie) {
   }
   const chauffeurNonVerifie = motifNonVerifie(v, chauffeurPressentiId);
   if (chauffeurNonVerifie) throw new Error(chauffeurNonVerifie);
+  /* Lot b3 : chauffeur retiré, permis échu, pièce expirée, catégorie incompatible. */
+  if (chauffeurPressentiId) {
+    const inapte = motifInaptitude(
+      depot('chauffeur').brutParId(chauffeurPressentiId),
+      v,
+      depot('referentiel').brutParId(v.essieuxId)?.code,
+    );
+    if (inapte) throw new Error(inapte);
+  }
   const debutSaisi = texte(saisie.disponibleDu);
   const finSaisie = texte(saisie.disponibleAu);
   const debut = new Date(debutSaisi.length === 10 ? `${debutSaisi}T00:00:00` : debutSaisi);
@@ -280,37 +319,17 @@ export function publierOffre(ctx, saisie) {
   const prixKmT = saisie.prixKmT == null || saisie.prixKmT === ''
     ? null : verifierNombre(saisie.prixKmT, 'Prix indicatif');
 
-  const maintenant = new Date().toISOString();
-  return stockageInterne().transaction((tx) => {
-    const offre = depot('offre').creer(
-      {
-        id: identifiant('off'),
-        reference: reference('OV'),
-        groupementId: ctx.groupementId,
-        vehiculeId: v.id,
-        chauffeurPressentiId,
-        localiteDepartId,
-        localiteArriveeId,
-        disponibleDu: debut.toISOString(),
-        disponibleAu: fin.toISOString(),
-        prixKmT,
-        trajetRetour: saisie.trajetRetour === true,
-        trajetVide: saisie.trajetVide === true,
-        etat: ETAT_OFFRE.DISPONIBLE,
-        publieeLe: maintenant,
-        creeeParUtilisateurId: ctx.utilisateurId,
-        demo: true,
-      },
-      { tx, roleAuteur: ctx.roleId },
-    );
-    journaliser(ctx, EVENEMENT_AUDIT.OFFRE_PUBLIEE, {
-      cibleType: 'offre',
-      cibleId: offre.id,
-      details: `Offre ${offre.reference} publiée.`,
-      tx,
-    });
-    return offre;
-  });
+  return {
+    vehiculeId: v.id,
+    chauffeurPressentiId,
+    localiteDepartId,
+    localiteArriveeId,
+    disponibleDu: debut.toISOString(),
+    disponibleAu: fin.toISOString(),
+    prixKmT,
+    trajetRetour: saisie.trajetRetour === true,
+    trajetVide: saisie.trajetVide === true,
+  };
 }
 
 /**

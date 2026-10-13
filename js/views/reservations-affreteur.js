@@ -7,12 +7,16 @@ import { echeanceDe } from '../domain/matching.state.js';
 import { blocConfiance } from './confiance.js';
 import { POV, labelOf } from '../domain/enums.js';
 import { aller } from '../core/router.js';
+/* Lot b3 : propositions des transporteurs (sens B) */
+import { badgeProposition, estPropositionRecue } from './propositions-affreteur.js';
+import { bandeau } from '../core/ui.js';
 
 export function reservationsVue(ctx, action) {
   const reservations = mesAppariements(ctx);
   let filtre = 'toutes';
   const groupes = [
     ['toutes', 'Toutes', () => true],
+    ['propositions', 'Propositions reçues', estPropositionRecue],
     ['reserver', 'En attente', a => a.etat === 'reserver'],
     ['accepter', 'À valider', a => a.etat === 'accepter'],
     ['valider', 'Validées', a => a.etat === 'valider'],
@@ -28,7 +32,14 @@ export function reservationsVue(ctx, action) {
     rejeter:'Le transporteur a décliné cette réservation.',
     annuler:'Cette réservation est clôturée.',
   };
+  // Lot b3 : en sens B, l'affréteur répond — les messages et le badge le disent.
+  const messagesSensB = {
+    reserver:'Un transporteur vous propose ce véhicule pour votre demande. À vous de l’accepter ou de la refuser.',
+    accepter:'Vous avez accepté cette proposition. Votre validation confirme la mise en relation.',
+    rejeter:'Vous avez refusé cette proposition.',
+  };
   function fiche(a) {
+    const sensB = a.sens === 'demande_vers_offre';
     const demande = lire(ctx,'demande',a.demandeId) ?? {};
     const declaration = demande.declarationId ? lire(ctx,'declaration',demande.declarationId) ?? {} : {};
     const offre = lire(ctx,'offre',a.offreId) ?? {};
@@ -39,7 +50,7 @@ export function reservationsVue(ctx, action) {
     return el('article.reservation-card', {class:`state-${a.etat}`},[
       el('header.reservation-card-head',{},[
         el('div',{},[el('span.reservation-ref',{text:a.reference}),el('p',{text:nomDe(ctx, a.groupementTransporteurId)}),a.etat!=='valider'?blocConfiance(a.groupementTransporteurId,{compact:true}):null]),
-        badge(a.etat,POV.AFFRETEUR),
+        estPropositionRecue(a) ? badgeProposition() : badge(a.etat,POV.AFFRETEUR),
       ]),
       el('div.reservation-card-body',{},[
         el('div.reservation-corridor',{},[
@@ -52,15 +63,15 @@ export function reservationsVue(ctx, action) {
           el('div',{},[camion(offre, 29),el('span',{},[el('small',{text:'Véhicule réservé'}),el('strong',{text:offre.vehiculeId ? immatriculationDe(ctx, offre.vehiculeId) : 'Non renseigné'})])]),
           el('div',{},[icone('package',16),el('span',{},[el('small',{text:'Capacité'}),el('strong',{text:vehicule.capaciteT ? `${vehicule.capaciteT} t · ${refDe(vehicule.carrosserieId)}` : 'Non renseignée'})])]),
         ]),
-        el('div.reservation-progress',{'aria-label':terminal?'Réservation clôturée':`Étape ${progression} sur 3`},['Réservée','Acceptée','Validée'].map((label,i)=>el('span',{class:!terminal&&i<progression?'done':'',text:label}))),
+        el('div.reservation-progress',{'aria-label':terminal?'Réservation clôturée':`Étape ${progression} sur 3`},[sensB?'Proposée':'Réservée','Acceptée','Validée'].map((label,i)=>el('span',{class:!terminal&&i<progression?'done':'',text:label}))),
       ]),
       el('div.reservation-message',{},[
-        el('p',{text:a.motifCloture==='expiration' ? 'Cette réservation a expiré : le délai est dépassé. Le véhicule est revenu sur le marché et rien n’a été débité.' : messages[a.etat] ?? labelOf(a.etat)}),
+        el('p',{text:a.motifCloture==='expiration' ? 'Cette réservation a expiré : le délai est dépassé. Le véhicule est revenu sur le marché et rien n’a été débité.' : (sensB && messagesSensB[a.etat]) || messages[a.etat] || labelOf(a.etat)}),
         a.motifRejet ? el('small',{text:`Motif : ${labelOf(a.motifRejet)}`}) : null,
         // Correctif anti-fraude n° 4 : toute attente a une fin, affichée.
-        echeanceDe(a) ? el('span.badge.badge-warning',{text:`${a.etat==='reserver'?'Réponse attendue':'À valider'} avant le ${dateHeure(echeanceDe(a))}`}) : null,
+        echeanceDe(a) ? el('span.badge.badge-warning',{text:`${a.etat==='reserver'?(sensB?'Votre réponse est attendue':'Réponse attendue'):'À valider'} avant le ${dateHeure(echeanceDe(a))}`}) : null,
       ]),
-      el('footer.reservation-card-foot',{},[el('span',{text:`Réservée le ${dateHeure(a.reserveLe)}`}),
+      el('footer.reservation-card-foot',{},[el('span',{text:`${sensB?'Proposée':'Réservée'} le ${dateHeure(a.reserveLe)}`}),
         a.etat==='annuler' ? el('a.btn.btn-sm',{href:'#/affreteur/marche',text:'Explorer le marché'}) : action(ctx,a),
       ]),
     ]);
@@ -83,6 +94,8 @@ export function reservationsVue(ctx, action) {
     ].map(([id,label,icon])=>el('button.reservation-summary-card',{type:'button',class:`summary-${id}`,on:{click:()=>{filtre=id;rendre();}}},[
       el('span.indicator-watermark',{'aria-hidden':'true'},[icone(icon,88)]),el('span.reservation-summary-icon',{},[icone(icon,22)]),el('span',{},[el('strong',{text:reservations.filter(a=>a.etat===id).length}),el('small',{text:label})]),icone('arrow-right',16),
     ]))),
+    // Lot b3 : les propositions reçues attendent une réponse de l'affréteur.
+    reservations.some(estPropositionRecue) ? bandeau({ton:'warn',titre:((n)=>n>1?`${n} propositions de transporteurs à examiner`:'Une proposition de transporteur à examiner')(reservations.filter(estPropositionRecue).length),message:'Un transporteur a proposé un véhicule sur l’une de vos demandes. Tant que vous n’avez pas répondu, son véhicule reste immobilisé.',actions:[el('button.btn.btn-primary',{type:'button',text:'Voir les propositions',on:{click:()=>{filtre='propositions';rendre();}}})]}) : null,
     el('div.reservation-toolbar',{},[el('div.reservation-filters',{'aria-label':'Filtrer les réservations'},tabs),compteur]),
     liste,
     el('div.reservation-reassurance',{},[icone('info',18),el('span',{text:'Réserver est gratuit. Les frais de mise en relation sont débités uniquement lors de votre validation.'})]),

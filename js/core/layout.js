@@ -221,6 +221,10 @@ function aideContextuelle(roleId) {
     activation_inscription:
       'Aucun transporteur ne s’engage sur le marché sans votre contrôle : dossier, ' +
       'cartes grises, permis. Vous ne voyez ni soldes ni coordonnées de contact.',
+    /* Lot b3 : contrôle sur route */
+    agent_controle_route:
+      'Chaque vérification est enregistrée à votre nom, quel qu’en soit le résultat. ' +
+      'Vous voyez l’authenticité et l’état du document, jamais les coordonnées des entreprises.',
   };
   const defaut =
     'Aucun droit métier n’est accordé à ce rôle dans ce POC : caisse, contentieux ' +
