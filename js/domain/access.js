@@ -48,6 +48,8 @@ import {
   peutLireClassification,
   porteeDe,
 } from './permissions.js';
+// Lot b2 : organisation interne — périmètre et période d'un mandat.
+import { refusMandat } from './mandat.js';
 
 /**
  * Motifs de refus. Le code sert aux tests et au journal ; le message va à l'écran.
@@ -64,6 +66,8 @@ export const MOTIF_REFUS = Object.freeze({
   PARTIE_NON_HABILITEE: 'partie_non_habilitee',
   /* Lot b1 */
   INSCRIPTION_EN_ATTENTE: 'inscription_en_attente',
+  /* --- Lot b2 : organisation interne --- */
+  HORS_MANDAT: 'hors_mandat',
 });
 
 /**
@@ -78,6 +82,10 @@ export const MOTIF_REFUS = Object.freeze({
  *   parce qu'un appariement à l'état `valider` les met en relation avec cet
  *   utilisateur. Produit par {@link liberationsDe} — une fonction pure de ce
  *   module, et non une responsabilité laissée à l'appelant (finding S11).
+ * @property {{id: string, etat: string, debuteLe: string, finitLe: string, perimetre: string[]}} [mandat]
+ *   Lot b2. Présent dans le seul contexte délégué d'un intermédiaire qui agit
+ *   au nom d'un mandant : `groupementId` est alors celui du mandant, et chaque
+ *   droit est en outre borné par le mandat (`domain/mandat.js`).
  */
 
 /**
@@ -148,7 +156,9 @@ export function decider(ctx, droit, cible = undefined) {
   if (!ctx.compteActif) {
     return refus(
       MOTIF_REFUS.COMPTE_SUSPENDU,
-      'Votre compte est suspendu. Contactez le concessionnaire pour le rétablir.',
+      // Lot b2 : une filiale inactive dit pourquoi (mère non vérifiée).
+      ctx.motifSuspension ??
+        'Votre compte est suspendu. Contactez le concessionnaire pour le rétablir.',
     );
   }
 
@@ -192,6 +202,16 @@ function deciderPortee(ctx, r, droit, cible) {
     // inutile : l'utilisateur sait ce qu'il vient de tenter, pas pourquoi on le
     // lui refuse. Quand le catalogue porte une raison métier, c'est elle qu'on
     // sert ; le nom du droit reste en repli pour les cas qui n'en ont pas.
+    // Lot b2 : en contexte délégué, le geste revient au mandant, pas à un
+    // « responsable » de l'intermédiaire.
+    if (ctx.mandat) {
+      return refus(
+        MOTIF_REFUS.DROIT_ABSENT,
+        `Ce geste revient à votre mandant, ${ctx.mandat.mandantNom ?? 'l’entreprise qui vous a désigné'} : ` +
+          'un intermédiaire prépare, il n’engage ni les frais ni les décisions de son mandant. ' +
+          'Le dossier est prêt, prévenez-le.',
+      );
+    }
     const raison = DROITS[droit].refus;
     return refus(
       MOTIF_REFUS.DROIT_ABSENT,
@@ -199,6 +219,14 @@ function deciderPortee(ctx, r, droit, cible) {
         ? `${raison} (Rôle « ${r.libelle} ».)`
         : `Le rôle « ${r.libelle} » ne dispose pas du droit « ${DROITS[droit].libelle} ».`,
     );
+  }
+
+  // Lot b2 : un intermédiaire n'agit qu'en période de mandat, et dans son
+  // périmètre. Le rôle délégué dit ce qui est permis en principe ; le mandat,
+  // ce que ce mandant a réellement confié.
+  if (ctx.mandat) {
+    const horsMandat = refusMandat(ctx.mandat, droit);
+    if (horsMandat) return refus(MOTIF_REFUS.HORS_MANDAT, horsMandat);
   }
 
   if (cible === undefined) return accord(portee);

@@ -90,6 +90,19 @@ export const GABARITS = Object.freeze({
     objet: 'Compte crédité',
     texte: (p) => `Votre compte a été crédité — encaissement ${p.reference}.`,
   },
+  /* --- Lot b2 : organisation interne --- */
+  'mandat.designe': {
+    objet: 'Nouveau mandat reçu',
+    texte: (p) =>
+      `Une entreprise vous a désigné comme intermédiaire (mandat ${p.reference}). ` +
+      'Retrouvez-la dans vos mandants pour agir en son nom, dans le périmètre confié.',
+  },
+  'mandat.retire': {
+    objet: 'Mandat retiré',
+    texte: (p) =>
+      `Le mandat ${p.reference} a été retiré par votre mandant. Vous ne pouvez plus ` +
+      'agir en son nom.',
+  },
 });
 
 /**

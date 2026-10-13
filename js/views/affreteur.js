@@ -637,8 +637,9 @@ function ecranValidation(ctx, appariementId) {
             registreDebit({
               lignes: [
                 {
-                  partie: `Vous — ${nomDe(ctx, a.groupementAffreteurId)}`,
-                  solde: p.soldeUtilisateur,
+                  partie: `${ctx.mandat ? 'Votre mandant' : 'Vous'} — ${nomDe(ctx, a.groupementAffreteurId)}`,
+                  // Lot b2 : le solde exact ne va qu'à qui détient `compte.lire`.
+                  solde: decider(ctx, 'compte.lire', { groupementId: ctx.groupementId }).autorise ? p.soldeUtilisateur : null,
                   frais: p.montantUtilisateur,
                   suffisant: p.utilisateurProvisionne,
                 },

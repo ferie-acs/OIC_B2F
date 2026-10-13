@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Lot b2 : organisation interne — utilisateurs, filiales, intermédiaires.
+   Uniquement des variables, rayons et espacements existants de l'application.
+   ========================================================================== */
+
+/* Cellule « nom + précision » des tableaux */
+.user-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
+.user-cell small{color:var(--text-muted);font-size:12px}
+
+/* Plusieurs badges ou un badge et sa précision, empilés */
+.badge-stack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:6px}
+.badge-stack small{color:var(--text-muted);font-size:12px;line-height:1.5;max-width:260px}
+
+/* Actions d'une ligne de tableau : boutons compacts, retour à la ligne permis */
+.org-actions{justify-content:flex-start;margin-bottom:0;gap:var(--s2)}
+.org-actions .action-refusee{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px}
+.org-actions .motif-refus{max-width:220px}
+
+/* Périmètre d'un mandat */
+.perimetre-liste{margin:0;padding-left:18px;display:grid;gap:4px;color:var(--text-secondary);font-size:13px}
+
+/* Choix du périmètre dans la désignation */
+.mandat-perimetre{border:0;margin:0 0 var(--s3);padding:0;display:grid;gap:var(--s2)}
+.mandat-perimetre legend{font-weight:650;font-size:14px;margin-bottom:var(--s2);color:var(--text)}
+
+/* Code d'activation affiché une seule fois */
+.code-activation{display:grid;gap:6px;justify-items:center;text-align:center;margin:var(--s3) 0;padding:var(--s4) var(--s3);background:var(--surface-2);border:1px dashed var(--border-strong);border-radius:var(--r-md)}
+.code-activation span{color:var(--text-muted);font-size:12px}
+.code-activation strong{font-size:30px;letter-spacing:4px;color:var(--text);font-variant-numeric:tabular-nums;word-break:break-all}
+.code-activation small{color:var(--text-secondary);font-size:12px}
+
+/* Bandeau du contexte délégué : au nom de qui l'intermédiaire agit */
+.mandat-bar>span{flex:1 1 320px;min-width:0}
+.mandat-bar .mandat-bar-retour{margin-left:auto;flex-shrink:0}
+
+/* Écran de connexion : second lien, resserré sous le premier */
+.auth-activation-link{margin-top:-14px}
+
+@media(max-width:650px){
+  .mandat-bar .mandat-bar-retour{margin-left:0;width:100%;justify-content:center}
+  .badge-stack small,.org-actions .motif-refus{max-width:none}
+}
+
+/* Montants des tableaux d'organisation : sur une seule ligne */
+.organisation-page .cellule-montant{white-space:nowrap}

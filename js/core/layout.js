@@ -13,6 +13,10 @@ import { arborescenceDe, segmentEspace } from './nav.js';
 import { role } from '../domain/roles.js';
 import { nonLues } from '../services/notification.service.js';
 import { profil } from '../services/auth.service.js';
+// Lot b2 : organisation interne — contexte délégué d'un intermédiaire.
+import { revenirAMonEspace } from '../services/mandat.service.js';
+import { labelOf } from '../domain/enums.js';
+import { ICONES_PAGES_LOT_B2 } from './nav-lot-b2.js';
 
 /** Repères cohérents entre sous-menus et titres, sans modifier les droits. */
 function iconePage(route, fallback = 'dashboard') {
@@ -23,7 +27,8 @@ function iconePage(route, fallback = 'dashboard') {
     tarifs:'wallet',abonnement:'wallet',abonnements:'wallet',groupement:'building',
     groupements:'building',utilisateurs:'users',roles:'users',chauffeurs:'users',
     dut:'file',duts:'file',audit:'history',etats:'shield',parametres:'settings',
-    /* Lot b1 */ dossier:'file',profil:'user',messages:'mail',messagerie:'mail',verifications:'shield'})[page] ?? fallback;
+    /* Lot b1 */ dossier:'file',profil:'user',messages:'mail',messagerie:'mail',verifications:'shield'})[page]
+    ?? ICONES_PAGES_LOT_B2[page] ?? fallback; // Lot b2
 }
 
 /** Clé du thème. **Jamais `dut_theme`** : une collision effacerait celui du DUT. */
@@ -239,6 +244,19 @@ function aideContextuelle(roleId, ctx = null) {
     activation_inscription_affreteur:
       'Vous contrôlez les dossiers des affréteurs et des intermédiaires de fret. ' +
       'L’activation revient à un autre agent que celui qui a déclaré les pièces conformes.',
+    // Lot b2 : organisation interne
+    intermediaire:
+      'Vous agissez pour vos mandants dans le périmètre et la période que chacun vous a ' +
+      'confiés. La validation, qui engage leurs frais, leur reste réservée.',
+    collaborateur_intermediaire:
+      'Vous agissez pour les mandants de votre entreprise, dans le périmètre de chaque ' +
+      'mandat. La validation leur reste réservée.',
+    mandataire_affreteur:
+      'Vous préparez les dossiers de votre mandant. La validation, qui débite ses frais, ' +
+      'lui revient ; les coordonnées des transporteurs ne sont transmises qu’à lui.',
+    mandataire_transporteur:
+      'Vous répondez pour votre mandant dans le périmètre confié. Les coordonnées des ' +
+      'affréteurs ne sont transmises qu’à lui, après validation.',
   };
   const defaut =
     'Aucun droit métier n’est accordé à ce rôle dans ce POC : caisse, contentieux ' +
@@ -320,6 +338,7 @@ function barreSuperieure({ ctx, titre, zone, moi, r }) {
  * @param {import('../domain/access.js').Contexte} ctx
  */
 function bandeauDelegation(ctx) {
+  if (ctx.mandat) return bandeauMandat(ctx); // Lot b2
   if (!ctx.roleId.startsWith('auxiliaire_')) return null;
   // Lot b1 : un intermédiaire de fret inscrit n'est pas le sous-compte d'un groupement.
   if (ctx.groupementType === 'intermediaire') {
@@ -337,6 +356,34 @@ function bandeauDelegation(ctx) {
         'Vous agissez par délégation pour le compte de votre groupement. ' +
         'Les actions qui engagent ses finances ne vous sont pas accessibles.',
     }),
+  ]);
+}
+
+/**
+ * Lot b2 : bandeau d'un intermédiaire agissant au nom d'un mandant — sur tous
+ * les écrans du contexte délégué, avec le retour à son propre espace.
+ * @param {import('../domain/access.js').Contexte} ctx
+ */
+function bandeauMandat(ctx) {
+  const m = ctx.mandat;
+  const fin = new Date(`${m.finitLe}T00:00:00`).toLocaleDateString('fr-FR');
+  return el('div.delegation-bar.mandat-bar', { role: 'status' }, [
+    icone('briefcase', 16),
+    el('strong', { text: `Au nom de ${m.mandantNom}` }),
+    el('span', {
+      text:
+        `Mandat ${m.reference}, jusqu’au ${fin} : ${m.perimetre.map((p) => labelOf(p).toLowerCase()).join(', ')}. ` +
+        'Chaque action est tracée au nom de votre mandant ; la validation et les coordonnées lui restent réservées.',
+    }),
+    el('button.btn.btn-secondary.mandat-bar-retour', {
+      type: 'button',
+      on: {
+        click: () => {
+          revenirAMonEspace();
+          globalThis.location.hash = '#/intermediaire/mandants';
+        },
+      },
+    }, [icone('undo-2', 16), el('span', { text: 'Revenir à mon espace' })]),
   ]);
 }
 
