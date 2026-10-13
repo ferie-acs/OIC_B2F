@@ -82,6 +82,8 @@ export function contexteDe(utilisateur) {
     inscriptionActivee: inscriptionActiveeDe(g),
     // Lot b1 : type de l'entreprise, pour adapter les textes d'aide (intermédiaire de fret).
     groupementType: g ? depot('groupement').brutParId(g)?.type ?? null : null,
+    // Lot b5 : entreprise suspendue par l'exploitant (consultation seule).
+    groupementSuspendu: g ? depot('groupement').brutParId(g)?.etat === ETAT_COMPTE.SUSPENDU : false,
     objetsLiberes: liberationsDe({
       groupementId: g,
       appariements: depot('appariement').brutTous(),
@@ -116,6 +118,17 @@ export async function connecter(email, motDePasse) {
       );
     }
     throw new Error('Identifiants incorrects.');
+  }
+
+  // Lot b5 : un compte désactivé par son administrateur ne se connecte plus. Le
+  // message n'est servi qu'après un mot de passe exact : il ne révèle rien.
+  if (u.etat !== ETAT_COMPTE.ACTIF) {
+    journaliser(
+      { utilisateurId: u.id, roleId: u.roleId, groupementId: u.groupementId },
+      EVENEMENT_AUDIT.CONNEXION_REFUSEE,
+      { cibleType: 'utilisateur', cibleId: u.id, details: 'Connexion refusée : compte désactivé.' },
+    );
+    throw new Error('Ce compte est désactivé. Adressez-vous à l’administrateur de votre organisation.');
   }
 
   // Durcissement transparent si le paramètre de coût a évolué.

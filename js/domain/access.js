@@ -68,6 +68,8 @@ export const MOTIF_REFUS = Object.freeze({
   INSCRIPTION_EN_ATTENTE: 'inscription_en_attente',
   /* --- Lot b2 : organisation interne --- */
   HORS_MANDAT: 'hors_mandat',
+  // Lot b5 : entreprise suspendue par l'exploitant.
+  GROUPEMENT_SUSPENDU: 'groupement_suspendu',
 });
 
 /**
@@ -174,6 +176,16 @@ export function decider(ctx, droit, cible = undefined) {
           'Votre compte n’est pas encore activé. Tant que l’agent d’activation n’a pas ' +
             'contrôlé votre dossier, seul l’espace « Mon dossier » vous est ouvert.',
         );
+  }
+
+  // Lot b5 : une entreprise suspendue garde la consultation de son historique,
+  // mais n'engage plus aucune opération. Signaler un incident reste possible.
+  if (ctx.groupementSuspendu === true && DROITS[droit].mutation === true && droit !== 'incident.declarer') {
+    return refus(
+      MOTIF_REFUS.GROUPEMENT_SUSPENDU,
+      'Votre entreprise est suspendue par l’exploitant de la plateforme : vous consultez ' +
+        'votre historique, mais aucune nouvelle opération n’est possible.',
+    );
   }
 
   if (r.soumisAbonnement && !ctx.abonnementActif && !DROITS_HORS_ABONNEMENT.has(droit)) {
