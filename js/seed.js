@@ -286,6 +286,12 @@ export const COMPTES_DEMO = Object.freeze([
     titre: 'Intermédiaire de fret',
     sous: 'Fret Conseil Intermédiation, deux mandants — DÉMO',
   },
+  /* Lot b3 : contrôle sur route (compte créé par js/seed-lot-b3.js) */
+  {
+    email: 'controle@demo.invalid',
+    titre: 'Agent de contrôle sur route',
+    sous: 'Vérification des attestations par QR code — DÉMO',
+  },
 ]);
 
 const VEHICULES = [

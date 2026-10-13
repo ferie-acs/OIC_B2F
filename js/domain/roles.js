@@ -467,6 +467,27 @@ export const ROLES = Object.freeze({
       'des véhicules et répond aux réservations dans le périmètre du mandat ; ne reçoit ' +
       'aucune coordonnée de contrepartie.',
   }),
+
+  /* ================================================================ *
+   * Lot b3 : contrôle sur route
+   * ================================================================ */
+
+  agent_controle_route: Object.freeze({
+    id: 'agent_controle_route',
+    libelle: 'Agent de contrôle sur route',
+    niveau: NIVEAU.MODELISE,
+    espace: ESPACE.MINIMAL,
+    legacyGroupe: null,
+    institutionnel: true,
+    soumisAbonnement: false,
+    preuve: 'vue/check/document.php (vérification par QR code, chaque vérification journalisée)',
+    description:
+      "Vérifie sur route l'authenticité d'une attestation de bourse de fret, par son " +
+      'QR code ou son code de vérification. Le système existant ouvre cette page à ' +
+      'tout porteur du lien ; le POC conserve cette page publique et y ajoute un ' +
+      'compte d’agent, pour que chaque contrôle soit imputé et que l’agent retrouve ' +
+      'l’historique des siens. Aucun droit de transaction, aucune coordonnée.',
+  }),
 });
 
 /** Nombre de rôles déclarés. Vérifié par test. @type {number} */

@@ -22,6 +22,19 @@ import { role } from '../domain/roles.js';
 /** @type {Map<string, (ctx: any, params: Record<string, string>) => Node|Promise<Node>>} */
 const ecrans = new Map();
 
+/* Lot b3 : pages publiques hors espace (vérification d'une attestation par QR). */
+/** @type {Map<string, (ctx: any|null, route: {page: string, params: Record<string, string>}) => void>} */
+const publiques = new Map();
+
+/**
+ * Déclare une page publique, servie avec ou sans session : `#/<segment>/…`.
+ * @param {string} segment
+ * @param {(ctx: any|null, route: {page: string, params: Record<string, string>}) => void} rendu
+ */
+export function declarerPubliqueRoute(segment, rendu) {
+  publiques.set(segment, rendu);
+}
+
 /**
  * Déclare l'écran d'une route.
  * @param {string} cle `espace/page`
@@ -90,6 +103,8 @@ export function demarrer({ contexte, surLogin, surPublic, surAccueil, rendre }) 
     if (surAccueil && (route.espace === 'accueil' || !route.espace)) { surAccueil(ctx); return; }
     // Lot b1 : pages publiques déclarées.
     if (pagesPubliques.has(route.espace)) { pagesPubliques.get(route.espace)(ctx, route.params); return; }
+    // Lot b3 : une page publique ne demande pas de session (vérification par QR).
+    if (publiques.has(route.espace)) { publiques.get(route.espace)(ctx, route); return; }
     if (surPublic && (route.espace === 'explorer' || (!ctx && !route.espace))) {
       surPublic(ctx, route.params);
       return;

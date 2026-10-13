@@ -257,6 +257,10 @@ function aideContextuelle(roleId, ctx = null) {
     mandataire_transporteur:
       'Vous répondez pour votre mandant dans le périmètre confié. Les coordonnées des ' +
       'affréteurs ne sont transmises qu’à lui, après validation.',
+    /* Lot b3 : contrôle sur route */
+    agent_controle_route:
+      'Chaque vérification est enregistrée à votre nom, quel qu’en soit le résultat. ' +
+      'Vous voyez l’authenticité et l’état du document, jamais les coordonnées des entreprises.',
   };
   const defaut =
     'Aucun droit métier n’est accordé à ce rôle dans ce POC : caisse, contentieux ' +

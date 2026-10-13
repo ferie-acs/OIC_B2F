@@ -202,6 +202,12 @@ export function dossiersTransporteurs(ctx) {
           permisNumero: c.permisNumero,
           permisEcheance: c.permisEcheance ?? null,
           verifieLe: c.verifieLe ?? null,
+          /* Lot b3 : pièce d'identité et catégories, contrôlées avec le permis */
+          pieceType: c.pieceType ?? null,
+          pieceNumero: c.pieceNumero ?? null,
+          pieceExpireLe: c.pieceExpireLe ?? null,
+          permisCategories: c.permisCategories ?? [],
+          actif: c.actif !== false,
         })),
     }))
     .sort((a, b) => ordreEtat(a.etat) - ordreEtat(b.etat) || a.raisonSociale.localeCompare(b.raisonSociale, 'fr'));
@@ -353,8 +359,15 @@ export function verifierChauffeur(ctx, chauffeurId) {
   if (c.permisEcheance && new Date(`${c.permisEcheance}T23:59:59`) < new Date()) {
     throw new Error('Le permis de ce chauffeur est échu : il ne peut pas être attesté.');
   }
+  /* Lot b3 : la pièce d'identité suit la même règle que le permis. */
+  if (c.pieceExpireLe && new Date(`${c.pieceExpireLe}T23:59:59`) < new Date()) {
+    throw new Error('La pièce d’identité de ce chauffeur est expirée : elle ne peut pas être attestée.');
+  }
+  if (c.actif === false) {
+    throw new Error('Ce chauffeur a été retiré par son transporteur : il n’y a rien à attester.');
+  }
   return attester(ctx, 'chauffeur', c, EVENEMENT_AUDIT.CHAUFFEUR_VERIFIE,
-    'Chauffeur contrôlé : permis de conduire.');
+    'Chauffeur contrôlé : permis de conduire et pièce d’identité.');
 }
 
 function attester(ctx, entite, objet, evenement, details) {
@@ -384,7 +397,12 @@ function transporteurDe(groupementId) {
  */
 export const CHAMPS_CONTROLES = Object.freeze({
   vehicule: Object.freeze(['immatriculation', 'carteGrise', 'carteTransportNumero', 'carteTransportEcheance']),
-  chauffeur: Object.freeze(['nom', 'permisNumero', 'permisEcheance']),
+  chauffeur: Object.freeze([
+    'nom', 'permisNumero', 'permisEcheance',
+    /* Lot b3 : pièce d'identité et catégories du permis */
+    'pieceType', 'pieceNumero', 'pieceDelivreeLe', 'pieceExpireLe', 'nationalite',
+    'dateNaissance', 'permisCategories', 'cacrNumero',
+  ]),
 });
 
 /**

@@ -38,12 +38,16 @@ import { reprendreFileDut } from './services/passerelle-dut.service.js';
 import { installerListesRecherche } from './core/liste-recherche.js';
 /* Lot b1 : inscription, dossier, profil, messagerie */
 import { amorcerLotB1 } from './seed-lot-b1.js';
-import { declarerPublique } from './core/router.js';
+import { declarerPublique, declarerPubliqueRoute } from './core/router.js';
 import * as lotB1 from './views/lot-b1.js';
 // Lot b2 : organisation interne
 import * as organisation from './views/organisation.js';
 import * as intermediaire from './views/intermediaire.js';
 import { completerJeuLotB2 } from './seed-lot-b2.js';
+/* Lot b3 : marché, flotte, attestation et contrôle sur route */
+import { vueAttestations } from './views/attestations.js';
+import { controleRoute, historiqueControles, verificationPublique } from './views/controle-route.js';
+import { completerLotB3 } from './seed-lot-b3.js';
 
 /* ------------------------------------------------------------------ *
  * Routes — la clé est `espace/page`, telle que `nav.js` la déclare.
@@ -137,6 +141,15 @@ function declarerRoutes() {
   declarer('intermediaire/groupement', intermediaire.ficheEntreprise);
   declarer('intermediaire/filiales', organisation.filialesEtEntites);
   declarer('intermediaire/utilisateurs', organisation.utilisateurs);
+
+  // --- Lot b3 : attestation de bourse de fret et contrôle sur route ---
+  declarer('transporteur/attestations', vueAttestations);
+  declarer('minimal/controle', controleRoute);
+  declarer('minimal/controles', historiqueControles);
+  declarerPubliqueRoute('verifier', (ctx, route) => {
+    monter(verificationPublique(ctx, route.page));
+    window.scrollTo(0, 0);
+  });
 }
 
 /* ------------------------------------------------------------------ *
@@ -253,6 +266,7 @@ async function demarrerApplication() {
   await completerJeuAntiFraude();
   await amorcerLotB1();
   await completerJeuLotB2(); // Lot b2 : intermédiaire, mandats, filiale de démonstration
+  await completerLotB3();
   await enrichirDemo();
   enrichirSensDemo();
   initialiserStationnementDemo();
