@@ -1,0 +1,3 @@
+# Apache (MAMP) : servir les modules ES .mjs avec le bon type MIME.
+# Sans cela, le navigateur refuse de les charger (aperçu PDF, cartes).
+AddType text/javascript .mjs
